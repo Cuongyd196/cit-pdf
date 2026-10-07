@@ -12,10 +12,7 @@
     "dist/**/*",
     "dist-web/**/*",
     "app/**/*",
-    "bundled-modules/**/*",
-    "../node_modules/tar/**/*",
-    "../node_modules/minipass/**/*",
-    "../node_modules/yallist/**/*"
+    "bundled-modules/**/*"
   ],
   "extraResources": [
     {

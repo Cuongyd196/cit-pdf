@@ -49,6 +49,18 @@ execSync('npx tsc -p desktop/tsconfig.json', {
   stdio: 'inherit',
 });
 
+// The main process needs `tar` at runtime. It is installed inside desktop/
+// so the package carries only that, not the web app's dependencies (those
+// are already bundled by Vite). Without this, electron-builder falls back
+// to the root node_modules and the installer grows by several hundred MB.
+if (!existsSync(resolve(root, 'desktop', 'node_modules', 'tar'))) {
+  console.log('   Installing main-process dependencies in desktop/...');
+  execSync('npm install --omit=dev --no-audit --no-fund', {
+    cwd: resolve(root, 'desktop'),
+    stdio: 'inherit',
+  });
+}
+
 // 3. Ensure bundled modules exist
 const cpdfDistDir = resolve(root, 'desktop', 'bundled-modules', 'cpdf', 'dist');
 mkdirSync(cpdfDistDir, { recursive: true });

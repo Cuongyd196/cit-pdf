@@ -74,13 +74,12 @@ function resolveAppPaths() {
     ? app.getAppPath()
     : path.resolve(__dirname, '..', '..');
 
-  let distDir = path.join(appRoot, 'dist');
-  if (
-    !fs.existsSync(distDir) &&
-    fs.existsSync(path.join(appRoot, 'dist-web'))
-  ) {
-    distDir = path.join(appRoot, 'dist-web');
-  }
+  // The web bundle is always the copy made by the desktop build. In the
+  // package it sits next to dist/, which holds the compiled main process,
+  // so "dist" must never be used as a fallback here.
+  const distDir = isPackaged
+    ? path.join(appRoot, 'dist-web')
+    : path.join(appRoot, 'desktop', 'dist-web');
 
   let manifestPath = path.resolve(
     appRoot,
