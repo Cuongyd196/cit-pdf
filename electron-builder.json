@@ -8,12 +8,7 @@
     "output": "release",
     "buildResources": "build-resources"
   },
-  "files": [
-    "dist/**/*",
-    "dist-web/**/*",
-    "app/**/*",
-    "bundled-modules/**/*"
-  ],
+  "files": ["dist/**/*", "dist-web/**/*", "app/**/*", "bundled-modules/**/*"],
   "extraResources": [
     {
       "from": "LICENSE",
@@ -47,6 +42,7 @@
     ]
   },
   "nsis": {
+    "artifactName": "${productName}-${version}-Windows-x64-Setup.${ext}",
     "oneClick": false,
     "perMachine": false,
     "allowElevation": false,
@@ -55,6 +51,9 @@
     "createStartMenuShortcut": true,
     "shortcutName": "CIT-PDF",
     "uninstallDisplayName": "CIT-PDF"
+  },
+  "portable": {
+    "artifactName": "${productName}-${version}-Windows-x64-Portable.${ext}"
   },
   "mac": {
     "target": [
