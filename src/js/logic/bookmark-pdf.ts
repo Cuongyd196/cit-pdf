@@ -1698,7 +1698,7 @@ function createNodeElement(node: BookmarkNode, level = 0): HTMLLIElement {
     : '';
 
   titleDiv.innerHTML = `
-                <span class="text-sm block ${styleClass} ${textColorClass}" ${customColorStyle}>${escapeHTML(node.title)}${destinationIcon}</span>
+                <span class="text-sm block ${styleClass} ${textColorClass}" ${customColorStyle}><span data-no-translate>${escapeHTML(node.title)}</span>${destinationIcon}</span>
                 <span class="text-xs text-gray-500">Page ${escapeHTML(String(node.page))}</span>
             `;
 

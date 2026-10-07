@@ -25,6 +25,8 @@ export const createLanguageSwitcher = (): HTMLElement => {
   const container = document.createElement('div');
   container.className = 'relative';
   container.id = 'language-switcher';
+  // Language names stay in their own language.
+  container.setAttribute('data-no-translate', '');
 
   const button = document.createElement('button');
   button.className = `

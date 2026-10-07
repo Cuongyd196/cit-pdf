@@ -1,3 +1,4 @@
+import { initPhrases } from './phrases.js';
 import i18next from 'i18next';
 import HttpBackend from 'i18next-http-backend';
 import { getStoredItem, setStoredItem } from '../utils/safe-storage.js';
@@ -147,6 +148,10 @@ export const initI18n = async (): Promise<typeof i18next> => {
   });
 
   await i18next.loadNamespaces('tools');
+
+  // Text that never went through i18n keys; not awaited so a missing or slow
+  // phrase file cannot hold up the page.
+  void initPhrases(currentLang);
 
   initialized = true;
   return i18next;

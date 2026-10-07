@@ -12,6 +12,7 @@ import type {
   ModuleStatus,
   EnsureResult,
 } from './types.js';
+import { getUiLanguage, ui } from './ui-strings.js';
 
 export class ModulesManager {
   private manifest: ModulesManifest;
@@ -125,23 +126,25 @@ export class ModulesManager {
     // Prompt user confirmation with sizes
     const descriptions = needed.map((n) => {
       const item = this.getManifestItem(n);
-      const label = item?.label?.vi || item?.label?.en || n;
+      const label =
+        item?.label?.[getUiLanguage()] ||
+        item?.label?.en ||
+        item?.label?.vi ||
+        n;
       const mb = item?.size ? (item.size / (1024 * 1024)).toFixed(1) : '?';
       return `• ${label} (~${mb} MB)`;
     });
 
     if (win) {
+      const text = ui();
       const choice = await dialog.showMessageBox(win, {
         type: 'question',
-        buttons: ['Tải về (Download)', 'Hủy (Cancel)'],
+        buttons: [text.download, text.cancel],
         defaultId: 0,
         cancelId: 1,
-        title: 'Cần tải thêm thành phần xử lý',
-        message:
-          'Tính năng này cần tải thêm module xử lý từ nguồn chính thống:',
-        detail:
-          descriptions.join('\n') +
-          '\n\nSau khi tải xong, ứng dụng sẽ hoạt động offline hoàn toàn.',
+        title: text.downloadModulesTitle,
+        message: text.downloadModulesMessage,
+        detail: `${descriptions.join('\n')}\n\n${text.downloadModulesDetail}`,
       });
 
       if (choice.response !== 0) {

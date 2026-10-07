@@ -99,4 +99,5 @@ export const IPC_CHANNELS = {
   SHOW_SAVE_DIALOG: 'bento:show-save-dialog',
   LIST_PRINTERS: 'bento:list-printers',
   PRINT: 'bento:print',
+  SET_LANGUAGE: 'bento:set-language',
 } as const;

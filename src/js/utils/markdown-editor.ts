@@ -375,7 +375,7 @@ export class MarkdownEditor {
               <div class="md-editor-pane-header">
                 <span data-i18n="tools:markdownToPdf.panePreview">Preview</span>
               </div>
-              <div class="md-editor-preview" id="mdPreview"></div>
+              <div class="md-editor-preview" id="mdPreview" data-no-translate></div>
             </div>
           </div>
         </div>

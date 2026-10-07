@@ -291,6 +291,8 @@ const init = async () => {
   };
 
   if (__DESKTOP__) {
+    // The menu bar and native dialogs live in the main process.
+    window.bentoDesktop?.setLanguage?.(document.documentElement.lang);
     const { initDesktopShell } = await import('./desktop/shell.js');
     initDesktopShell({ categoryTranslationKeys, toolTranslationKeys });
   }

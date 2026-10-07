@@ -79,6 +79,7 @@ interface DesktopBridge {
   readOpenedFile(path: string): Promise<Uint8Array>;
   listPrinters(): Promise<PrinterInfo[]>;
   print(request: PrintRequest): Promise<PrintResult>;
+  setLanguage(lang: string): void;
 }
 
 declare global {

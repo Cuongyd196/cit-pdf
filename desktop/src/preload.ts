@@ -76,6 +76,11 @@ const bridge = {
   print: (request: PrintRequest): Promise<PrintResult> => {
     return ipcRenderer.invoke(IPC_CHANNELS.PRINT, request);
   },
+
+  // Keeps the menu bar and native dialogs in the language of the pages.
+  setLanguage: (lang: string): void => {
+    ipcRenderer.send(IPC_CHANNELS.SET_LANGUAGE, lang);
+  },
 };
 
 contextBridge.exposeInMainWorld('bentoDesktop', bridge);

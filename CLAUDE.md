@@ -88,6 +88,8 @@ SharedArrayBuffer-based engines need cross-origin isolation, so dev/preview serv
 
 i18next with two namespaces, `common` and `tools`, in `public/locales/<lang>/`. HTML uses `data-i18n="key"` / `data-i18n="tools:mergePdf.name"`; TS uses `t()` from `src/js/i18n`. Language is a URL prefix (`/de/merge-pdf`); `languageRouterPlugin` handles this in dev/preview and `scripts/generate-i18n-pages.mjs` emits static per-language pages at build. The supported-language list is duplicated in `vite.config.ts` (`SUPPORTED_LANGUAGES`) and `src/js/i18n/i18n.ts` (`supportedLanguages`) — keep them in sync. `node scripts/check-translations.js` reports missing keys; full procedure in `TRANSLATION.md`.
 
+Most tool pages and their scripts still carry English text that never went through i18n keys (hard-coded markup, `showAlert('Error', …)`, template literals). `src/js/i18n/phrases.ts` covers those without touching each file: a language may ship `public/locales/<lang>/phrases.json`, a map from the English source text to its translation, and a `MutationObserver` swaps matching text nodes and `placeholder`/`title`/`aria-label` attributes, including text inserted later. Keys use `{0}`, `{1}` for runtime values (`"Loading page {0}..."`). Only `vi` has one. New UI text in English therefore needs either a `data-i18n` key or a `phrases.json` entry; mark content that must stay as typed with `data-no-translate`.
+
 ### Other subsystems
 
 - `src/js/workflow/` — Rete.js node editor for the PDF Workflow Builder; nodes in `workflow/nodes/`.

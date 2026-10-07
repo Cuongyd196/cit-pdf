@@ -5,6 +5,7 @@ import { execFile } from 'node:child_process';
 import { app, BrowserWindow, ipcMain, shell, dialog, Menu } from 'electron';
 import { registerAppScheme, setupAppProtocol } from './protocol.js';
 import { ModulesManager } from './modules-manager.js';
+import { fill, setUiLanguage, ui } from './ui-strings.js';
 import {
   IPC_CHANNELS,
   PRINT_DUPLEX_MODES,
@@ -181,14 +182,15 @@ ipcMain.handle(
   IPC_CHANNELS.REMOVE_MODULE,
   async (_event, name: DesktopModuleName): Promise<boolean> => {
     if (!modulesManager || !mainWindow) return false;
+    const text = ui();
     const choice = await dialog.showMessageBox(mainWindow, {
       type: 'warning',
-      buttons: ['Xóa (Remove)', 'Hủy (Cancel)'],
+      buttons: [text.remove, text.cancel],
       defaultId: 1,
       cancelId: 1,
-      title: 'Xóa bộ xử lý',
-      message: `Xóa bộ xử lý "${name}" khỏi máy?`,
-      detail: 'Bạn có thể tải lại bất cứ lúc nào khi cần dùng.',
+      title: text.removeModuleTitle,
+      message: fill(text.removeModuleMessage, { name }),
+      detail: text.removeModuleDetail,
     });
     if (choice.response !== 0) return false;
     return modulesManager.removeModule(name);
@@ -326,6 +328,122 @@ ipcMain.handle(
   }
 );
 
+// The pages tell us their language; remember it so the menu is right from
+// the first frame of the next launch.
+function languageFile(): string {
+  return path.join(app.getPath('userData'), 'ui-language');
+}
+
+function readSavedLanguage(): string {
+  try {
+    return fs.readFileSync(languageFile(), 'utf8').trim();
+  } catch {
+    return 'vi';
+  }
+}
+
+function buildMenu(): void {
+  const text = ui();
+  const isMac = process.platform === 'darwin';
+  // Electron's built-in role menus come with English labels, so each item
+  // is spelled out to keep the whole menu bar in the app's language.
+  const template: Electron.MenuItemConstructorOptions[] = [
+    ...(isMac ? [{ role: 'appMenu' as const }] : []),
+    {
+      label: text.menuFile,
+      submenu: [
+        {
+          label: text.openPdf,
+          accelerator: 'CmdOrCtrl+O',
+          click: () => {
+            void showOpenFileDialog();
+          },
+        },
+        { type: 'separator' as const },
+        isMac
+          ? { role: 'close' as const, label: text.closeWindow }
+          : { role: 'quit' as const, label: text.quit },
+      ],
+    },
+    {
+      label: text.menuEdit,
+      submenu: [
+        { role: 'undo' as const, label: text.undo },
+        { role: 'redo' as const, label: text.redo },
+        { type: 'separator' as const },
+        { role: 'cut' as const, label: text.cut },
+        { role: 'copy' as const, label: text.copy },
+        { role: 'paste' as const, label: text.paste },
+        { role: 'delete' as const, label: text.delete },
+        { type: 'separator' as const },
+        { role: 'selectAll' as const, label: text.selectAll },
+      ],
+    },
+    {
+      label: text.menuView,
+      submenu: [
+        { role: 'reload' as const, label: text.reload },
+        { role: 'forceReload' as const, label: text.forceReload },
+        { role: 'toggleDevTools' as const, label: text.devTools },
+        { type: 'separator' as const },
+        { role: 'resetZoom' as const, label: text.resetZoom },
+        { role: 'zoomIn' as const, label: text.zoomIn },
+        { role: 'zoomOut' as const, label: text.zoomOut },
+        { type: 'separator' as const },
+        { role: 'togglefullscreen' as const, label: text.fullscreen },
+      ],
+    },
+    {
+      label: text.menuWindow,
+      submenu: [
+        { role: 'minimize' as const, label: text.minimize },
+        { role: 'zoom' as const, label: text.zoomWindow },
+        ...(isMac
+          ? [
+              { type: 'separator' as const },
+              { role: 'front' as const, label: text.bringAllToFront },
+            ]
+          : [{ role: 'close' as const, label: text.closeWindow }]),
+      ],
+    },
+    {
+      role: 'help' as const,
+      label: text.menuHelp,
+      submenu: [
+        {
+          label: fill(text.about, { app: APP_NAME }),
+          click: () => {
+            mainWindow?.loadURL(`${APP_ORIGIN}/cit-about.html`);
+          },
+        },
+        {
+          label: fill(text.sourceCode, { app: APP_NAME }),
+          click: async () => {
+            await shell.openExternal('https://github.com/Cuongyd196/cit-pdf');
+          },
+        },
+        {
+          label: 'BentoPDF (GitHub)',
+          click: async () => {
+            await shell.openExternal('https://github.com/alam00000/bentopdf');
+          },
+        },
+      ],
+    },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+ipcMain.on(IPC_CHANNELS.SET_LANGUAGE, (_event, lang: unknown) => {
+  if (typeof lang !== 'string' || !setUiLanguage(lang)) return;
+  buildMenu();
+  try {
+    fs.writeFileSync(languageFile(), lang, 'utf8');
+  } catch (e) {
+    console.warn('[Main] Could not save the UI language:', e);
+  }
+});
+
 app.on('second-instance', (_event, argv, workingDirectory) => {
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
@@ -347,95 +465,8 @@ app.whenReady().then(() => {
 
   createWindow();
 
-  // Create clean application menu
-  const isMac = process.platform === 'darwin';
-  const template: Electron.MenuItemConstructorOptions[] = [
-    ...(isMac ? [{ role: 'appMenu' as const }] : []),
-    {
-      label: 'Tệp',
-      submenu: [
-        {
-          label: 'Mở tệp PDF…',
-          accelerator: 'CmdOrCtrl+O',
-          click: () => {
-            void showOpenFileDialog();
-          },
-        },
-        { type: 'separator' as const },
-        isMac
-          ? { role: 'close' as const, label: 'Đóng cửa sổ' }
-          : { role: 'quit' as const, label: 'Thoát' },
-      ],
-    },
-    // Electron's built-in role menus come with English labels, so each item
-    // is spelled out to keep the whole menu bar in Vietnamese.
-    {
-      label: 'Chỉnh sửa',
-      submenu: [
-        { role: 'undo' as const, label: 'Hoàn tác' },
-        { role: 'redo' as const, label: 'Làm lại' },
-        { type: 'separator' as const },
-        { role: 'cut' as const, label: 'Cắt' },
-        { role: 'copy' as const, label: 'Sao chép' },
-        { role: 'paste' as const, label: 'Dán' },
-        { role: 'delete' as const, label: 'Xóa' },
-        { type: 'separator' as const },
-        { role: 'selectAll' as const, label: 'Chọn tất cả' },
-      ],
-    },
-    {
-      label: 'Hiển thị',
-      submenu: [
-        { role: 'reload' as const, label: 'Tải lại' },
-        { role: 'forceReload' as const, label: 'Tải lại hoàn toàn' },
-        { role: 'toggleDevTools' as const, label: 'Công cụ nhà phát triển' },
-        { type: 'separator' as const },
-        { role: 'resetZoom' as const, label: 'Kích thước thật' },
-        { role: 'zoomIn' as const, label: 'Phóng to' },
-        { role: 'zoomOut' as const, label: 'Thu nhỏ' },
-        { type: 'separator' as const },
-        { role: 'togglefullscreen' as const, label: 'Toàn màn hình' },
-      ],
-    },
-    {
-      label: 'Cửa sổ',
-      submenu: [
-        { role: 'minimize' as const, label: 'Thu nhỏ cửa sổ' },
-        { role: 'zoom' as const, label: 'Phóng to cửa sổ' },
-        ...(isMac
-          ? [
-              { type: 'separator' as const },
-              { role: 'front' as const, label: 'Đưa tất cả lên trước' },
-            ]
-          : [{ role: 'close' as const, label: 'Đóng cửa sổ' }]),
-      ],
-    },
-    {
-      role: 'help' as const,
-      label: 'Trợ giúp',
-      submenu: [
-        {
-          label: `Giới thiệu ${APP_NAME}`,
-          click: () => {
-            mainWindow?.loadURL(`${APP_ORIGIN}/cit-about.html`);
-          },
-        },
-        {
-          label: `Mã nguồn ${APP_NAME} (GitHub)`,
-          click: async () => {
-            await shell.openExternal('https://github.com/Cuongyd196/cit-pdf');
-          },
-        },
-        {
-          label: 'BentoPDF (GitHub)',
-          click: async () => {
-            await shell.openExternal('https://github.com/alam00000/bentopdf');
-          },
-        },
-      ],
-    },
-  ];
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  setUiLanguage(readSavedLanguage());
+  buildMenu();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
