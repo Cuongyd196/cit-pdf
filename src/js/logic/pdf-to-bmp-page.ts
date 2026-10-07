@@ -1,0 +1,216 @@
+import { showLoader, hideLoader, showAlert } from '../ui.js';
+import {
+  downloadFile,
+  formatBytes,
+  readFileAsArrayBuffer,
+  getPDFDocument,
+  getCleanPdfFilename,
+} from '../utils/helpers.js';
+import { createIcons, icons } from 'lucide';
+import JSZip from 'jszip';
+import * as pdfjsLib from 'pdfjs-dist';
+import { PDFPageProxy } from 'pdfjs-dist';
+import { t } from '../i18n/i18n';
+import { loadPdfWithPasswordPrompt } from '../utils/password-prompt.js';
+import '../utils/setup-pdf-worker.js';
+
+let files: File[] = [];
+
+const updateUI = () => {
+  const fileDisplayArea = document.getElementById('file-display-area');
+  const optionsPanel = document.getElementById('options-panel');
+  const dropZone = document.getElementById('drop-zone');
+
+  if (!fileDisplayArea || !optionsPanel || !dropZone) return;
+
+  fileDisplayArea.innerHTML = '';
+
+  if (files.length > 0) {
+    optionsPanel.classList.remove('hidden');
+
+    files.forEach((file) => {
+      const fileDiv = document.createElement('div');
+      fileDiv.className =
+        'flex items-center justify-between bg-gray-700 p-3 rounded-lg text-sm';
+
+      const infoContainer = document.createElement('div');
+      infoContainer.className = 'flex flex-col overflow-hidden';
+
+      const nameSpan = document.createElement('div');
+      nameSpan.className = 'truncate font-medium text-gray-200 text-sm mb-1';
+      nameSpan.textContent = file.name;
+
+      const metaSpan = document.createElement('div');
+      metaSpan.className = 'text-xs text-gray-400';
+      metaSpan.textContent = `${formatBytes(file.size)} • ${t('common.loadingPageCount')}`; // Initial state
+
+      infoContainer.append(nameSpan, metaSpan);
+
+      // Add remove button
+      const removeBtn = document.createElement('button');
+      removeBtn.className =
+        'ml-4 text-red-400 hover:text-red-300 flex-shrink-0';
+      removeBtn.innerHTML = '<i data-lucide="trash-2" class="w-4 h-4"></i>';
+      removeBtn.onclick = () => {
+        files = [];
+        updateUI();
+      };
+
+      fileDiv.append(infoContainer, removeBtn);
+      fileDisplayArea.appendChild(fileDiv);
+
+      // Fetch page count asynchronously
+      readFileAsArrayBuffer(file)
+        .then((buffer) => {
+          return getPDFDocument(buffer).promise;
+        })
+        .then((pdf) => {
+          metaSpan.textContent = `${formatBytes(file.size)} • ${pdf.numPages} ${pdf.numPages !== 1 ? t('common.pages') : t('common.page')}`;
+        })
+        .catch((e) => {
+          console.warn('Error loading PDF page count:', e);
+          metaSpan.textContent = formatBytes(file.size);
+        });
+    });
+
+    // Initialize icons immediately after synchronous render
+    createIcons({ icons });
+  } else {
+    optionsPanel.classList.add('hidden');
+  }
+};
+
+const resetState = () => {
+  files = [];
+  const fileInput = document.getElementById('file-input') as HTMLInputElement;
+  if (fileInput) fileInput.value = '';
+  updateUI();
+};
+
+async function convert() {
+  if (files.length === 0) {
+    showAlert(
+      t('tools:pdfToBmp.alert.noFile'),
+      t('tools:pdfToBmp.alert.noFileExplanation')
+    );
+    return;
+  }
+  try {
+    const result = await loadPdfWithPasswordPrompt(files[0], files, 0);
+    if (!result) return;
+    showLoader(t('tools:pdfToBmp.loader.converting'));
+    const { pdf } = result;
+
+    if (pdf.numPages === 1) {
+      const page = await pdf.getPage(1);
+      const blob = await renderPage(page);
+      downloadFile(blob, getCleanPdfFilename(files[0].name) + '.bmp');
+    } else {
+      const zip = new JSZip();
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const blob = await renderPage(page);
+        if (blob) {
+          zip.file(`page_${i}.bmp`, blob);
+        }
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      downloadFile(zipBlob, getCleanPdfFilename(files[0].name) + '_bmps.zip');
+    }
+
+    showAlert(
+      t('common.success'),
+      t('tools:pdfToBmp.alert.conversionSuccess'),
+      'success',
+      () => {
+        resetState();
+      }
+    );
+  } catch (e) {
+    console.error(e);
+    showAlert(t('common.error'), t('tools:pdfToBmp.alert.conversionError'));
+  } finally {
+    hideLoader();
+  }
+}
+
+async function renderPage(page: PDFPageProxy): Promise<Blob | null> {
+  const viewport = page.getViewport({ scale: 2.0 });
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  canvas.height = viewport.height;
+  canvas.width = viewport.width;
+
+  await page.render({
+    canvasContext: context!,
+    viewport: viewport,
+    canvas,
+  }).promise;
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, 'image/bmp')
+  );
+  return blob;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const fileInput = document.getElementById('file-input') as HTMLInputElement;
+  const dropZone = document.getElementById('drop-zone');
+  const processBtn = document.getElementById('process-btn');
+  const backBtn = document.getElementById('back-to-tools');
+
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      window.location.href = import.meta.env.BASE_URL;
+    });
+  }
+
+  const handleFileSelect = (newFiles: FileList | null) => {
+    if (!newFiles || newFiles.length === 0) return;
+    const validFiles = Array.from(newFiles).filter(
+      (file) => file.type === 'application/pdf'
+    );
+
+    if (validFiles.length === 0) {
+      showAlert(
+        t('tools:pdfToBmp.alert.invalidFile'),
+        t('tools:pdfToBmp.alert.invalidFileExplanation')
+      );
+      return;
+    }
+
+    files = [validFiles[0]];
+    updateUI();
+  };
+
+  if (fileInput && dropZone) {
+    fileInput.addEventListener('change', (e) => {
+      handleFileSelect((e.target as HTMLInputElement).files);
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('bg-gray-700');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('bg-gray-700');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('bg-gray-700');
+      handleFileSelect(e.dataTransfer?.files ?? null);
+    });
+
+    fileInput.addEventListener('click', () => {
+      fileInput.value = '';
+    });
+  }
+
+  if (processBtn) {
+    processBtn.addEventListener('click', convert);
+  }
+});

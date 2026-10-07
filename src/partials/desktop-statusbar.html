@@ -1,0 +1,24 @@
+<footer
+  id="desktop-statusbar"
+  class="desktop-statusbar"
+  data-simple-footer="true"
+>
+  <span
+    >{{#if brandName}}{{brandName}}{{else}}BentoPDF{{/if}}
+    <span id="app-version">{{appVersion}}</span></span
+  >
+  <a
+    id="desktop-modules-status"
+    href="{{baseUrl}}cit-settings.html"
+    class="hover:text-white"
+  ></a>
+  <button
+    id="desktop-theme-toggle"
+    type="button"
+    class="ml-auto flex flex-shrink-0 items-center gap-1.5 rounded px-2 py-0.5 hover:text-white"
+    data-desktop-i18n-title="themeToggle"
+  >
+    <i class="ph ph-moon text-sm"></i>
+    <span></span>
+  </button>
+</footer>

@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <meta
+      name="title"
+      content="Fix Page Size Online Free - Fix Page Size Tool | BentoPDF"
+    />
+    <meta
+      name="description"
+      content="Standardize all pages to a uniform size. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta name="keywords" content="fix page size, online pdf" />
+    <meta name="author" content="BentoPDF" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.bentopdf.com/fix-page-size" />
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.bentopdf.com/fix-page-size" />
+    <meta
+      property="og:title"
+      content="Fix Page Size Online Free - Fix Page Size Tool | BentoPDF"
+    />
+    <meta
+      property="og:description"
+      content="Standardize all pages to a uniform size. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta
+      property="og:image"
+      content="https://www.bentopdf.com/images/og-fix-page-size.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="BentoPDF" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://www.bentopdf.com/fix-page-size" />
+    <meta name="twitter:title" content="Fix Page Size Free" />
+    <meta
+      name="twitter:description"
+      content="Standardize all pages to a uniform size. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.bentopdf.com/images/twitter-fix-page-size.png"
+    />
+    <meta name="twitter:site" content="@BentoPDF" />
+
+    <!-- Mobile Web App -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Fix Page Size" />
+
+    <title>Fix Page Size - Standardize PDF Pages - BentoPDF</title>
+
+    <link href="/src/css/styles.css" rel="stylesheet" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/favicon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/images/favicon-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/images/apple-touch-icon.png"
+    />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  </head>
+
+  <body class="antialiased bg-gray-900">
+    {{> navbar }}
+
+    <div
+      id="uploader"
+      class="min-h-screen flex flex-col items-center justify-start py-12 p-4 bg-gray-900"
+    >
+      <div
+        id="tool-uploader"
+        class="bg-gray-800 rounded-xl shadow-xl px-4 py-8 md:p-8 max-w-2xl w-full text-gray-200 border border-gray-700"
+      >
+        <button
+          id="back-to-tools"
+          class="flex items-center gap-2 text-indigo-300 hover:text-indigo-400 mb-6 font-semibold"
+        >
+          <i data-lucide="arrow-left" class="cursor-pointer"></i>
+          <span class="cursor-pointer" data-i18n="tools.backToTools">
+            Back to Tools
+          </span>
+        </button>
+
+        <h1
+          class="text-2xl font-bold text-white mb-2"
+          data-i18n="tools:fixPageSize.name"
+        >
+          Fix Page Size
+        </h1>
+        <p class="text-gray-400 mb-6" data-i18n="tools:fixPageSize.subtitle">
+          Standardize all pages to a uniform size.
+        </p>
+
+        <div
+          id="drop-zone"
+          class="relative flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer bg-gray-900 hover:bg-gray-700 transition-colors duration-300"
+        >
+          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <i class="ph ph-upload-simple text-4xl mb-3 text-gray-400"></i>
+            <p class="mb-2 text-sm text-gray-400">
+              <span class="font-semibold" data-i18n="upload.clickToSelect"
+                >Click to select PDF</span
+              >
+              <span data-i18n="upload.orDragAndDrop">or drag and drop</span>
+            </p>
+            <p class="text-xs text-gray-500" data-i18n="upload.filesNeverLeave">
+              Your files never leave your device.
+            </p>
+          </div>
+          <input
+            id="file-input"
+            type="file"
+            class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+            accept="application/pdf"
+          />
+        </div>
+
+        <div id="file-display-area" class="mt-4 space-y-2"></div>
+
+        <!-- Fix Page Size Options -->
+        <div id="tool-options" class="hidden mt-6 space-y-4">
+          <!-- Target Size -->
+          <div>
+            <label
+              for="target-size"
+              class="block mb-2 text-sm font-medium text-gray-300"
+              >Target Page Size</label
+            >
+            <select
+              id="target-size"
+              class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5"
+            >
+              <option value="A4">A4 (210 × 297 mm)</option>
+              <option value="Letter">Letter (8.5 × 11 in)</option>
+              <option value="Legal">Legal (8.5 × 14 in)</option>
+              <option value="A3">A3 (297 × 420 mm)</option>
+              <option value="A5">A5 (148 × 210 mm)</option>
+              <option value="Tabloid">Tabloid (11 × 17 in)</option>
+              <option value="Custom">Custom...</option>
+            </select>
+          </div>
+
+          <!-- Custom Size (hidden by default) -->
+          <div id="custom-size-wrapper" class="hidden space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label
+                  for="custom-width"
+                  class="block mb-1 text-xs font-medium text-gray-400"
+                  >Width</label
+                >
+                <input
+                  type="number"
+                  id="custom-width"
+                  step="0.01"
+                  min="0.1"
+                  value="8.5"
+                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm"
+                />
+              </div>
+              <div>
+                <label
+                  for="custom-height"
+                  class="block mb-1 text-xs font-medium text-gray-400"
+                  >Height</label
+                >
+                <input
+                  type="number"
+                  id="custom-height"
+                  step="0.01"
+                  min="0.1"
+                  value="11"
+                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <label
+                for="custom-units"
+                class="block mb-1 text-xs font-medium text-gray-400"
+                >Units</label
+              >
+              <select
+                id="custom-units"
+                class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm"
+              >
+                <option value="in">Inches</option>
+                <option value="mm">Millimeters</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Orientation -->
+          <div>
+            <label
+              for="orientation"
+              class="block mb-2 text-sm font-medium text-gray-300"
+              >Orientation</label
+            >
+            <select
+              id="orientation"
+              class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5"
+            >
+              <option value="auto">Auto (Keep Original)</option>
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </div>
+
+          <!-- Scaling Mode -->
+          <div>
+            <label class="block mb-2 text-sm font-medium text-gray-300"
+              >Content Scaling</label
+            >
+            <div class="flex gap-4 p-2 rounded-lg bg-gray-900">
+              <label
+                class="flex-1 flex items-center gap-2 p-3 rounded-md hover:bg-gray-700 cursor-pointer has-[:checked]:bg-indigo-600"
+              >
+                <input
+                  type="radio"
+                  name="scaling-mode"
+                  value="fit"
+                  checked
+                  class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500"
+                />
+                <div>
+                  <span class="font-semibold text-white">Fit</span>
+                  <p class="text-xs text-gray-400">
+                    Preserves all content, may add margins.
+                  </p>
+                </div>
+              </label>
+              <label
+                class="flex-1 flex items-center gap-2 p-3 rounded-md hover:bg-gray-700 cursor-pointer has-[:checked]:bg-indigo-600"
+              >
+                <input
+                  type="radio"
+                  name="scaling-mode"
+                  value="fill"
+                  class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500"
+                />
+                <div>
+                  <span class="font-semibold text-white">Fill (Crop)</span>
+                  <p class="text-xs text-gray-400">
+                    Fills the page, may crop content.
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Background Color -->
+          <div>
+            <label
+              for="background-color"
+              class="block mb-2 text-sm font-medium text-gray-300"
+              >Background Color</label
+            >
+            <div class="flex items-center gap-3">
+              <input type="color" id="background-color" value="#ffffff" />
+              <span class="text-sm text-gray-400"
+                >Color for margins/padding</span
+              >
+            </div>
+          </div>
+
+          <button id="process-btn" class="btn-gradient w-full">
+            Fix Page Size
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader Modal -->
+    <div
+      id="loader-modal"
+      class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-gray-800 p-8 rounded-lg flex flex-col items-center gap-4 border border-gray-700 shadow-xl"
+      >
+        <div class="solid-spinner"></div>
+        <p
+          id="loader-text"
+          class="text-white text-lg font-medium"
+          data-i18n="loader.processing"
+          data-i18n="loader.processing"
+        >
+          Processing...
+        </p>
+      </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div
+      id="alert-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-gray-700"
+      >
+        <h3
+          id="alert-title"
+          class="text-xl font-bold text-white mb-2"
+          data-i18n="alert.title"
+          data-i18n="alert.title"
+        >
+          Alert
+        </h3>
+        <p id="alert-message" class="text-gray-300 mb-6"></p>
+        <button
+          id="alert-ok"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-8 text-center"
+        data-i18n="howItWorks.title"
+      >
+        How It Works
+      </h2>
+      <div class="space-y-6">
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            1
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Upload File</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step1">
+              Click or drag and drop your file to begin
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            2
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Process</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step2">
+              Click the process button to start
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            3
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Download</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step3">
+              Save your processed file instantly
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Tools Section -->
+    <section class="max-w-6xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="relatedTools.title"
+      >
+        Related PDF Tools
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <a
+          href="merge-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Merge PDF</h3>
+          <p class="text-gray-400 text-sm">Free online merge PDF tool</p>
+        </a>
+        <a
+          href="compress-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Compress PDF</h3>
+          <p class="text-gray-400 text-sm">Free online compress PDF tool</p>
+        </a>
+        <a
+          href="split-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Split PDF</h3>
+          <p class="text-gray-400 text-sm">Free online split PDF tool</p>
+        </a>
+        <a
+          href="edit-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Edit PDF</h3>
+          <p class="text-gray-400 text-sm">Free online edit PDF tool</p>
+        </a>
+        <a
+          href="rotate-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Rotate PDF</h3>
+          <p class="text-gray-400 text-sm">Free online rotate PDF tool</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="faq.sectionTitle"
+      >
+        Frequently Asked Questions
+      </h2>
+      <div class="faq-list">
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What's the difference between Fit and Fill when resizing pages?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Fit scales each page until the whole page sits inside the target
+            size, centers it, and pads any leftover space with the background
+            color. Fill scales until the target is completely covered, which
+            crops whatever spills past the edges. Use Fit when losing content
+            isn't acceptable and Fill when you'd rather have edge-to-edge pages.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can I convert a Letter document to A4 without distorting it?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Choose A4 as the target and keep Fit. Content is scaled
+            proportionally, never stretched, so a Letter page ends up slightly
+            narrower on A4 with a thin band of background color at the top and
+            bottom.
+            <a
+              href="/page-dimensions"
+              class="text-indigo-300 hover:text-indigo-400"
+              >Page Dimensions</a
+            >
+            will confirm every page matches afterward.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What does the Auto orientation option do?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Auto looks at each page individually and keeps landscape pages
+            landscape and portrait pages portrait, turning the target size to
+            match. Portrait or Landscape forces every page into that orientation
+            and scales the content to fit the new shape.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can I set a custom page size?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Choose Custom as the target and enter the width and height in inches
+            or millimeters, down to a hundredth of a unit. This covers trim
+            sizes that aren't in the preset list, such as 6 x 9 inch book pages.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Does this keep the text selectable, or does it turn pages into
+            images?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Pages are redrawn as vector content in a new document, so text stays
+            sharp and selectable and nothing is rasterized. What doesn't carry
+            over: annotations, form fields, links, and bookmarks, because only
+            the page appearance is copied. Run
+            <a href="/flatten-pdf" class="text-indigo-300 hover:text-indigo-400"
+              >Flatten PDF</a
+            >
+            first if filled-in form values need to survive.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            My pages are almost Letter size but not quite. Will this fix them?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Yes. Pick Letter and Fit; a page that is 8.49 by 11.02 inches is
+            scaled by a fraction of a percent to exactly 8.5 by 11, which is
+            invisible to the eye but satisfies print shops and document systems
+            that reject off-size pages.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What is the background color used for?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            It fills the margins that Fit mode adds when the source page has a
+            different shape than the target. White is the default; pick a dark
+            color when your pages have dark backgrounds so the padding doesn't
+            stand out.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Is my PDF uploaded to fix the page sizes?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            No. The resizing is done by a PDF library running in your browser,
+            and the new file is assembled on your device. Nothing is sent
+            anywhere.
+          </p>
+        </details>
+      </div>
+    </section>
+    {{> footer }}
+    <script type="module" src="/src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="/src/js/utils/full-width.ts"></script>
+    <script type="module" src="/src/js/utils/simple-mode-footer.ts"></script>
+    <script type="module" src="/src/js/logic/fix-page-size-page.ts"></script>
+    <script type="module" src="/src/js/mobileMenu.ts"></script>
+
+    <script type="module" src="/src/js/main.ts"></script>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Fix Page Size - BentoPDF",
+        "applicationCategory": "PDF Tool",
+        "operatingSystem": "Any - Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to fix page size online",
+        "description": "Learn how to fix page size using BentoPDF",
+        "step": [
+          {
+            "@type": "HowToStep",
+            "position": 1,
+            "name": "Upload File",
+            "text": "Click or drag and drop your file"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 2,
+            "name": "Process",
+            "text": "Click the process button"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 3,
+            "name": "Download",
+            "text": "Download your processed file"
+          }
+        ]
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.bentopdf.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Fix Page Size",
+            "item": "https://www.bentopdf.com/fix-page-size"
+          }
+        ]
+      }
+    </script>
+  </body>
+</html>

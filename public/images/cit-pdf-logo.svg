@@ -1,0 +1,14 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="cit-bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+<stop stop-color="#0F766E"/>
+<stop offset="1" stop-color="#14B8A6"/>
+</linearGradient>
+</defs>
+<rect width="512" height="512" rx="112" fill="url(#cit-bg)"/>
+<path d="M148 84H300L392 176V404C392 417.255 381.255 428 368 428H148C134.745 428 124 417.255 124 404V108C124 94.745 134.745 84 148 84Z" fill="white"/>
+<path d="M300 84L392 176H324C310.745 176 300 165.255 300 152V84Z" fill="#99F6E4"/>
+<text x="258" y="300" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="92" fill="#0F766E">CIT</text>
+<rect x="168" y="328" width="180" height="64" rx="16" fill="#EF4444"/>
+<text x="258" y="377" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="46" letter-spacing="4" fill="white">PDF</text>
+</svg>

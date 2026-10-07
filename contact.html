@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Primary Meta Tags -->
+    <title>Contact BentoPDF - Get in Touch | Support</title>
+    <meta
+      name="description"
+      content="Contact BentoPDF for support, questions, or feedback. Reach us at contact@bentopdf.com - we're here to help with your PDF needs."
+    />
+    <meta name="author" content="BentoPDF" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.bentopdf.com/contact" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.bentopdf.com/contact" />
+    <meta
+      property="og:title"
+      content="Contact BentoPDF - Get in Touch | Support"
+    />
+    <meta
+      property="og:description"
+      content="Contact BentoPDF for support, questions, or feedback. Reach us at contact@bentopdf.com - we're here to help with your PDF needs."
+    />
+    <meta
+      property="og:image"
+      content="https://www.bentopdf.com/images/og-contact.png"
+    />
+    <meta property="og:site_name" content="BentoPDF" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Contact BentoPDF - Get in Touch | Support"
+    />
+    <meta
+      name="twitter:description"
+      content="Contact BentoPDF for support, questions, or feedback. Reach us at contact@bentopdf.com - we're here to help with your PDF needs."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.bentopdf.com/images/twitter-contact.png"
+    />
+    <meta name="twitter:site" content="@BentoPDF" />
+
+    <link href="/src/css/styles.css" rel="stylesheet" />
+    <link href="/src/css/landing.css" rel="stylesheet" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/favicon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/images/favicon-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/images/apple-touch-icon.png"
+    />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  </head>
+
+  <body class="lp antialiased">
+    {{> navbar }}
+
+    <div id="app">
+      <section id="contact-hero" class="lp-sec lp-sec--first">
+        <div class="lp-frame">
+          <div class="lp-cta">
+            <div>
+              <h1 class="lp-h2">
+                <span class="line" data-i18n="contact.title">Get in Touch</span>
+              </h1>
+              <p class="lp-head-p" data-i18n="contact.subtitle">
+                We'd love to hear from you. Whether you have a question,
+                feedback, or a feature request, please don't hesitate to reach
+                out.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact-channels" class="lp-sec lp-band">
+        <div class="lp-frame">
+          <div class="lp-grid lp-grid--2 lp-cross">
+            <a class="lp-cell lp-reveal" href="mailto:contact@bentopdf.com">
+              <span class="lp-tile"><i data-lucide="mail"></i></span>
+              <h3 data-i18n="contact.emailTitle">Email</h3>
+              <p data-i18n="contact.email">
+                You can reach us directly by email at:
+              </p>
+              <b>contact@bentopdf.com</b>
+            </a>
+
+            <a
+              class="lp-cell lp-reveal"
+              href="https://github.com/alam00000/bentopdf/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span class="lp-tile"><i data-lucide="github"></i></span>
+              <h3>GitHub</h3>
+              <p data-i18n="contact.githubText">
+                Report a bug, request a feature, or read the source.
+              </p>
+              <b>github.com/alam00000/bentopdf</b>
+            </a>
+
+            <a
+              class="lp-cell lp-reveal"
+              href="https://discord.gg/Bgq3Ay3f2w"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span class="lp-tile"><i data-lucide="message-circle"></i></span>
+              <h3>Discord</h3>
+              <p data-i18n="contact.discordText">
+                Join the community to chat with us and other users.
+              </p>
+              <b>discord.gg/Bgq3Ay3f2w</b>
+            </a>
+
+            <a class="lp-cell lp-reveal" href="faq.html">
+              <span class="lp-tile"><i data-lucide="help-circle"></i></span>
+              <h3 data-i18n="footer.faqLink">FAQ</h3>
+              <p data-i18n="contact.faqText">
+                Find quick answers to the questions we get most often.
+              </p>
+              <b data-i18n="contact.faqLink">Read the FAQ</b>
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    {{> footer }}
+
+    <script type="module" src="src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="src/js/main.ts"></script>
+    <script type="module" src="src/js/mobileMenu.ts"></script>
+    <script type="module" src="src/js/landing.ts"></script>
+    <!-- JSON-LD Schema -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ContactPage",
+        "name": "Contact BentoPDF - Get in Touch | Support",
+        "url": "https://www.bentopdf.com/contact"
+      }
+    </script>
+  </body>
+</html>

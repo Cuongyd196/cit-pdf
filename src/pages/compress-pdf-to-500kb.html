@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <title>Compress PDF to 500KB Free Online | BentoPDF</title>
+    <meta name="title" content="Compress PDF to 500KB Free Online | BentoPDF" />
+    <meta
+      name="description"
+      content="Bring a PDF under 500KB with almost no visible quality loss. Free, no uploads. Runs entirely in your browser."
+    />
+    <meta
+      name="keywords"
+      content="compress pdf to 500kb, compress pdf, reduce pdf size, pdf compressor"
+    />
+    <meta name="author" content="BentoPDF" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <!-- Canonical URL -->
+    <link
+      rel="canonical"
+      href="https://www.bentopdf.com/compress-pdf-to-500kb"
+    />
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://www.bentopdf.com/compress-pdf-to-500kb"
+    />
+    <meta
+      property="og:title"
+      content="Compress PDF to 500KB Free Online | BentoPDF"
+    />
+    <meta
+      property="og:description"
+      content="Bring a PDF under 500KB with almost no visible quality loss. Free, no uploads. Runs entirely in your browser."
+    />
+    <meta
+      property="og:image"
+      content="https://www.bentopdf.com/images/og-compress-pdf.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="BentoPDF" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:url"
+      content="https://www.bentopdf.com/compress-pdf-to-500kb"
+    />
+    <meta
+      name="twitter:title"
+      content="Compress PDF to 500KB Free - BentoPDF"
+    />
+    <meta
+      name="twitter:description"
+      content="Bring a PDF under 500KB with almost no visible quality loss. Free, no uploads. Runs entirely in your browser."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.bentopdf.com/images/twitter-compress-pdf.png"
+    />
+    <meta name="twitter:site" content="@BentoPDF" />
+
+    <!-- Mobile Web App -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Compress PDF to 500KB" />
+
+    <link href="/src/css/styles.css" rel="stylesheet" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/favicon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/images/favicon-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/images/apple-touch-icon.png"
+    />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  </head>
+
+  <body class="antialiased bg-gray-900">
+    {{> navbar }}
+
+    <div
+      id="uploader"
+      class="min-h-screen flex flex-col items-center justify-start py-12 p-4 bg-gray-900"
+    >
+      <div
+        id="tool-uploader"
+        class="bg-gray-800 rounded-xl shadow-xl px-4 py-8 md:p-8 max-w-2xl w-full text-gray-200 border border-gray-700"
+      >
+        <button
+          id="back-to-tools"
+          class="flex items-center gap-2 text-indigo-300 hover:text-indigo-400 mb-6 font-semibold"
+        >
+          <i data-lucide="arrow-left" class="cursor-pointer"></i>
+          <span class="cursor-pointer" data-i18n="tools.backToTools">
+            Back to Tools
+          </span>
+        </button>
+
+        <h1 class="text-2xl font-bold text-white mb-2">
+          Compress PDF to 500KB
+        </h1>
+        <p class="text-gray-400 mb-6">
+          Bring your PDF under 500KB while keeping images sharp.
+        </p>
+
+        <div
+          id="drop-zone"
+          class="relative flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer bg-gray-900 hover:bg-gray-700 transition-colors duration-300"
+        >
+          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <i class="ph ph-upload-simple text-4xl mb-3 text-gray-400"></i>
+            <p class="mb-2 text-sm text-gray-400">
+              <span class="font-semibold" data-i18n="upload.clickToSelect"
+                >Click to select files</span
+              >
+              <span data-i18n="upload.orDragAndDrop">or drag and drop</span>
+            </p>
+            <p
+              class="text-xs text-gray-500"
+              data-i18n="upload.hints.oneOrMorePdfs"
+            >
+              One or more PDF files
+            </p>
+            <p class="text-xs text-gray-500" data-i18n="upload.filesNeverLeave">
+              Your files never leave your device.
+            </p>
+          </div>
+          <input
+            id="file-input"
+            type="file"
+            class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+            accept="application/pdf"
+            multiple
+          />
+        </div>
+
+        <div id="file-controls" class="hidden mt-4 flex gap-3">
+          <button
+            id="add-more-btn"
+            class="btn bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2"
+          >
+            <i data-lucide="plus"></i>
+            <span data-i18n="upload.addMore">Add More Files</span>
+          </button>
+          <button
+            id="clear-files-btn"
+            class="btn bg-gray-700 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2"
+          >
+            <i data-lucide="trash-2"></i>
+            <span data-i18n="upload.clearAll">Clear All</span>
+          </button>
+        </div>
+
+        <div id="file-display-area" class="mt-4 space-y-2"></div>
+
+        <div id="compress-options" class="hidden mt-6 space-y-6">
+          <div>
+            <label
+              for="compression-algorithm"
+              class="block mb-2 text-sm font-medium text-gray-300"
+              >Compression Algorithm</label
+            >
+            <select
+              id="compression-algorithm"
+              class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="condense">Condense (Recommended)</option>
+              <option value="photon">Photon (For Photo-Heavy PDFs)</option>
+            </select>
+            <div id="algorithm-info" class="mt-2 text-xs text-gray-400">
+              <p id="condense-info">
+                <strong>Condense</strong> uses advanced compression: removes
+                dead-weight, optimizes images, subsets fonts. Best for most
+                PDFs.
+              </p>
+              <p id="photon-info" class="hidden">
+                <strong>Photon</strong> converts pages to images. Use for
+                photo-heavy/scanned PDFs.
+                <span class="text-yellow-500"
+                  >⚠️ Warning: Text will become non-selectable and links will
+                  stop working.</span
+                >
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label
+              for="compression-level"
+              class="block mb-2 text-sm font-medium text-gray-300"
+              >Compression Level</label
+            >
+            <select
+              id="compression-level"
+              class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="light">Light (Preserve Quality)</option>
+              <option value="balanced" selected>Balanced (Recommended)</option>
+              <option value="aggressive">Aggressive (Smaller Files)</option>
+              <option value="extreme">Extreme (Maximum Compression)</option>
+            </select>
+          </div>
+
+          <!-- Grayscale toggle - always visible -->
+          <div
+            class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700"
+          >
+            <input
+              type="checkbox"
+              id="convert-to-grayscale"
+              class="w-5 h-5 rounded cursor-pointer flex-shrink-0"
+            />
+            <div>
+              <label
+                for="convert-to-grayscale"
+                class="text-sm font-medium text-gray-300 cursor-pointer"
+                >Convert to Grayscale</label
+              >
+              <p class="text-xs text-gray-500 mt-0.5">
+                Reduces file size by removing color information
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <button
+              id="toggle-custom-settings"
+              type="button"
+              class="flex items-center gap-2 text-indigo-300 hover:text-indigo-400 text-sm font-medium"
+            >
+              <i data-lucide="settings" class="w-4 h-4"></i>
+              <span>Custom Settings</span>
+              <i
+                data-lucide="chevron-down"
+                id="custom-settings-chevron"
+                class="w-4 h-4"
+              ></i>
+            </button>
+
+            <div
+              id="custom-settings-panel"
+              class="hidden mt-4 p-4 bg-gray-900 rounded-lg border border-gray-700 space-y-4"
+            >
+              <div class="text-sm text-gray-400 mb-2">
+                Fine-tune compression parameters:
+              </div>
+
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <label
+                    for="image-quality"
+                    class="block mb-1 text-xs font-medium text-gray-400"
+                    >Output Quality</label
+                  >
+                  <input
+                    type="number"
+                    id="image-quality"
+                    value="75"
+                    min="1"
+                    max="100"
+                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">1-100%</p>
+                </div>
+                <div>
+                  <label
+                    for="dpi-target"
+                    class="block mb-1 text-xs font-medium text-gray-400"
+                    >Resize Images To</label
+                  >
+                  <input
+                    type="number"
+                    id="dpi-target"
+                    value="96"
+                    min="36"
+                    max="300"
+                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">DPI</p>
+                </div>
+                <div>
+                  <label
+                    for="dpi-threshold"
+                    class="block mb-1 text-xs font-medium text-gray-400"
+                    >Only Process Above</label
+                  >
+                  <input
+                    type="number"
+                    id="dpi-threshold"
+                    value="150"
+                    min="72"
+                    max="600"
+                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">DPI</p>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="remove-metadata"
+                    checked
+                    class="w-4 h-4 rounded"
+                  />
+                  <span class="text-sm text-gray-300">Remove metadata</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="subset-fonts"
+                    checked
+                    class="w-4 h-4 rounded"
+                  />
+                  <span class="text-sm text-gray-300"
+                    >Subset fonts (remove unused glyphs)</span
+                  >
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="remove-thumbnails"
+                    checked
+                    class="w-4 h-4 rounded"
+                  />
+                  <span class="text-sm text-gray-300"
+                    >Remove embedded thumbnails</span
+                  >
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button id="process-btn" class="btn-gradient w-full mt-4">
+            Compress PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="loader-modal"
+      class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-gray-800 p-8 rounded-lg flex flex-col items-center gap-4 border border-gray-700 shadow-xl"
+      >
+        <div class="solid-spinner"></div>
+        <p id="loader-text" class="text-white text-lg font-medium">
+          Processing...
+        </p>
+      </div>
+    </div>
+
+    <div
+      id="alert-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-gray-700"
+      >
+        <h3
+          id="alert-title"
+          class="text-xl font-bold text-white mb-2"
+          data-i18n="alert.title"
+          data-i18n="alert.title"
+        >
+          Alert
+        </h3>
+        <p id="alert-message" class="text-gray-300 mb-6"></p>
+        <button
+          id="alert-ok"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+
+    <section class="max-w-4xl mx-auto px-4 pt-12">
+      <p id="direct-answer" class="text-gray-300 text-lg leading-relaxed">
+        To compress a PDF to 500KB, add your file below, keep the recommended
+        Balanced level, and download the result. 500KB is a comfortable target.
+        most documents reach it with no visible difference, and your file never
+        leaves your browser.
+      </p>
+    </section>
+    <section class="max-w-4xl mx-auto px-4 pt-8">
+      <h2 class="text-2xl font-bold text-white mb-3">The sweet spot target</h2>
+      <p class="text-gray-400 leading-relaxed">
+        Half a megabyte is the most forgiving of the common upload limits. used
+        by CMS uploads, tender portals, and course submission systems. Balanced
+        level typically gets a 5 to 20MB office document or light scan under
+        500KB while keeping images sharp and text perfectly crisp.
+      </p>
+    </section>
+    <section class="max-w-4xl mx-auto px-4 pt-8">
+      <h2 class="text-2xl font-bold text-white mb-3">
+        If you are just over the line
+      </h2>
+      <p class="text-gray-400 leading-relaxed">
+        A file that lands at 600 to 700KB after Balanced almost always drops
+        below 500KB with Aggressive. Check for an embedded photo cover page or a
+        high-resolution logo on every page. repeated images are a common hidden
+        cost that compression handles well.
+      </p>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-8 text-center"
+        data-i18n="howItWorks.title"
+      >
+        How It Works
+      </h2>
+      <div class="space-y-6">
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            1
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Upload PDFs</h3>
+            <p class="text-gray-400">
+              Click or drag and drop one or more PDF files
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            2
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">
+              Choose Algorithm
+            </h3>
+            <p class="text-gray-400">
+              Select Condense (recommended) or Photon (for photo-heavy PDFs)
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            3
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">
+              Select Compression Level
+            </h3>
+            <p class="text-gray-400">
+              Pick Light, Balanced, Aggressive, or Extreme compression
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            4
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">
+              Customize & Compress
+            </h3>
+            <p class="text-gray-400">
+              Optionally enable grayscale or custom settings, then compress
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            5
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Download</h3>
+            <p class="text-gray-400">
+              Save your compressed PDFs - up to 90% smaller
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Tools Section -->
+    <section class="max-w-6xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="relatedTools.title"
+      >
+        Related PDF Tools
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <a
+          href="merge-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Merge PDF</h3>
+          <p class="text-gray-400 text-sm">Free online merge PDF tool</p>
+        </a>
+        <a
+          href="split-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Split PDF</h3>
+          <p class="text-gray-400 text-sm">Free online split PDF tool</p>
+        </a>
+        <a
+          href="pdf-to-jpg.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">PDF to JPG</h3>
+          <p class="text-gray-400 text-sm">Free online PDF to JPG tool</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="faq.sectionTitle"
+      >
+        Frequently Asked Questions
+      </h2>
+      <div class="faq-list">
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Will 500KB compression change how my PDF prints?<i
+              data-lucide="plus"
+              class="faq-d-icon"
+            ></i>
+          </summary>
+          <p class="faq-d-a">
+            At Balanced level, print quality stays excellent for text and vector
+            graphics. Photos are optimized for screen-and-print use; only
+            large-format printing would show the difference.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can I compress multiple PDFs to 500KB at once?<i
+              data-lucide="plus"
+              class="faq-d-icon"
+            ></i>
+          </summary>
+          <p class="faq-d-a">
+            Yes. add several files and each is compressed independently in your
+            browser, with no queue and no per-file fee.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Why is my compressed file already smaller than 500KB but the portal
+            still rejects it?<i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Some portals measure size in mebibytes or reject certain PDF
+            versions. Re-check the exact limit wording, and try the Sanitize PDF
+            tool to strip unusual metadata if a compliant file is still
+            rejected.
+          </p>
+        </details>
+      </div>
+    </section>
+    {{> footer }}
+    <script type="module" src="/src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="/src/js/utils/full-width.ts"></script>
+    <script type="module" src="/src/js/utils/simple-mode-footer.ts"></script>
+    <script type="module" src="/src/js/logic/compress-pdf-page.ts"></script>
+    <script type="module" src="/src/js/mobileMenu.ts"></script>
+    <script type="module" src="/src/js/main.ts"></script>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Compress PDF to 500KB - BentoPDF",
+        "applicationCategory": "PDF Compression Tool",
+        "operatingSystem": "Any - Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Reduce PDF file size",
+          "Multiple compression algorithms",
+          "Batch processing",
+          "No file size limits",
+          "Condense algorithm for smart compression",
+          "Photon algorithm for image-heavy PDFs"
+        ]
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to Compress PDF Files Online Free",
+        "description": "Learn how to compress PDF files to reduce size while maintaining quality",
+        "step": [
+          {
+            "@type": "HowToStep",
+            "position": 1,
+            "name": "Upload Your PDF",
+            "text": "Click or drag and drop your PDF file into the upload area"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 2,
+            "name": "Choose Compression Level",
+            "text": "Select your desired compression level: Light, Balanced, Aggressive, or Extreme"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 3,
+            "name": "Select Algorithm",
+            "text": "Choose Condense (recommended) or Photon algorithm based on your PDF type"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 4,
+            "name": "Compress and Download",
+            "text": "Click 'Compress PDF' and download your optimized file"
+          }
+        ]
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.bentopdf.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Compress PDF to 500KB",
+            "item": "https://www.bentopdf.com/compress-pdf-to-500kb"
+          }
+        ]
+      }
+    </script>
+  </body>
+</html>

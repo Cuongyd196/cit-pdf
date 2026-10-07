@@ -1,0 +1,52 @@
+<!-- Apply the saved theme before the page paints to avoid a dark flash. -->
+<script>
+  try {
+    if (localStorage.getItem('cit:theme') === 'light') {
+      document.documentElement.dataset.theme = 'light';
+    }
+  } catch (e) {}
+</script>
+<aside id="desktop-sidebar" class="desktop-sidebar" data-simple-nav="true">
+  <a
+    href="{{baseUrl}}"
+    class="flex items-center gap-2 px-4 h-14 flex-shrink-0 no-underline"
+  >
+    <img
+      id="nav-logo"
+      src="{{baseUrl}}{{#if brandLogo}}{{brandLogo}}{{else}}images/favicon-no-bg.svg{{/if}}"
+      alt="{{#if brandName}}{{brandName}}{{else}}BentoPDF{{/if}} Logo"
+      class="h-8 w-8"
+    />
+    <span id="nav-brand" class="text-white font-bold text-lg"
+      >{{#if brandName}}{{brandName}}{{else}}BentoPDF{{/if}}</span
+    >
+  </a>
+
+  <div class="relative px-3 pb-3 flex-shrink-0">
+    <i
+      class="ph ph-magnifying-glass absolute left-6 top-2.5 text-gray-400 pointer-events-none"
+    ></i>
+    <input
+      type="text"
+      id="desktop-search"
+      class="w-full pl-9 pr-3 py-2 text-sm bg-gray-700 text-white border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+      placeholder="Search tools…"
+      data-desktop-i18n-placeholder="searchPlaceholder"
+      autocomplete="off"
+      spellcheck="false"
+    />
+  </div>
+
+  <nav id="desktop-nav" class="flex-1 overflow-y-auto pb-3"></nav>
+
+  <div class="flex-shrink-0 border-t border-gray-700 py-2">
+    <a href="{{baseUrl}}cit-settings.html" class="desktop-nav-item">
+      <i class="ph ph-gear text-base text-gray-400"></i>
+      <span data-desktop-i18n="settings">Settings</span>
+    </a>
+    <a href="{{baseUrl}}cit-about.html" class="desktop-nav-item">
+      <i class="ph ph-info text-base text-gray-400"></i>
+      <span data-i18n="nav.about">About</span>
+    </a>
+  </div>
+</aside>

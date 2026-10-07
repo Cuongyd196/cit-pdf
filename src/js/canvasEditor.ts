@@ -1,0 +1,333 @@
+import { showLoader, hideLoader, showAlert } from './ui.js';
+import { getPDFDocument } from './utils/helpers.js';
+import { state } from './state.js';
+import { toolLogic } from './logic/index.js';
+import { icons, createIcons } from 'lucide';
+import * as pdfjsLib from 'pdfjs-dist';
+import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
+import type { CropBox } from '@/types';
+import './utils/setup-pdf-worker.js';
+
+const editorState: {
+  pdf: PDFDocumentProxy | null;
+  canvas: HTMLCanvasElement | null;
+  context: CanvasRenderingContext2D | null;
+  container: HTMLElement | null;
+  currentPageNum: number;
+  pageRendering: boolean;
+  pageNumPending: number | null;
+  scale: number | 'fit';
+  pageSnapshot: ImageData | null;
+  isDrawing: boolean;
+  startX: number;
+  startY: number;
+  cropBoxes: Record<number, CropBox>;
+  lastInteractionRect: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null;
+} = {
+  pdf: null,
+  canvas: null,
+  context: null,
+  container: null,
+  currentPageNum: 1,
+  pageRendering: false,
+  pageNumPending: null,
+  scale: 1.0,
+  pageSnapshot: null,
+  isDrawing: false,
+  startX: 0,
+  startY: 0,
+  cropBoxes: {},
+  lastInteractionRect: null,
+};
+
+/**
+ * Calculates the best scale to fit the page within the container.
+ * @param {PDFPageProxy} page - The PDF.js page object.
+ */
+function calculateFitScale(page: PDFPageProxy) {
+  const containerWidth = editorState.container!.clientWidth;
+  const viewport = page.getViewport({ scale: 1.0 });
+  return containerWidth / viewport.width;
+}
+
+/**
+ * Renders a specific page of the PDF onto the canvas.
+ * @param {number} num The page number to render.
+ */
+async function renderPage(num: number) {
+  editorState.pageRendering = true;
+  showLoader(`Loading page ${num}...`);
+
+  try {
+    const page = await editorState.pdf!.getPage(num);
+
+    if (editorState.scale === 'fit') {
+      editorState.scale = calculateFitScale(page);
+    }
+
+    const viewport = page.getViewport({ scale: editorState.scale as number });
+    editorState.canvas!.height = viewport.height;
+    editorState.canvas!.width = viewport.width;
+
+    const renderContext = {
+      canvas: editorState.canvas,
+      canvasContext: editorState.context!,
+      viewport: viewport,
+    };
+
+    await page.render(renderContext).promise;
+
+    editorState.pageSnapshot = editorState.context!.getImageData(
+      0,
+      0,
+      editorState.canvas!.width,
+      editorState.canvas!.height
+    );
+    redrawShapes();
+  } catch (error) {
+    console.error('Error rendering page:', error);
+    showAlert('Render Error', 'Could not display the page.');
+  } finally {
+    editorState.pageRendering = false;
+    hideLoader();
+
+    document.getElementById('current-page-display')!.textContent = String(num);
+    (document.getElementById('prev-page') as HTMLButtonElement).disabled =
+      num <= 1;
+    (document.getElementById('next-page') as HTMLButtonElement).disabled =
+      num >= editorState.pdf!.numPages;
+
+    if (editorState.pageNumPending !== null) {
+      const pendingPage = editorState.pageNumPending;
+      editorState.pageNumPending = null;
+      queueRenderPage(pendingPage);
+    }
+  }
+}
+
+function queueRenderPage(num: number) {
+  if (editorState.pageRendering) {
+    editorState.pageNumPending = num;
+  } else {
+    editorState.currentPageNum = num;
+    renderPage(num);
+  }
+}
+
+function redrawShapes() {
+  if (editorState.pageSnapshot) {
+    editorState.context!.putImageData(editorState.pageSnapshot, 0, 0);
+  }
+
+  const currentCropBox = editorState.cropBoxes[editorState.currentPageNum - 1];
+  if (currentCropBox) {
+    editorState.context!.strokeStyle = 'rgba(15, 118, 110, 0.9)';
+    editorState.context!.lineWidth = 2;
+    editorState.context!.setLineDash([8, 4]);
+    editorState.context!.strokeRect(
+      currentCropBox.x,
+      currentCropBox.y,
+      currentCropBox.width,
+      currentCropBox.height
+    );
+    editorState.context!.setLineDash([]);
+  }
+}
+
+function getEventCoordinates(e: MouseEvent | TouchEvent) {
+  const rect = editorState.canvas!.getBoundingClientRect();
+  const touch =
+    'touches' in e && e.touches.length > 0 ? e.touches[0] : (e as MouseEvent);
+  const scaleX = editorState.canvas!.width / rect.width;
+  const scaleY = editorState.canvas!.height / rect.height;
+  return {
+    x: (touch.clientX - rect.left) * scaleX,
+    y: (touch.clientY - rect.top) * scaleY,
+  };
+}
+
+function handleInteractionStart(e: MouseEvent | TouchEvent) {
+  e.preventDefault();
+  const coords = getEventCoordinates(e);
+  editorState.isDrawing = true;
+  editorState.startX = coords.x;
+  editorState.startY = coords.y;
+}
+
+function handleInteractionMove(e: MouseEvent | TouchEvent) {
+  if (!editorState.isDrawing) return;
+  e.preventDefault();
+
+  redrawShapes();
+  const coords = getEventCoordinates(e);
+
+  const x = Math.min(editorState.startX, coords.x);
+  const y = Math.min(editorState.startY, coords.y);
+  const width = Math.abs(editorState.startX - coords.x);
+  const height = Math.abs(editorState.startY - coords.y);
+
+  editorState.context!.strokeStyle = 'rgba(15, 118, 110, 0.9)';
+  editorState.context!.lineWidth = 2;
+  editorState.context!.setLineDash([8, 4]);
+  editorState.context!.strokeRect(x, y, width, height);
+  editorState.context!.setLineDash([]);
+
+  editorState.lastInteractionRect = { x, y, width, height };
+}
+
+function handleInteractionEnd() {
+  if (!editorState.isDrawing) return;
+  editorState.isDrawing = false;
+
+  const finalRect = editorState.lastInteractionRect;
+
+  if (!finalRect || finalRect.width < 5 || finalRect.height < 5) {
+    redrawShapes(); // Redraw to clear any invalid, tiny box
+    editorState.lastInteractionRect = null;
+    return;
+  }
+
+  editorState.cropBoxes[editorState.currentPageNum - 1] = {
+    ...finalRect,
+    scale: editorState.scale,
+  };
+
+  editorState.lastInteractionRect = null;
+  redrawShapes();
+}
+
+export async function setupCanvasEditor(toolId: string) {
+  editorState.canvas = document.getElementById(
+    'canvas-editor'
+  ) as HTMLCanvasElement | null;
+  if (!editorState.canvas) return;
+  editorState.container = document.getElementById('canvas-container');
+  editorState.context = editorState.canvas.getContext('2d');
+
+  const pageNav = document.getElementById('page-nav');
+  const pdfData = await state.pdfDoc.save();
+  editorState.pdf = await getPDFDocument({ data: pdfData }).promise;
+
+  editorState.cropBoxes = {};
+  editorState.currentPageNum = 1;
+  editorState.scale = 'fit';
+
+  pageNav!.textContent = '';
+
+  const prevButton = document.createElement('button');
+  prevButton.id = 'prev-page';
+  prevButton.className =
+    'btn p-2 rounded-full bg-gray-700 hover:bg-gray-600 disabled:opacity-50';
+  prevButton.innerHTML = '<i data-lucide="chevron-left"></i>';
+
+  const pageInfo = document.createElement('span');
+  pageInfo.className = 'text-white font-medium';
+
+  const currentPageDisplay = document.createElement('span');
+  currentPageDisplay.id = 'current-page-display';
+  currentPageDisplay.textContent = '1';
+
+  pageInfo.append(
+    'Page ',
+    currentPageDisplay,
+    ` of ${editorState.pdf.numPages}`
+  );
+
+  const nextButton = document.createElement('button');
+  nextButton.id = 'next-page';
+  nextButton.className =
+    'btn p-2 rounded-full bg-gray-700 hover:bg-gray-600 disabled:opacity-50';
+  nextButton.innerHTML = '<i data-lucide="chevron-right"></i>';
+
+  pageNav!.append(prevButton, pageInfo, nextButton);
+
+  createIcons({ icons });
+
+  document.getElementById('prev-page')!.addEventListener('click', () => {
+    if (editorState.currentPageNum > 1)
+      queueRenderPage(editorState.currentPageNum - 1);
+  });
+  document.getElementById('next-page')!.addEventListener('click', () => {
+    if (editorState.currentPageNum < editorState.pdf!.numPages)
+      queueRenderPage(editorState.currentPageNum + 1);
+  });
+
+  const newCanvas = editorState.canvas.cloneNode(true) as HTMLCanvasElement;
+  editorState.canvas.parentNode!.replaceChild(newCanvas, editorState.canvas);
+  editorState.canvas = newCanvas;
+  editorState.context = newCanvas.getContext('2d');
+
+  // Mouse Events
+  editorState.canvas.addEventListener('mousedown', handleInteractionStart);
+  editorState.canvas.addEventListener('mousemove', handleInteractionMove);
+  editorState.canvas.addEventListener('mouseup', handleInteractionEnd);
+  editorState.canvas.addEventListener('mouseleave', handleInteractionEnd);
+
+  // Touch Events
+  editorState.canvas.addEventListener('touchstart', handleInteractionStart, {
+    passive: false,
+  });
+  editorState.canvas.addEventListener('touchmove', handleInteractionMove, {
+    passive: false,
+  });
+  editorState.canvas.addEventListener('touchend', handleInteractionEnd);
+
+  if (toolId === 'crop') {
+    (document.getElementById('zoom-in-btn') as HTMLElement).onclick = () => {
+      if (typeof editorState.scale === 'number') {
+        editorState.scale += 0.25;
+      }
+      renderPage(editorState.currentPageNum);
+    };
+    (document.getElementById('zoom-out-btn') as HTMLElement).onclick = () => {
+      if (typeof editorState.scale === 'number' && editorState.scale > 0.25) {
+        editorState.scale -= 0.25;
+        renderPage(editorState.currentPageNum);
+      }
+    };
+    (document.getElementById('fit-page-btn') as HTMLElement).onclick =
+      async () => {
+        const page = await editorState.pdf!.getPage(editorState.currentPageNum);
+        editorState.scale = calculateFitScale(page);
+        renderPage(editorState.currentPageNum);
+      };
+    (document.getElementById('clear-crop-btn') as HTMLElement).onclick = () => {
+      delete editorState.cropBoxes[editorState.currentPageNum - 1];
+      redrawShapes();
+    };
+    (document.getElementById('clear-all-crops-btn') as HTMLElement).onclick =
+      () => {
+        editorState.cropBoxes = {};
+        redrawShapes();
+      };
+
+    (document.getElementById('process-btn') as HTMLElement).onclick =
+      async () => {
+        if (Object.keys(editorState.cropBoxes).length === 0) {
+          showAlert(
+            'No Area Selected',
+            'Please draw a rectangle on at least one page to select the crop area.'
+          );
+          return;
+        }
+        const cropLogic = toolLogic['crop-pdf'];
+        const success =
+          typeof cropLogic === 'object' && cropLogic.process
+            ? await cropLogic.process(editorState.cropBoxes)
+            : false;
+        if (success) {
+          showAlert(
+            'Success!',
+            'Your PDF has been cropped and the download has started.'
+          );
+        }
+      };
+  }
+
+  queueRenderPage(1);
+}

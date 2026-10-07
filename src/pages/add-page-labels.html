@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Add Page Labels Online Free - PDF Page Labels Tool | BentoPDF</title>
+    <meta
+      name="title"
+      content="Add Page Labels Online Free - PDF Page Labels Tool | BentoPDF"
+    />
+    <meta
+      name="description"
+      content="Add PDF page labels such as Roman numerals, prefixes, and custom numbering ranges. Free, secure, and runs entirely in your browser with CoherentPDF."
+    />
+    <meta
+      name="keywords"
+      content="add page labels, pdf page labels, roman numeral pages, coherentpdf"
+    />
+    <meta name="author" content="BentoPDF" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <link rel="canonical" href="https://www.bentopdf.com/add-page-labels" />
+
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://www.bentopdf.com/add-page-labels"
+    />
+    <meta
+      property="og:title"
+      content="Add Page Labels Online Free - PDF Page Labels Tool | BentoPDF"
+    />
+    <meta
+      property="og:description"
+      content="Apply PDF page labels with Roman numerals, letters, prefixes, and custom start values."
+    />
+    <meta property="og:site_name" content="BentoPDF" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:url"
+      content="https://www.bentopdf.com/add-page-labels"
+    />
+    <meta name="twitter:title" content="Add Page Labels Free" />
+    <meta
+      name="twitter:description"
+      content="Add PDF page labels like i, ii, iii, A-1, and more directly in your browser."
+    />
+    <meta name="twitter:site" content="@BentoPDF" />
+
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Add Page Labels" />
+
+    <link href="/src/css/styles.css" rel="stylesheet" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/favicon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/images/favicon-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/images/apple-touch-icon.png"
+    />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  </head>
+
+  <body class="antialiased bg-gray-900">
+    {{> navbar }}
+
+    <div
+      id="uploader"
+      class="min-h-screen flex flex-col items-center justify-start py-12 p-4 bg-gray-900"
+    >
+      <div
+        id="tool-uploader"
+        class="bg-gray-800 rounded-xl shadow-xl px-4 py-8 md:p-8 max-w-2xl w-full text-gray-200 border border-gray-700"
+      >
+        <button
+          id="back-to-tools"
+          class="flex items-center gap-2 text-indigo-300 hover:text-indigo-400 mb-6 font-semibold"
+        >
+          <i data-lucide="arrow-left" class="cursor-pointer"></i>
+          <span class="cursor-pointer" data-i18n="tools.backToTools"
+            >Back to Tools</span
+          >
+        </button>
+
+        <h1
+          class="text-2xl font-bold text-white mb-2"
+          data-i18n="tools:addPageLabels.name"
+        >
+          Add Page Labels
+        </h1>
+        <p class="text-gray-400 mb-6" data-i18n="tools:addPageLabels.subtitle">
+          Add PDF page labels such as Roman numerals, prefixes, lettered
+          sections, or custom starting values.
+        </p>
+
+        <div
+          id="drop-zone"
+          class="relative flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer bg-gray-900 hover:bg-gray-700 transition-colors duration-300"
+        >
+          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <i class="ph ph-upload-simple text-4xl mb-3 text-gray-400"></i>
+            <p class="mb-2 text-sm text-gray-400">
+              <span class="font-semibold" data-i18n="upload.clickToSelect"
+                >Click to select a file</span
+              >
+              <span data-i18n="upload.orDragAndDrop">or drag and drop</span>
+            </p>
+            <p
+              class="text-xs text-gray-500"
+              data-i18n="tools:addPageLabels.uploadHint"
+            >
+              PDF file
+            </p>
+            <p class="text-xs text-gray-500" data-i18n="upload.filesNeverLeave">
+              Your files never leave your device.
+            </p>
+          </div>
+          <input
+            id="file-input"
+            type="file"
+            class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+            accept="application/pdf"
+          />
+        </div>
+
+        <div id="file-display-area" class="mt-4 space-y-2"></div>
+
+        <div id="options-panel" class="hidden mt-6 space-y-4">
+          <div
+            class="rounded-lg border border-indigo-700/40 bg-indigo-900/20 p-4"
+          >
+            <h2
+              class="text-sm font-semibold text-white mb-2"
+              data-i18n="tools:addPageLabels.howLabelsWorkTitle"
+            >
+              How labels work
+            </h2>
+            <ul class="text-sm text-gray-300 space-y-1 list-disc list-inside">
+              <li data-i18n="tools:addPageLabels.howLabelsWorkStep1">
+                Leave Page Range empty to label all pages.
+              </li>
+              <li data-i18n="tools:addPageLabels.howLabelsWorkStep2">
+                Use styles like Roman numerals for front matter and decimal
+                numbering for the main body.
+              </li>
+              <li data-i18n="tools:addPageLabels.howLabelsWorkStep3">
+                Use Prefix with Start Value 0 to create labels such as A-0, A-1,
+                A-2.
+              </li>
+              <li data-i18n="tools:addPageLabels.howLabelsWorkStep4">
+                Enable progress when one rule uses a disjoint range such as
+                1-9,30-40 or odd.
+              </li>
+            </ul>
+          </div>
+
+          <div class="flex items-center justify-between gap-4">
+            <h2
+              class="text-lg font-semibold text-white"
+              data-i18n="tools:addPageLabels.labelRulesTitle"
+            >
+              Label Rules
+            </h2>
+            <button
+              id="add-rule-btn"
+              type="button"
+              class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
+            >
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span data-i18n="tools:addPageLabels.addRule">Add Rule</span>
+            </button>
+          </div>
+
+          <div id="label-rules" class="space-y-4"></div>
+
+          <label
+            class="flex items-center gap-3 rounded-lg border border-gray-700 bg-gray-900 px-4 py-3 text-sm text-gray-300"
+          >
+            <input
+              id="remove-existing-labels"
+              type="checkbox"
+              checked
+              class="h-4 w-4 rounded border-gray-500 bg-gray-700 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span data-i18n="tools:addPageLabels.removeExistingLabels"
+              >Remove existing page labels before applying these rules</span
+            >
+          </label>
+
+          <p
+            class="text-xs text-gray-500"
+            data-i18n="tools:addPageLabels.cpdfNote"
+          >
+            This tool uses CoherentPDF in your browser. If CoherentPDF is not
+            configured, you will be prompted to set it up in WASM Settings.
+          </p>
+
+          <button
+            id="process-btn"
+            class="btn-gradient w-full mt-4"
+            data-i18n="tools:addPageLabels.processButton"
+          >
+            Add Page Labels
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="loader-modal"
+      class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-gray-800 p-8 rounded-lg flex flex-col items-center gap-4 border border-gray-700 shadow-xl"
+      >
+        <div class="solid-spinner"></div>
+        <p
+          id="loader-text"
+          class="text-white text-lg font-medium"
+          data-i18n="loader.processing"
+        >
+          Processing...
+        </p>
+      </div>
+    </div>
+
+    <div
+      id="alert-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-gray-700"
+      >
+        <h3
+          id="alert-title"
+          class="text-xl font-bold text-white mb-2"
+          data-i18n="alert.title"
+        >
+          Alert
+        </h3>
+        <p id="alert-message" class="text-gray-300 mb-6"></p>
+        <button
+          id="alert-ok"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+          data-i18n="common.ok"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-8 text-center"
+        data-i18n="howItWorks.title"
+      >
+        How It Works
+      </h2>
+      <div class="space-y-6">
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            1
+          </div>
+          <div class="flex-1">
+            <h3
+              class="text-lg font-semibold text-white mb-1"
+              data-i18n="tools:addPageLabels.howItWorksUploadTitle"
+            >
+              Upload File
+            </h3>
+            <p
+              class="text-gray-400"
+              data-i18n="tools:addPageLabels.howItWorksUploadDescription"
+            >
+              Choose the PDF you want to relabel.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            2
+          </div>
+          <div class="flex-1">
+            <h3
+              class="text-lg font-semibold text-white mb-1"
+              data-i18n="tools:addPageLabels.howItWorksDefineTitle"
+            >
+              Define Rules
+            </h3>
+            <p
+              class="text-gray-400"
+              data-i18n="tools:addPageLabels.howItWorksDefineDescription"
+            >
+              Set one or more page label rules with page ranges, styles,
+              prefixes, and starting values.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            3
+          </div>
+          <div class="flex-1">
+            <h3
+              class="text-lg font-semibold text-white mb-1"
+              data-i18n="tools:addPageLabels.howItWorksDownloadTitle"
+            >
+              Download
+            </h3>
+            <p
+              class="text-gray-400"
+              data-i18n="tools:addPageLabels.howItWorksDownloadDescription"
+            >
+              Save the updated PDF with its new page labels.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="tools:addPageLabels.relatedToolsTitle"
+      >
+        Related PDF Tools
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <a
+          href="page-numbers.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3
+            class="text-white font-semibold mb-1"
+            data-i18n="tools:pageNumbers.name"
+          >
+            Page Numbers
+          </h3>
+          <p
+            class="text-gray-400 text-sm"
+            data-i18n="tools:pageNumbers.subtitle"
+          >
+            Print visible page numbers on each page.
+          </p>
+        </a>
+        <a
+          href="bates-numbering.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3
+            class="text-white font-semibold mb-1"
+            data-i18n="tools:batesNumbering.name"
+          >
+            Bates Numbering
+          </h3>
+          <p
+            class="text-gray-400 text-sm"
+            data-i18n="tools:batesNumbering.subtitle"
+          >
+            Add sequential Bates stamps across files.
+          </p>
+        </a>
+        <a
+          href="bookmark.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3
+            class="text-white font-semibold mb-1"
+            data-i18n="tools:editBookmarks.name"
+          >
+            Edit Bookmarks
+          </h3>
+          <p
+            class="text-gray-400 text-sm"
+            data-i18n="tools:editBookmarks.subtitle"
+          >
+            Organize bookmark structure inside your PDF.
+          </p>
+        </a>
+        <a
+          href="table-of-contents.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3
+            class="text-white font-semibold mb-1"
+            data-i18n="tools:tableOfContents.name"
+          >
+            Table of Contents
+          </h3>
+          <p
+            class="text-gray-400 text-sm"
+            data-i18n="tools:tableOfContents.subtitle"
+          >
+            Generate a contents page from bookmarks.
+          </p>
+        </a>
+        <a
+          href="view-metadata.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3
+            class="text-white font-semibold mb-1"
+            data-i18n="tools:viewMetadata.name"
+          >
+            View Metadata
+          </h3>
+          <p
+            class="text-gray-400 text-sm"
+            data-i18n="tools:viewMetadata.subtitle"
+          >
+            Inspect hidden document information.
+          </p>
+        </a>
+        <a
+          href="edit-metadata.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3
+            class="text-white font-semibold mb-1"
+            data-i18n="tools:editMetadata.name"
+          >
+            Edit Metadata
+          </h3>
+          <p
+            class="text-gray-400 text-sm"
+            data-i18n="tools:editMetadata.subtitle"
+          >
+            Update title, author, and other document data.
+          </p>
+        </a>
+      </div>
+    </section>
+
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="faq.sectionTitle"
+      >
+        Frequently Asked Questions
+      </h2>
+      <div class="faq-list">
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            How do I label appendix pages A-1, A-2, A-3?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Add a rule for the appendix page range, keep Decimal Arabic as the
+            style, and type A- in the Label Prefix field. With the default start
+            value of 1 the pages become A-1, A-2, A-3, and a second rule with
+            the prefix B- handles the next appendix.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can page numbering start at 0 or at a number other than 1?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Each rule has a Start Value field that defaults to 1. Set it to 0
+            for zero-based numbering, or to any other number, for example 15 so
+            a chapter extracted from a longer book keeps its original page
+            numbers.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What does 'Continue numbering across disjoint ranges' do?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Turn it on when one rule covers pages that aren't contiguous, such
+            as 1-9,30-40 or odd, and you want the labels to keep counting in
+            sequence across the gap. With it off, each separate block of pages
+            starts again from the start value.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What happens to the page labels the PDF already has?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            The 'Remove existing page labels' box is checked by default, so the
+            old labels are cleared before your rules are applied. Uncheck it if
+            you only want to relabel some pages and keep the existing labels on
+            the rest.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Which page range formats can I type?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Leave the field empty to cover every page, or use forms like 1-4, 7,
+            odd, or 1-9,30-40. Page numbers refer to physical positions in the
+            file, not to labels the PDF may already display.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can I add labels to a password-protected PDF?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Not directly. The tool stops with a Protected PDF message, so remove
+            the password first with
+            <a href="/unlock-pdf" class="text-indigo-300 hover:text-indigo-400"
+              >Unlock PDF</a
+            >
+            and then upload the copy that no longer needs one.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Why does the tool ask me to configure CoherentPDF?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Page labels are written by the CoherentPDF engine, which normally
+            loads from a CDN the first time you use the tool. If that default
+            has been turned off in a self-hosted build, you'll be prompted to
+            point
+            <a
+              href="/wasm-settings"
+              class="text-indigo-300 hover:text-indigo-400"
+              >WASM Settings</a
+            >
+            at a copy of the library.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            How do I check that the labels were applied?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Open the downloaded PDF in a reader that displays page labels, such
+            as Adobe Acrobat or Firefox's built-in viewer, and look at the page
+            number box in the toolbar. It shows the label, for example iv or
+            A-1, instead of the plain page index.
+          </p>
+        </details>
+      </div>
+    </section>
+
+    {{> footer }}
+    <script type="module" src="/src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="/src/js/utils/full-width.ts"></script>
+    <script type="module" src="/src/js/utils/simple-mode-footer.ts"></script>
+    <script type="module" src="/src/js/logic/add-page-labels-page.ts"></script>
+    <script type="module" src="/src/js/mobileMenu.ts"></script>
+    <script type="module" src="/src/js/main.ts"></script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Add Page Labels - BentoPDF",
+        "applicationCategory": "PDF Tool",
+        "operatingSystem": "Any - Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,24 @@
+# BentoPDF Robots.txt
+# https://www.bentopdf.com
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://www.bentopdf.com/sitemap.xml
+
+# Disallow internal/system paths
+Disallow: /api/
+Allow: /src/pages/
+Disallow: /src/
+Disallow: /*.wasm$
+Disallow: /*.wasm.gz$
+Disallow: /*.data.gz$
+Disallow: /*.br$
+
+# Disallow temporary/upload directories
+Disallow: /tmp/
+Disallow: /temp/
+Disallow: /uploads/
+

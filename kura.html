@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Primary Meta Tags -->
+    <title>Kura - PDF/A, PDF/UA &amp; PDF/X Conversion Engine | BentoPDF</title>
+    <meta
+      name="description"
+      content="Kura converts any PDF to archival, print and accessibility standards. Free under the AGPL, commercial licenses from $99/year."
+    />
+    <meta name="author" content="BentoPDF" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.bentopdf.com/kura" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.bentopdf.com/kura" />
+    <meta
+      property="og:title"
+      content="Kura - PDF/A, PDF/UA &amp; PDF/X Conversion Engine | BentoPDF"
+    />
+    <meta
+      property="og:description"
+      content="Kura converts any PDF to archival, print and accessibility standards. Free under the AGPL, commercial licenses from $99/year."
+    />
+    <meta
+      property="og:image"
+      content="https://www.bentopdf.com/images/og-tools.png"
+    />
+    <meta property="og:site_name" content="BentoPDF" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Kura - PDF/A, PDF/UA &amp; PDF/X Conversion Engine | BentoPDF"
+    />
+    <meta
+      name="twitter:description"
+      content="Kura converts any PDF to archival, print and accessibility standards. Free under the AGPL, commercial licenses from $99/year."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.bentopdf.com/images/og-tools.png"
+    />
+    <meta name="twitter:site" content="@BentoPDF" />
+
+    <link href="/src/css/styles.css" rel="stylesheet" />
+    <link href="/src/css/landing.css" rel="stylesheet" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/favicon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/images/favicon-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/images/apple-touch-icon.png"
+    />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  </head>
+
+  <body class="lp antialiased">
+    {{> navbar }}
+
+    <div id="app">
+      <section id="kura-hero" class="lp-sec lp-sec--first">
+        <div class="lp-frame">
+          <div class="lp-head lp-head--center">
+            <div>
+              <h1 class="lp-h1">
+                <span class="line">Meet</span>
+                <span class="line dim">Kura</span>
+              </h1>
+              <p class="lp-head-p">
+                The PDF standards and preflight engine. Convert any PDF to every
+                PDF/A level, PDF/UA, PDF/X, PDF/E and PDF/VT, then preflight the
+                result against 396 bundled profiles to confirm it conforms.
+              </p>
+              <p class="lp-head-p">
+                Ships as a CLI, npm package, browser WebAssembly build, Docker
+                image and C library.
+              </p>
+              <div class="lp-actions">
+                <span class="lp-brackets">
+                  <a href="#pricing" class="lp-btn lp-btn--primary">
+                    <span>See pricing</span>
+                    <i data-lucide="arrow-right"></i>
+                  </a>
+                </span>
+                <a
+                  href="https://kura.bentopdf.com"
+                  target="_blank"
+                  rel="noopener"
+                  class="lp-btn lp-btn--ghost"
+                >
+                  <i data-lucide="external-link"></i>
+                  <span>Visit website</span>
+                </a>
+                <a
+                  href="https://github.com/alam00000/bentopdf-kura"
+                  target="_blank"
+                  rel="noopener"
+                  class="lp-btn lp-btn--ghost"
+                >
+                  <i data-lucide="github"></i>
+                  <span>View on GitHub</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="lp-grid lp-grid--4">
+            <div class="lp-cell lp-stat lp-cell--accent lp-reveal">
+              <b>25</b><span>conformance targets</span>
+            </div>
+            <div class="lp-cell lp-stat lp-cell--white lp-reveal">
+              <b>396</b><span>bundled preflight profiles</span>
+            </div>
+            <div class="lp-cell lp-stat lp-cell--hatch lp-reveal">
+              <b>0</b><span>false findings in conformance testing</span>
+            </div>
+            <div class="lp-cell lp-stat lp-cell--raised lp-reveal">
+              <b>5</b><span>form factors, one engine</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-sec">
+        <div class="lp-frame">
+          <div class="lp-pad--tight">
+            <div class="lp-note lp-reveal">
+              <i data-lucide="badge-check"></i>
+              <p>
+                <strong
+                  >Open source, self-hosting and internal use stay free.</strong
+                >
+                Kura is licensed under the AGPL-3.0. If your project is
+                AGPL-compatible, or you run Kura as-is for yourself, you never
+                need a commercial license. Commercial licenses are only for
+                shipping Kura inside closed-source software.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" class="lp-sec lp-band">
+        <div class="lp-frame">
+          <div class="lp-head lp-head--center">
+            <div>
+              <h2 class="lp-h2">
+                <span class="line">Commercial</span>
+                <span class="line dim">Licenses</span>
+              </h2>
+              <p class="lp-head-p">
+                Per product, billed annually. Every tier includes all updates
+                and new releases while active.
+              </p>
+            </div>
+          </div>
+
+          <div class="lp-grid lp-grid--4">
+            <div class="lp-cell lp-tier lp-reveal">
+              <h3>Solo</h3>
+              <p class="lp-tier-for">
+                One developer, under $100k annual revenue
+              </p>
+              <div class="lp-tier-price"><b>$99</b><span>/ year</span></div>
+              <ul>
+                <li><i data-lucide="check"></i>One closed-source product</li>
+                <li><i data-lucide="check"></i>All updates while active</li>
+                <li><i data-lucide="check"></i>Email support</li>
+              </ul>
+              <a
+                href="https://buy.polar.sh/polar_cl_NLuLBtXkHXyelWdxPy6zarYyNJqMd4NF1PWJI2sEeZa"
+                class="lp-btn lp-btn--ghost lp-btn--sm"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Get Solo</a
+              >
+            </div>
+            <div class="lp-cell lp-tier lp-cell--accent lp-reveal">
+              <h3>Indie</h3>
+              <p class="lp-tier-for">Companies under $1M annual revenue</p>
+              <div class="lp-tier-price"><b>$199</b><span>/ year</span></div>
+              <ul>
+                <li><i data-lucide="check"></i>One closed-source product</li>
+                <li><i data-lucide="check"></i>Unlimited developers</li>
+                <li><i data-lucide="check"></i>All updates while active</li>
+                <li><i data-lucide="check"></i>Email support</li>
+              </ul>
+              <a
+                href="https://buy.polar.sh/polar_cl_MMPcXzyyNvVfX3Fuvac1eGgG7pTgDiIDB2RCs4HUbxx"
+                class="lp-btn lp-btn--primary lp-btn--sm"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Get Indie</a
+              >
+            </div>
+            <div class="lp-cell lp-tier lp-reveal">
+              <h3>Business</h3>
+              <p class="lp-tier-for">Companies at $1M annual revenue or more</p>
+              <div class="lp-tier-price"><b>$499</b><span>/ year</span></div>
+              <ul>
+                <li><i data-lucide="check"></i>One closed-source product</li>
+                <li><i data-lucide="check"></i>Unlimited developers</li>
+                <li><i data-lucide="check"></i>All updates while active</li>
+                <li><i data-lucide="check"></i>Priority email support</li>
+              </ul>
+              <a
+                href="https://buy.polar.sh/polar_cl_r4HLyDK1rda9cERr31Jbg99m3GEVDC2K4ooFo4FtoFb"
+                class="lp-btn lp-btn--ghost lp-btn--sm"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Get Business</a
+              >
+            </div>
+            <div class="lp-cell lp-tier lp-reveal">
+              <h3>OEM</h3>
+              <p class="lp-tier-for">
+                Redistribution, reselling as an SDK, or offering Kura as a
+                service
+              </p>
+              <div class="lp-tier-price">
+                <span class="lp-tier-from">from</span><b>$1,999</b
+                ><span>/ year</span>
+              </div>
+              <ul>
+                <li><i data-lucide="check"></i>Redistribution rights</li>
+                <li><i data-lucide="check"></i>Terms shaped to your product</li>
+                <li><i data-lucide="check"></i>Priority support</li>
+              </ul>
+              <a
+                href="mailto:contact@bentopdf.com?subject=Kura%20commercial%20license%20OEM"
+                class="lp-btn lp-btn--ghost lp-btn--sm"
+                >Contact us</a
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="license-details" class="lp-sec lp-band">
+        <div class="lp-frame">
+          <div class="lp-head lp-head--center">
+            <div>
+              <h2 class="lp-h2">
+                <span class="line">Commercial license</span>
+                <span class="line dim">details</span>
+              </h2>
+            </div>
+          </div>
+          <div class="lp-pad">
+            <div class="grid grid-cols-1 gap-6">
+              <div class="lp-panel">
+                <h3
+                  class="text-xl font-semibold text-white mb-4 flex items-center gap-3"
+                >
+                  <i data-lucide="package" class="w-6 h-6 text-indigo-400"></i>
+                  Delivery &amp; licensing model
+                </h3>
+                <ul class="space-y-3 text-gray-400">
+                  <li class="flex items-start gap-3">
+                    <i
+                      data-lucide="check-circle"
+                      class="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
+                    ></i>
+                    <span
+                      ><strong class="text-white"
+                        >No license key is required or provided.</strong
+                      >
+                      Kura intentionally does not use license keys, to
+                      streamline deployment and reduce operational
+                      friction.</span
+                    >
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <i
+                      data-lucide="check-circle"
+                      class="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
+                    ></i>
+                    <span
+                      >Upon purchase you receive a ZIP archive containing the
+                      complete Kura source code.</span
+                    >
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <i
+                      data-lucide="check-circle"
+                      class="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
+                    ></i>
+                    <span
+                      >Because Kura is open source, every release and every
+                      update can always be downloaded from our
+                      <a
+                        href="https://github.com/alam00000/bentopdf-kura/releases"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-indigo-400 hover:underline"
+                        >GitHub releases page</a
+                      >.</span
+                    >
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <i
+                      data-lucide="check-circle"
+                      class="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
+                    ></i>
+                    <span
+                      >The source code provided is identical to the code
+                      published in our public open-source repository.</span
+                    >
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <i
+                      data-lucide="x-circle"
+                      class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
+                    ></i>
+                    <span
+                      ><strong class="text-white">No refunds.</strong> Under no
+                      circumstances shall a refund be made after purchase.</span
+                    >
+                  </li>
+                </ul>
+                <p class="mt-4 text-gray-300">
+                  <strong class="text-white">GitHub repository:</strong>
+                  <a
+                    href="https://github.com/alam00000/bentopdf-kura"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-indigo-400 hover:underline"
+                    >github.com/alam00000/bentopdf-kura</a
+                  >
+                </p>
+              </div>
+
+              <div class="lp-panel">
+                <h3
+                  class="text-xl font-semibold text-white mb-4 flex items-center gap-3"
+                >
+                  <i
+                    data-lucide="file-text"
+                    class="w-6 h-6 text-indigo-400"
+                  ></i>
+                  Invoicing
+                </h3>
+                <ul class="space-y-3 text-gray-400">
+                  <li class="flex items-start gap-3">
+                    <i
+                      data-lucide="check-circle"
+                      class="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
+                    ></i>
+                    <span
+                      >We use <strong class="text-white">Polar</strong> for
+                      payments, which
+                      <strong class="text-white"
+                        >automatically sends invoices</strong
+                      >
+                      via email after purchase.</span
+                    >
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <i
+                      data-lucide="check-circle"
+                      class="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
+                    ></i>
+                    <span
+                      >Polar handles
+                      <strong class="text-white">VAT invoices</strong> for
+                      businesses in applicable regions.</span
+                    >
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <i
+                      data-lucide="info"
+                      class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
+                    ></i>
+                    <span
+                      >For VAT invoices, select
+                      <strong class="text-white"
+                        >"I'm purchasing as a business"</strong
+                      >
+                      during checkout and enter your billing address and Tax/VAT
+                      number.</span
+                    >
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="compare" class="lp-sec">
+        <div class="lp-frame">
+          <div class="lp-head lp-head--center">
+            <div>
+              <h2 class="lp-h2">
+                <span class="line">What each tier</span>
+                <span class="line dim">covers</span>
+              </h2>
+              <p class="lp-head-p">
+                Every tier lets you ship Kura inside one closed-source product.
+                The tiers differ by who you are, how many developers you have,
+                and whether Kura is passed on to anyone else.
+              </p>
+            </div>
+          </div>
+          <div class="lp-pad--tight lp-reveal">
+            <div class="overflow-x-auto">
+              <table class="lp-table lp-compare">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Solo</th>
+                    <th>Indie</th>
+                    <th>Business</th>
+                    <th>OEM</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">Who it's for</th>
+                    <td>One developer, under $100k annual revenue</td>
+                    <td>Companies under $1M annual revenue</td>
+                    <td>Companies at $1M annual revenue or more</td>
+                    <td>
+                      Anyone redistributing, reselling or hosting the engine
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Annual price</th>
+                    <td>$99</td>
+                    <td>$199</td>
+                    <td>$499</td>
+                    <td>from $1,999</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Developers covered</th>
+                    <td>One developer</td>
+                    <td>Unlimited</td>
+                    <td>Unlimited</td>
+                    <td>Discussed with you</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Closed-source products covered</th>
+                    <td>One</td>
+                    <td>One</td>
+                    <td>One</td>
+                    <td>Terms shaped to your product</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Updates while active</th>
+                    <td class="lp-yes"><i data-lucide="check"></i></td>
+                    <td class="lp-yes"><i data-lucide="check"></i></td>
+                    <td class="lp-yes"><i data-lucide="check"></i></td>
+                    <td class="lp-yes"><i data-lucide="check"></i></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Support</th>
+                    <td>Email</td>
+                    <td>Email</td>
+                    <td>Priority email</td>
+                    <td>Priority</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">
+                      Redistribute inside someone else's product
+                    </th>
+                    <td class="lp-no"><i data-lucide="x"></i></td>
+                    <td class="lp-no"><i data-lucide="x"></i></td>
+                    <td class="lp-no"><i data-lucide="x"></i></td>
+                    <td class="lp-yes"><i data-lucide="check"></i></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Resell as an SDK</th>
+                    <td class="lp-no"><i data-lucide="x"></i></td>
+                    <td class="lp-no"><i data-lucide="x"></i></td>
+                    <td class="lp-no"><i data-lucide="x"></i></td>
+                    <td class="lp-yes"><i data-lucide="check"></i></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Offer Kura as a hosted service</th>
+                    <td class="lp-no"><i data-lucide="x"></i></td>
+                    <td class="lp-no"><i data-lucide="x"></i></td>
+                    <td class="lp-no"><i data-lucide="x"></i></td>
+                    <td class="lp-yes"><i data-lucide="check"></i></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="lp-table-note">
+              Redistribution, reselling and hosting are what separate OEM from
+              the rest. If Kura only ships inside your own closed-source
+              product, the choice between Solo, Indie and Business is purely a
+              question of your size.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-sec lp-band">
+        <div class="lp-frame">
+          <div class="lp-head lp-head--center">
+            <div>
+              <h2 class="lp-h2">
+                <span class="line">License</span>
+                <span class="line dim">Terms</span>
+              </h2>
+            </div>
+          </div>
+          <div class="lp-grid lp-grid--2">
+            <div class="lp-cell lp-reveal">
+              <span class="lp-tile"><i data-lucide="package"></i></span>
+              <h3>Per product</h3>
+              <p>
+                A license covers one shipped product. A second product needs a
+                second license, or ask about covering your whole catalogue at
+                OEM.
+              </p>
+            </div>
+            <div class="lp-cell lp-reveal">
+              <span class="lp-tile"><i data-lucide="refresh-cw"></i></span>
+              <h3>Updates included</h3>
+              <p>
+                Every release published while your license is active is yours.
+                If you let it lapse, you keep a perpetual right to the last
+                version you received.
+              </p>
+            </div>
+            <div class="lp-cell lp-reveal">
+              <span class="lp-tile"><i data-lucide="unlock"></i></span>
+              <h3>No AGPL obligations</h3>
+              <p>
+                The commercial license replaces the AGPL for your product. You
+                ship closed source, with no requirement to publish your changes
+                or your application.
+              </p>
+            </div>
+            <div class="lp-cell lp-reveal">
+              <span class="lp-tile"><i data-lucide="shield-check"></i></span>
+              <h3>Clean provenance</h3>
+              <p>
+                Kura is written and owned by BentoPDF, and every third-party
+                component it links, including qpdf, PDFium and FreeType, is
+                permissively licensed. No copyleft surprises in your supply
+                chain.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-sec">
+        <div class="lp-frame">
+          <div class="lp-head lp-head--center">
+            <div>
+              <h2 class="lp-h2">
+                <span class="line">Frequently Asked</span>
+                <span class="line dim">Questions</span>
+              </h2>
+            </div>
+          </div>
+          <div class="lp-faq-wrap">
+            <div id="faq-accordion" class="lp-faq lp-reveal">
+              <div class="faq-item">
+                <button
+                  class="faq-question w-full flex justify-between items-center text-left"
+                  type="button"
+                >
+                  <span>Do I need a commercial license?</span>
+                  <i data-lucide="plus" class="faq-icon"></i>
+                </button>
+                <div
+                  class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out"
+                >
+                  <p>
+                    Only if you ship Kura inside closed-source software.
+                    Open-source projects under an AGPL-compatible license,
+                    self-hosting, and internal use are all free under the
+                    AGPL-3.0.
+                  </p>
+                </div>
+              </div>
+              <div class="faq-item">
+                <button
+                  class="faq-question w-full flex justify-between items-center text-left"
+                  type="button"
+                >
+                  <span>Does the BentoPDF commercial license cover Kura?</span>
+                  <i data-lucide="plus" class="faq-icon"></i>
+                </button>
+                <div
+                  class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out"
+                >
+                  <p>
+                    No. Kura is a separate project with its own license. The
+                    BentoPDF app license does not grant any rights to Kura, and
+                    a Kura license does not cover BentoPDF.
+                  </p>
+                </div>
+              </div>
+              <div class="faq-item">
+                <button
+                  class="faq-question w-full flex justify-between items-center text-left"
+                  type="button"
+                >
+                  <span>What happens if my company outgrows its tier?</span>
+                  <i data-lucide="plus" class="faq-icon"></i>
+                </button>
+                <div
+                  class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out"
+                >
+                  <p>
+                    You move up to the matching tier at your next renewal.
+                    Nothing retroactive. Growing past a threshold mid-term never
+                    invalidates your current license.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-sec">
+        <div class="lp-frame">
+          <div class="lp-cta">
+            <h2 class="lp-h2">Not sure which tier fits?</h2>
+            <p>
+              Tell us what you're building and we'll tell you what it costs. No
+              calls required.
+            </p>
+            <div class="lp-cta-actions">
+              <span class="lp-brackets">
+                <a
+                  href="mailto:contact@bentopdf.com?subject=Kura%20commercial%20license%20pricing"
+                  class="lp-btn lp-btn--primary"
+                >
+                  <span>contact@bentopdf.com</span>
+                  <i data-lucide="arrow-right"></i>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    {{> footer }}
+    <script type="module" src="src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="src/js/main.ts"></script>
+    <script type="module" src="src/js/mobileMenu.ts"></script>
+    <script type="module" src="src/js/landing.ts"></script>
+    <!-- JSON-LD Schema -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Kura - PDF/A, PDF/UA &amp; PDF/X Conversion Engine | BentoPDF",
+        "url": "https://www.bentopdf.com/kura"
+      }
+    </script>
+  </body>
+</html>

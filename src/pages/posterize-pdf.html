@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <meta
+      name="title"
+      content="Posterize PDF Online Free - Posterize PDF Tool | BentoPDF"
+    />
+    <meta
+      name="description"
+      content="Split a large page into multiple smaller pages. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta name="keywords" content="posterize pdf, online pdf" />
+    <meta name="author" content="BentoPDF" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.bentopdf.com/posterize-pdf" />
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.bentopdf.com/posterize-pdf" />
+    <meta
+      property="og:title"
+      content="Posterize PDF Online Free - Posterize PDF Tool | BentoPDF"
+    />
+    <meta
+      property="og:description"
+      content="Split a large page into multiple smaller pages. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta
+      property="og:image"
+      content="https://www.bentopdf.com/images/og-posterize-pdf.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="BentoPDF" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://www.bentopdf.com/posterize-pdf" />
+    <meta name="twitter:title" content="Posterize PDF Free" />
+    <meta
+      name="twitter:description"
+      content="Split a large page into multiple smaller pages. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.bentopdf.com/images/twitter-posterize-pdf.png"
+    />
+    <meta name="twitter:site" content="@BentoPDF" />
+
+    <!-- Mobile Web App -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Posterize PDF" />
+
+    <title>Posterize PDF - Split Pages for Poster Printing - BentoPDF</title>
+
+    <link href="/src/css/styles.css" rel="stylesheet" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/favicon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/images/favicon-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/images/apple-touch-icon.png"
+    />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  </head>
+
+  <body class="antialiased bg-gray-900">
+    {{> navbar }}
+
+    <div
+      id="uploader"
+      class="min-h-screen flex flex-col items-center justify-start py-12 p-4 bg-gray-900"
+    >
+      <div
+        id="tool-uploader"
+        class="bg-gray-800 rounded-xl shadow-xl px-4 py-8 md:p-8 max-w-2xl w-full text-gray-200 border border-gray-700"
+      >
+        <button
+          id="back-to-tools"
+          class="flex items-center gap-2 text-indigo-300 hover:text-indigo-400 mb-6 font-semibold"
+        >
+          <i data-lucide="arrow-left" class="cursor-pointer"></i>
+          <span class="cursor-pointer" data-i18n="tools.backToTools">
+            Back to Tools
+          </span>
+        </button>
+
+        <h1
+          class="text-2xl font-bold text-white mb-2"
+          data-i18n="tools:posterizePdf.name"
+        >
+          Posterize PDF
+        </h1>
+        <p class="text-gray-400 mb-6" data-i18n="tools:posterizePdf.subtitle">
+          Split a large page into multiple smaller pages.
+        </p>
+
+        <div
+          id="drop-zone"
+          class="relative flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer bg-gray-900 hover:bg-gray-700 transition-colors duration-300"
+        >
+          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <i class="ph ph-upload-simple text-4xl mb-3 text-gray-400"></i>
+            <p class="mb-2 text-sm text-gray-400">
+              <span class="font-semibold" data-i18n="upload.clickToSelect"
+                >Click to select PDF</span
+              >
+              <span data-i18n="upload.orDragAndDrop">or drag and drop</span>
+            </p>
+            <p class="text-xs text-gray-500" data-i18n="upload.filesNeverLeave">
+              Your files never leave your device.
+            </p>
+          </div>
+          <input
+            id="file-input"
+            type="file"
+            class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+            accept="application/pdf"
+          />
+        </div>
+
+        <div id="file-display-area" class="mt-4 space-y-2"></div>
+
+        <!-- Posterize Options -->
+        <div id="tool-options" class="hidden mt-6 space-y-6">
+          <!-- Preview Section -->
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-300">
+              Page Preview (<span id="current-preview-page">1</span> /
+              <span id="total-preview-pages">1</span>)
+            </label>
+            <div
+              id="posterize-preview-container"
+              class="relative w-full max-w-xl mx-auto bg-gray-900 rounded-lg border-2 border-gray-600 flex items-center justify-center"
+            >
+              <button
+                id="prev-preview-page"
+                class="absolute left-2 top-1/2 transform -translate-y-1/2 text-white bg-gray-800 bg-opacity-50 rounded-full p-2 hover:bg-gray-700 disabled:opacity-50 z-10"
+              >
+                <i data-lucide="chevron-left"></i>
+              </button>
+              <canvas
+                id="posterize-preview-canvas"
+                class="w-full h-auto rounded-md"
+              ></canvas>
+              <button
+                id="next-preview-page"
+                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-white bg-gray-800 bg-opacity-50 rounded-full p-2 hover:bg-gray-700 disabled:opacity-50 z-10"
+              >
+                <i data-lucide="chevron-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Grid Layout -->
+          <div class="p-4 bg-gray-900 border border-gray-700 rounded-lg">
+            <h3 class="text-lg font-semibold text-white mb-3">Grid Layout</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label
+                  for="posterize-rows"
+                  class="block mb-2 text-sm font-medium text-gray-300"
+                  >Rows</label
+                >
+                <input
+                  type="number"
+                  id="posterize-rows"
+                  value="1"
+                  min="1"
+                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5"
+                />
+              </div>
+              <div>
+                <label
+                  for="posterize-cols"
+                  class="block mb-2 text-sm font-medium text-gray-300"
+                  >Columns</label
+                >
+                <input
+                  type="number"
+                  id="posterize-cols"
+                  value="2"
+                  min="1"
+                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Output Page Settings -->
+          <div class="p-4 bg-gray-900 border border-gray-700 rounded-lg">
+            <h3 class="text-lg font-semibold text-white mb-3">
+              Output Page Settings
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label
+                  for="output-page-size"
+                  class="block mb-2 text-sm font-medium text-gray-300"
+                  >Page Size</label
+                >
+                <select
+                  id="output-page-size"
+                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5"
+                >
+                  <option value="A4" selected>A4</option>
+                  <option value="Letter">Letter</option>
+                  <option value="Legal">Legal</option>
+                  <option value="A3">A3</option>
+                  <option value="A5">A5</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  for="output-orientation"
+                  class="block mb-2 text-sm font-medium text-gray-300"
+                  >Orientation</label
+                >
+                <select
+                  id="output-orientation"
+                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5"
+                >
+                  <option value="auto" selected>Automatic (Recommended)</option>
+                  <option value="portrait">Portrait</option>
+                  <option value="landscape">Landscape</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced Options -->
+          <div class="p-4 bg-gray-900 border border-gray-700 rounded-lg">
+            <h3 class="text-lg font-semibold text-white mb-3">
+              Advanced Options
+            </h3>
+            <div class="space-y-4">
+              <!-- Content Scaling -->
+              <div>
+                <label class="block mb-2 text-sm font-medium text-gray-300"
+                  >Content Scaling</label
+                >
+                <div class="flex gap-4 p-2 rounded-lg bg-gray-800">
+                  <label
+                    class="flex-1 flex items-center gap-2 p-3 rounded-md hover:bg-gray-700 cursor-pointer has-[:checked]:bg-indigo-600"
+                  >
+                    <input
+                      type="radio"
+                      name="scaling-mode"
+                      value="fit"
+                      checked
+                      class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500"
+                    />
+                    <div>
+                      <span class="font-semibold text-white">Fit</span>
+                      <p class="text-xs text-gray-400">
+                        Preserves all content, may add margins.
+                      </p>
+                    </div>
+                  </label>
+                  <label
+                    class="flex-1 flex items-center gap-2 p-3 rounded-md hover:bg-gray-700 cursor-pointer has-[:checked]:bg-indigo-600"
+                  >
+                    <input
+                      type="radio"
+                      name="scaling-mode"
+                      value="fill"
+                      class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500"
+                    />
+                    <div>
+                      <span class="font-semibold text-white">Fill (Crop)</span>
+                      <p class="text-xs text-gray-400">
+                        Fills the page, may crop content.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Overlap -->
+              <div>
+                <label
+                  for="overlap"
+                  class="block mb-2 text-sm font-medium text-gray-300"
+                  >Overlap (for assembly)</label
+                >
+                <div class="flex items-center gap-2">
+                  <input
+                    type="number"
+                    id="overlap"
+                    value="0"
+                    min="0"
+                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5"
+                  />
+                  <select
+                    id="overlap-units"
+                    class="bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5"
+                  >
+                    <option value="pt">Points</option>
+                    <option value="in">Inches</option>
+                    <option value="mm">mm</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Page Range -->
+              <div>
+                <label
+                  for="page-range"
+                  class="block mb-2 text-sm font-medium text-gray-300"
+                  >Page Range (optional)</label
+                >
+                <input
+                  type="text"
+                  id="page-range"
+                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5"
+                  placeholder="e.g., 1-3, 5"
+                />
+                <p class="text-xs text-gray-400 mt-1">
+                  Total pages: <span id="total-pages">0</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button id="process-btn" class="btn-gradient w-full" disabled>
+            Posterize PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader Modal -->
+    <div
+      id="loader-modal"
+      class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-gray-800 p-8 rounded-lg flex flex-col items-center gap-4 border border-gray-700 shadow-xl"
+      >
+        <div class="solid-spinner"></div>
+        <p
+          id="loader-text"
+          class="text-white text-lg font-medium"
+          data-i18n="loader.processing"
+          data-i18n="loader.processing"
+        >
+          Processing...
+        </p>
+      </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div
+      id="alert-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-gray-700"
+      >
+        <h3
+          id="alert-title"
+          class="text-xl font-bold text-white mb-2"
+          data-i18n="alert.title"
+          data-i18n="alert.title"
+        >
+          Alert
+        </h3>
+        <p id="alert-message" class="text-gray-300 mb-6"></p>
+        <button
+          id="alert-ok"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-8 text-center"
+        data-i18n="howItWorks.title"
+      >
+        How It Works
+      </h2>
+      <div class="space-y-6">
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            1
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Upload File</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step1">
+              Click or drag and drop your file to begin
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            2
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Process</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step2">
+              Click the process button to start
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            3
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Download</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step3">
+              Save your processed file instantly
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Tools Section -->
+    <section class="max-w-6xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="relatedTools.title"
+      >
+        Related PDF Tools
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <a
+          href="merge-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Merge PDF</h3>
+          <p class="text-gray-400 text-sm">Free online merge PDF tool</p>
+        </a>
+        <a
+          href="compress-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Compress PDF</h3>
+          <p class="text-gray-400 text-sm">Free online compress PDF tool</p>
+        </a>
+        <a
+          href="split-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Split PDF</h3>
+          <p class="text-gray-400 text-sm">Free online split PDF tool</p>
+        </a>
+        <a
+          href="edit-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Edit PDF</h3>
+          <p class="text-gray-400 text-sm">Free online edit PDF tool</p>
+        </a>
+        <a
+          href="rotate-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Rotate PDF</h3>
+          <p class="text-gray-400 text-sm">Free online rotate PDF tool</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="faq.sectionTitle"
+      >
+        Frequently Asked Questions
+      </h2>
+      <div class="faq-list">
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            How do I print a large PDF across several A4 or Letter sheets?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Set Rows and Columns to the grid you want, for example 2 rows and 2
+            columns to split a page into four sheets, choose the output page
+            size, and click the button. Each grid cell becomes one page in the
+            new PDF, ready to print on ordinary paper and tape together. For the
+            opposite job, fitting several pages onto one sheet, use
+            <a href="/n-up-pdf" class="text-indigo-300 hover:text-indigo-400"
+              >N-Up PDF</a
+            >.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What is the overlap setting for?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Overlap extends each tile a little into its neighbors, in points,
+            inches, or millimeters, so the sheets share a strip you can glue or
+            tape without a gap at the seam. Leave it at 0 if you want tiles that
+            meet edge to edge.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What's the difference between Fit and Fill when posterizing?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Fit scales each tile so the whole thing lands on the output page,
+            leaving white margins if the shapes don't match. Fill (Crop) scales
+            the tile up until it covers the page completely, which removes
+            margins but can cut off edges.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can I posterize just one page of the document?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Type the pages in the Page range box, for example 1 or 1-3, 5. Only
+            those pages are split and included in the output; pages outside the
+            range are left out entirely, so extract them separately if you still
+            need them.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Is the output still vector, or is it turned into images?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Each page is rendered at double resolution and the tiles are saved
+            as PNG images, so the result is raster rather than vector. That's
+            fine for printing at poster sizes, but the text is no longer
+            selectable and very large scale factors can look soft.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            How many pages will the result have?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Rows multiplied by columns for every page you posterize, so a 3x3
+            grid turns one page into nine and a 2x2 grid applied to a three page
+            document produces twelve. Tiles are ordered row by row from left to
+            right.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What output sizes and orientations can I use?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            A4, Letter, Legal, A3, or A5, with orientation set to Portrait,
+            Landscape, or Automatic, which follows the shape of the source page.
+            The preview shows dashed red lines where the cuts will fall so you
+            can adjust the grid before processing.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Is my PDF uploaded to tile it?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            No. The rendering, tiling, and assembly happen in your browser, and
+            the new PDF downloads under the original file name. Because pages
+            are rendered locally, big grids on large pages take more memory on
+            your machine.
+          </p>
+        </details>
+      </div>
+    </section>
+    {{> footer }}
+    <script type="module" src="/src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="/src/js/utils/full-width.ts"></script>
+    <script type="module" src="/src/js/utils/simple-mode-footer.ts"></script>
+    <script type="module" src="/src/js/logic/posterize-page.ts"></script>
+    <script type="module" src="/src/js/mobileMenu.ts"></script>
+
+    <script type="module" src="/src/js/main.ts"></script>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Posterize PDF - BentoPDF",
+        "applicationCategory": "PDF Tool",
+        "operatingSystem": "Any - Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to posterize pdf online",
+        "description": "Learn how to posterize pdf using BentoPDF",
+        "step": [
+          {
+            "@type": "HowToStep",
+            "position": 1,
+            "name": "Upload File",
+            "text": "Click or drag and drop your file"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 2,
+            "name": "Process",
+            "text": "Click the process button"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 3,
+            "name": "Download",
+            "text": "Download your processed file"
+          }
+        ]
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.bentopdf.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Posterize PDF",
+            "item": "https://www.bentopdf.com/posterize-pdf"
+          }
+        ]
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1326 @@
+{
+  "categories": {
+    "popularTools": "الأدوات الشائعة",
+    "editAnnotate": "تعديل وتعليق",
+    "convertToPdf": "تحويل إلى PDF",
+    "convertFromPdf": "تحويل من PDF",
+    "organizeManage": "تنظيم وإدارة",
+    "optimizeRepair": "تحسين وإصلاح",
+    "securePdf": "تأمين PDF",
+    "input": "إدخال",
+    "output": "إخراج"
+  },
+  "convertToPdf": "تحويل إلى PDF",
+  "pdfMultiTool": {
+    "name": "أداة PDF المتعددة",
+    "subtitle": "دمج، تقسيم، تنظيم، حذف، تدوير، إضافة صفحات فارغة، استخراج وتكرار في واجهة موحدة."
+  },
+  "mergePdf": {
+    "name": "دمج PDF",
+    "subtitle": "دمج عدة ملفات PDF في ملف واحد. يحافظ على الإشارات المرجعية.",
+    "retainPageLabels": "الاحتفاظ بتسميات الصفحات الأصلية لكل ملف",
+    "retainPageLabelsHint": "غير مفعّل (افتراضي): يستخدم ملف PDF المدمج ترقيمًا طبيعيًا من 1 إلى N. مفعّل: يتم الاحتفاظ بتسميات الصفحات الأصلية لكل ملف (قد ينتج عن ذلك تسميات مكررة)."
+  },
+  "splitPdf": {
+    "name": "تقسيم PDF",
+    "subtitle": "استخراج نطاق من الصفحات في ملف PDF جديد."
+  },
+  "compressPdf": {
+    "name": "ضغط PDF",
+    "subtitle": "تقليل حجم ملف PDF الخاص بك.",
+    "algorithmLabel": "خوارزمية الضغط",
+    "condense": "تكثيف (موصى به)",
+    "photon": "فوتون (لملفات PDF كثيرة الصور)",
+    "condenseInfo": "يستخدم التكثيف ضغطًا متقدمًا: يزيل البيانات الزائدة، يحسّن الصور، يقلّص الخطوط. الأفضل لمعظم ملفات PDF.",
+    "photonInfo": "يحول فوتون الصفحات إلى صور. استخدمه لملفات PDF كثيرة الصور/الممسوحة ضوئيًا.",
+    "photonWarning": "تحذير: سيصبح النص غير قابل للتحديد وستتوقف الروابط عن العمل.",
+    "levelLabel": "مستوى الضغط",
+    "light": "خفيف (الحفاظ على الجودة)",
+    "balanced": "متوازن (موصى به)",
+    "aggressive": "عدواني (ملفات أصغر)",
+    "extreme": "أقصى (ضغط أقصى)",
+    "grayscale": "تحويل إلى تدرج الرمادي",
+    "grayscaleHint": "يقلل حجم الملف بإزالة معلومات الألوان",
+    "customSettings": "إعدادات مخصصة",
+    "customSettingsHint": "ضبط دقيق لمعلمات الضغط:",
+    "outputQuality": "جودة المخرجات",
+    "resizeImagesTo": "تغيير حجم الصور إلى",
+    "onlyProcessAbove": "معالجة فقط أعلى من",
+    "removeMetadata": "إزالة البيانات الوصفية",
+    "subsetFonts": "تقليص الخطوط (إزالة الحروف غير المستخدمة)",
+    "removeThumbnails": "إزالة الصور المصغرة المضمنة",
+    "compressButton": "ضغط PDF"
+  },
+  "pdfEditor": {
+    "name": "محرر PDF",
+    "subtitle": "تعليق، تمييز، تنقيح، تعليقات، إضافة أشكال/صور، بحث وعرض ملفات PDF."
+  },
+  "editPdfText": {
+    "name": "تحرير نص PDF",
+    "subtitle": "انقر على أي فقرة وحرّرها في مكانها مع إعادة تدفق فوري للنص والخطوط والأنماط.",
+    "saved": "تم حفظ ملف PDF بنجاح! ({{size}} كيلوبايت)",
+    "failedToLoad": "تعذّر تحميل محرّر نصوص PDF.",
+    "loadingFonts": "جارٍ تحميل الخطوط...",
+    "fontsUnavailable": "تعذّر تنزيل خط مطلوب لبعض الأحرف. تحقّق من اتصالك وحاول مرة أخرى، وإلا فقد لا تظهر هذه الأحرف بشكل صحيح في ملف PDF المحفوظ.",
+    "howToUpload": "رفع ملف PDF",
+    "howToClick": "انقر على فقرة",
+    "howToRestyle": "غيّر تنسيق أي شيء",
+    "relatedPdfEditor": "التعليق على ملفات PDF وتمييزها",
+    "relatedSignPdf": "ارسم توقيعك أو اكتبه أو ارفعه",
+    "relatedWatermark": "اطبع نصًا أو صورًا",
+    "relatedStamps": "ضع أختامًا على الصفحات",
+    "relatedCompress": "تقليل حجم الملف",
+    "relatedOrganizeName": "تنظيم PDF",
+    "relatedOrganize": "إعادة ترتيب الصفحات وإدارتها",
+    "open": "فتح",
+    "export": "تصدير",
+    "filterAll": "الكل",
+    "filterText": "نص",
+    "filterImages": "صور",
+    "filterShapes": "أشكال",
+    "addText": "إضافة نص",
+    "langAuto": "تلقائي",
+    "change": "تغيير",
+    "ignore": "تجاهل",
+    "next": "التالي",
+    "replace": "استبدال",
+    "replaceAll": "استبدال الكل",
+    "emptyState": "افتح ملف PDF لتحرير نصه وصوره وأشكاله.",
+    "choosePdf": "اختر ملف PDF…",
+    "font": "الخط",
+    "systemFonts": "خطوط النظام",
+    "color": "اللون",
+    "alignment": "المحاذاة",
+    "style": "النمط",
+    "lists": "القوائم",
+    "outline": "المخطط",
+    "spacing": "التباعد",
+    "direction": "الاتجاه",
+    "dirAuto": "تلقائي",
+    "pathStroke": "حد المسار",
+    "tipBackToUpload": "العودة إلى الرفع",
+    "tipOpenAnotherPdf": "فتح ملف PDF آخر",
+    "tipExportS": "تصدير (⌘S)",
+    "tipUndoZ": "تراجع (⌘Z)",
+    "tipRedoZ": "إعادة (⇧⌘Z)",
+    "tipFileDetails": "تفاصيل الملف",
+    "tipEditExistingContent": "تحرير المحتوى الحالي",
+    "tipWhatTheEditToolTouchesNarrowTheScopeOnBus": "ما تتأثر به أداة التحرير — ضيّق النطاق في الصفحات المزدحمة",
+    "tipClickThePageToAddATextBox": "انقر على الصفحة لإضافة مربع نص",
+    "tipSpellCheckLanguage": "لغة التدقيق الإملائي",
+    "tipFindAndReplace": "بحث واستبدال",
+    "tipAddAnImage": "إضافة صورة",
+    "tipCopyThisPageSTextInReadingOrder": "نسخ نص هذه الصفحة بترتيب القراءة",
+    "tipCheckTheSpellingOfThisPage": "تدقيق إملاء هذه الصفحة",
+    "tipShowOrHideTheFormatPanel": "إظهار لوحة التنسيق أو إخفاؤها",
+    "phReplaceWith": "استبدال بـ",
+    "tipAddToYourDictionary": "إضافة إلى القاموس",
+    "tipClose": "إغلاق",
+    "phFind": "بحث",
+    "tipPreviousMatch": "التطابق السابق",
+    "tipNextMatch": "التطابق التالي",
+    "tipRotateLeft90": "تدوير 90° لليسار",
+    "tipRotateRight90": "تدوير 90° لليمين",
+    "tipFlipHorizontal": "قلب أفقي",
+    "tipFlipVertical": "قلب رأسي",
+    "tipReplaceThisImageKeepingItsPlacement": "استبدال هذه الصورة مع الحفاظ على موضعها",
+    "tipAlternateTextForAccessibilityTaggedPdfs": "نص بديل لإمكانية الوصول (ملفات PDF الموسومة)",
+    "tipBringToFront": "إحضار إلى الأمام",
+    "tipSendToBack": "إرسال إلى الخلف",
+    "tipDuplicate": "تكرار",
+    "tipDelete": "حذف",
+    "tipAlignLeftEdges": "محاذاة الحواف اليسرى",
+    "tipAlignHorizontalCenters": "توسيط أفقي",
+    "tipAlignRightEdges": "محاذاة الحواف اليمنى",
+    "tipAlignTops": "محاذاة الحواف العلوية",
+    "tipAlignVerticalCenters": "توسيط رأسي",
+    "tipAlignBottoms": "محاذاة الحواف السفلية",
+    "tipDistributeHorizontally": "توزيع أفقي",
+    "tipDistributeVertically": "توزيع رأسي",
+    "tipFontSize": "حجم الخط",
+    "tipListFontsInstalledOnThisDeviceChromium": "عرض الخطوط المثبتة على هذا الجهاز (Chromium)",
+    "tipCustomTextColor": "لون نص مخصص",
+    "tipAlignLeft": "محاذاة لليسار",
+    "tipAlignCenter": "توسيط",
+    "tipAlignRight": "محاذاة لليمين",
+    "tipJustify": "ضبط",
+    "tipBold": "عريض",
+    "tipItalic": "مائل",
+    "tipUnderline": "تسطير",
+    "tipStrikethrough": "يتوسطه خط",
+    "tipSuperscript": "حرف مرتفع",
+    "tipSubscript": "حرف منخفض",
+    "tipToggleBulletedItem": "تبديل عنصر نقطي",
+    "tipToggleNumberedItem": "تبديل عنصر مرقّم",
+    "tipNumberedListMarkerStyle": "نمط علامة القوائم المرقّمة",
+    "tipDecreaseListIndentTab": "تقليل المسافة البادئة (⇧Tab)",
+    "tipIncreaseListIndentTab": "زيادة المسافة البادئة (Tab)",
+    "tipTextOutlineColor": "لون حد النص",
+    "tipOutlineWidth0None": "عرض الحد (0 = بلا)",
+    "tipFromContent": "من المحتوى",
+    "tipLeftToRight": "من اليسار إلى اليمين",
+    "tipRightToLeft": "من اليمين إلى اليسار",
+    "tipStrokeColor": "لون الحد",
+    "tipStrokeWidth": "عرض الحد",
+    "tipZoomPresets": "إعدادات التكبير المسبقة",
+    "tipZoomOut": "تصغير",
+    "tipZoomIn": "تكبير",
+    "tipFitPage": "ملاءمة الصفحة",
+    "tipPreviousPage": "الصفحة السابقة",
+    "tipTypeAPageNumberAndPressEnter": "اكتب رقم الصفحة ثم اضغط Enter",
+    "tipNextPage": "الصفحة التالية",
+    "tipDocumentProperties": "خصائص المستند",
+    "tipHideBar": "إخفاء الشريط",
+    "tipShowBar": "إظهار الشريط"
+  },
+  "jpgToPdf": {
+    "name": "JPG إلى PDF",
+    "subtitle": "إنشاء PDF من صور JPG وJPEG وJPEG2000 (JP2/JPX)."
+  },
+  "signPdf": {
+    "name": "توقيع PDF",
+    "subtitle": "ارسم أو اكتب أو ارفع توقيعك."
+  },
+  "cropPdf": {
+    "name": "قص PDF",
+    "subtitle": "قص هوامش كل صفحة في ملف PDF الخاص بك."
+  },
+  "extractPages": {
+    "name": "استخراج الصفحات",
+    "subtitle": "حفظ مجموعة من الصفحات كملفات جديدة."
+  },
+  "duplicateOrganize": {
+    "name": "تكرار وتنظيم",
+    "subtitle": "تكرار وإعادة ترتيب وحذف الصفحات.",
+    "saveChanges": "حفظ التغييرات"
+  },
+  "deletePages": {
+    "name": "حذف الصفحات",
+    "subtitle": "إزالة صفحات محددة من مستندك."
+  },
+  "editBookmarks": {
+    "name": "تعديل الإشارات المرجعية",
+    "subtitle": "إضافة وتعديل واستيراد وحذف واستخراج الإشارات المرجعية في PDF.",
+    "autoExtractExisting": "استخراج الإشارات المرجعية الموجودة تلقائيًا",
+    "importSectionTitle": "أو استيراد الإشارات المرجعية",
+    "csvFormat": "تنسيق CSV: العنوان,الصفحة,المستوى",
+    "jsonFormat": "تنسيق JSON",
+    "uploadCsvAction": "انقر لتحميل CSV",
+    "uploadJsonAction": "انقر لتحميل JSON",
+    "orDragHere": "أو اسحب إلى هنا"
+  },
+  "tableOfContents": {
+    "name": "جدول المحتويات",
+    "subtitle": "إنشاء صفحة جدول محتويات من إشارات PDF المرجعية.",
+    "titleLabel": "عنوان جدول المحتويات",
+    "fontSize": "حجم الخط",
+    "fontFamily": "عائلة الخط",
+    "addBookmark": "إضافة إشارة مرجعية لصفحة جدول المحتويات",
+    "generateButton": "إنشاء جدول المحتويات",
+    "selectPdfFirst": "يرجى تحديد ملف PDF أولاً.",
+    "statusReadingFileMainThread": "جارٍ قراءة الملف (الخيط الرئيسي)...",
+    "statusGenerating": "جارٍ إنشاء جدول المحتويات...",
+    "errorReadingFileWithMessage": "خطأ في قراءة الملف: {{message}}",
+    "successGeneratedDownloadStarted": "تم إنشاء جدول المحتويات بنجاح! بدأ التنزيل.",
+    "workerErrorWithMessage": "خطأ: {{message}}",
+    "workerErrorOccurred": "حدث خطأ في Worker. تحقق من وحدة التحكم لمزيد من التفاصيل."
+  },
+  "pageNumbers": {
+    "name": "أرقام الصفحات",
+    "subtitle": "إدراج أرقام الصفحات في مستندك."
+  },
+  "addPageLabels": {
+    "name": "إضافة تسميات الصفحات",
+    "subtitle": "تطبيق تسميات صفحات PDF باستخدام الأرقام الرومانية والبادئات وقيم البدء المخصصة.",
+    "uploadHint": "ملف PDF",
+    "howLabelsWorkTitle": "كيف تعمل التسميات",
+    "howLabelsWorkStep1": "اترك نطاق الصفحات فارغًا لتسمية جميع الصفحات.",
+    "howLabelsWorkStep2": "استخدم أنماطًا مثل الأرقام الرومانية للمقدمات والترقيم العشري للمحتوى الرئيسي.",
+    "howLabelsWorkStep3": "استخدم البادئة مع قيمة بدء 0 لإنشاء تسميات مثل A-0 وA-1 وA-2.",
+    "howLabelsWorkStep4": "فعّل التقدّم عندما تستخدم قاعدة واحدة نطاقًا غير متصل مثل 1-9,30-40 أو الصفحات الفردية.",
+    "labelRulesTitle": "قواعد التسميات",
+    "addRule": "إضافة قاعدة",
+    "removeExistingLabels": "إزالة تسميات الصفحات الحالية قبل تطبيق هذه القواعد",
+    "cpdfNote": "تستخدم هذه الأداة CoherentPDF داخل متصفحك. إذا لم يكن CoherentPDF مهيأً، فسيُطلب منك إعداده في إعدادات WASM.",
+    "processButton": "إضافة تسميات الصفحات",
+    "howItWorksUploadTitle": "رفع الملف",
+    "howItWorksUploadDescription": "اختر ملف PDF الذي تريد إعادة تسميته.",
+    "howItWorksDefineTitle": "تحديد القواعد",
+    "howItWorksDefineDescription": "اضبط قاعدة واحدة أو أكثر لتسميات الصفحات مع نطاقات الصفحات والأنماط والبادئات وقيم البدء.",
+    "howItWorksDownloadTitle": "تنزيل",
+    "howItWorksDownloadDescription": "احفظ ملف PDF المحدّث مع تسميات صفحاته الجديدة.",
+    "relatedToolsTitle": "أدوات PDF ذات الصلة",
+    "faqWhatIsQuestion": "ما هي تسمية الصفحة؟",
+    "faqWhatIsAnswer": "تسمية الصفحة هي الترقيم الذي تعرضه برامج قراءة PDF في الصور المصغّرة والتنقل بين الصفحات ومربعات حوار الطباعة. وهي لا تضيف نصًا جديدًا مطبوعًا على الصفحة نفسها.",
+    "faqMixQuestion": "هل يمكنني مزج الأرقام الرومانية مع الأرقام العادية؟",
+    "faqMixAnswer": "نعم. أضف قواعد متعددة، مثل 1-4 بنمط LowercaseRoman و5-20 بنمط DecimalArabic.",
+    "faqPrivacyQuestion": "هل تظل ملفاتي خاصة؟",
+    "faqPrivacyAnswer": "نعم. تتم المعالجة داخل متصفحك باستخدام CoherentPDF WASM. لا يغادر ملف PDF جهازك.",
+    "invalidFileTitle": "ملف غير صالح",
+    "invalidFileMessage": "يرجى رفع ملف PDF صالح.",
+    "loadingPdf": "جارٍ تحميل ملف PDF...",
+    "protectedPdfTitle": "ملف PDF محمي",
+    "protectedPdfMessage": "هذا الملف محمي بكلمة مرور. يرجى استخدام أداة فك التشفير أو تغيير الأذونات أولاً.",
+    "loadErrorMessage": "تعذر تحميل ملف PDF. قد يكون الملف غير صالح أو تالفًا أو محميًا بكلمة مرور.",
+    "fileMeta": "{{size}} • {{count}} صفحات",
+    "ruleTitle": "قاعدة التسمية {{number}}",
+    "pageRangeLabel": "نطاق الصفحات",
+    "pageRangePlaceholder": "جميع الصفحات، أو مثلًا 1-4، 7، فردي",
+    "labelStyleLabel": "نمط التسمية",
+    "labelPrefixLabel": "بادئة التسمية",
+    "labelPrefixPlaceholder": "بادئة اختيارية، مثل A-",
+    "startValueLabel": "قيمة البدء",
+    "continueNumbering": "متابعة الترقيم عبر النطاقات غير المتصلة",
+    "examplesNote": "أمثلة: 1-4 للمقدمة بالأرقام الرومانية، و15-20 مع البادئة A- وقيمة بدء 0، أو الصفحات الفردية مع تفعيل المتابعة.",
+    "uploadFirstMessage": "يرجى رفع ملف PDF أولاً.",
+    "applyingLabels": "جارٍ تطبيق تسميات الصفحات...",
+    "invalidRangeMessage": "القاعدة {{number}} تحتوي على نطاق صفحات غير صالح: {{range}}",
+    "allPages": "كل الصفحات",
+    "emptyOutputMessage": "أنتج CoherentPDF ملفًا فارغًا.",
+    "successMessage": "تمت إضافة تسميات الصفحات بنجاح!",
+    "processErrorMessage": "تعذر إضافة تسميات الصفحات.",
+    "styleOptions": {
+      "DecimalArabic": "أرقام عشرية",
+      "LowercaseRoman": "أرقام رومانية صغيرة",
+      "UppercaseRoman": "أرقام رومانية كبيرة",
+      "LowercaseLetters": "حروف صغيرة",
+      "UppercaseLetters": "حروف كبيرة",
+      "NoLabelPrefixOnly": "بادئة فقط بدون ترقيم"
+    }
+  },
+  "batesNumbering": {
+    "name": "ترقيم بيتس",
+    "subtitle": "إضافة أرقام بيتس التسلسلية عبر ملف PDF واحد أو أكثر."
+  },
+  "addWatermark": {
+    "name": "إضافة علامة مائية",
+    "subtitle": "ختم نص أو صورة على صفحات PDF الخاصة بك.",
+    "applyToAllPages": "تطبيق على جميع الصفحات"
+  },
+  "headerFooter": {
+    "name": "رأس وتذييل",
+    "subtitle": "إضافة نص في أعلى وأسفل الصفحات."
+  },
+  "invertColors": {
+    "name": "عكس الألوان",
+    "subtitle": "إنشاء نسخة \"الوضع الداكن\" من PDF الخاص بك."
+  },
+  "scannerEffect": {
+    "name": "تأثير الماسح الضوئي",
+    "subtitle": "اجعل PDF يبدو كمستند ممسوح ضوئيًا.",
+    "scanSettings": "إعدادات المسح",
+    "colorspace": "فضاء الألوان",
+    "gray": "رمادي",
+    "border": "حد",
+    "rotate": "تدوير",
+    "rotateVariance": "تباين التدوير",
+    "brightness": "السطوع",
+    "contrast": "التباين",
+    "blur": "ضبابية",
+    "noise": "تشويش",
+    "yellowish": "اصفرار",
+    "resolution": "الدقة",
+    "processButton": "تطبيق تأثير الماسح الضوئي"
+  },
+  "adjustColors": {
+    "name": "ضبط الألوان",
+    "subtitle": "ضبط دقيق للسطوع والتباين والتشبع والمزيد في PDF.",
+    "colorSettings": "إعدادات الألوان",
+    "brightness": "السطوع",
+    "contrast": "التباين",
+    "saturation": "التشبع",
+    "hueShift": "تحويل درجة اللون",
+    "temperature": "درجة الحرارة",
+    "tint": "صبغة",
+    "gamma": "جاما",
+    "sepia": "بني داكن",
+    "processButton": "تطبيق تعديلات الألوان"
+  },
+  "backgroundColor": {
+    "name": "لون الخلفية",
+    "subtitle": "تغيير لون خلفية PDF الخاص بك."
+  },
+  "changeTextColor": {
+    "name": "تغيير لون النص",
+    "subtitle": "تغيير لون النص في PDF الخاص بك."
+  },
+  "addStamps": {
+    "name": "إضافة أختام",
+    "subtitle": "إضافة أختام صور إلى PDF باستخدام شريط أدوات التعليقات.",
+    "usernameLabel": "اسم مستخدم الختم",
+    "usernamePlaceholder": "أدخل اسمك (للأختام)",
+    "usernameHint": "سيظهر هذا الاسم على الأختام التي تنشئها.",
+    "saveButton": "حفظ PDF المختوم"
+  },
+  "removeAnnotations": {
+    "name": "إزالة التعليقات",
+    "subtitle": "حذف التعليقات والتمييز والروابط."
+  },
+  "pdfFormFiller": {
+    "name": "ملء نماذج PDF",
+    "subtitle": "ملء النماذج مباشرة في المتصفح. يدعم أيضًا نماذج XFA.",
+    "uploadHint": "حمّل ملف PDF يحتوي على حقول نموذج. املأها مباشرة في العارض أدناه، ثم انقر على الزر لحفظ النموذج المملوء وتنزيله. يدعم أيضًا نماذج XFA.",
+    "xfaNoteTitle": "ملاحظة حول نماذج XFA:",
+    "xfaNoteDescription": "XFA (XML Forms Architecture) هو تنسيق قديم مدعوم فقط في بعض عارضات PDF مثل BentoPDF و Firefox. إذا فتحت ملف XFA PDF في برنامج آخر ورأيت صفحات فارغة أو لا توجد حقول نموذج، فهذا يعني أن هذا العارض لا يدعم XFA. لعرض وملء نماذج XFA بشكل صحيح، استخدم Firefox أو أداة ملء النماذج في BentoPDF."
+  },
+  "createPdfForm": {
+    "name": "إنشاء نموذج PDF",
+    "subtitle": "إنشاء نماذج PDF قابلة للتعبئة مع حقول نص بالسحب والإفلات.",
+    "orSeparator": "أو",
+    "createBlankPdf": "إنشاء PDF فارغ"
+  },
+  "removeBlankPages": {
+    "name": "إزالة الصفحات الفارغة",
+    "subtitle": "اكتشاف وحذف الصفحات الفارغة تلقائيًا.",
+    "sensitivityHint": "أعلى = أكثر صرامة، فقط الصفحات الفارغة تمامًا. أقل = يسمح بصفحات تحتوي على بعض المحتوى."
+  },
+  "imageToPdf": {
+    "name": "صور إلى PDF",
+    "subtitle": "تحويل JPG وPNG وBMP وGIF وTIFF وPNM وPGM وPBM وPPM وPAM وJXR وJPX وJP2 وPSD وSVG وHEIC وWebP إلى PDF."
+  },
+  "pngToPdf": {
+    "name": "PNG إلى PDF",
+    "subtitle": "إنشاء PDF من صورة PNG واحدة أو أكثر."
+  },
+  "webpToPdf": {
+    "name": "WebP إلى PDF",
+    "subtitle": "إنشاء PDF من صورة WebP واحدة أو أكثر."
+  },
+  "svgToPdf": {
+    "name": "SVG إلى PDF",
+    "subtitle": "إنشاء PDF من صورة SVG واحدة أو أكثر."
+  },
+  "bmpToPdf": {
+    "name": "BMP إلى PDF",
+    "subtitle": "إنشاء PDF من صورة BMP واحدة أو أكثر."
+  },
+  "heicToPdf": {
+    "name": "HEIC إلى PDF",
+    "subtitle": "إنشاء PDF من صورة HEIC واحدة أو أكثر."
+  },
+  "tiffToPdf": {
+    "name": "TIFF إلى PDF",
+    "subtitle": "إنشاء PDF من صورة TIFF واحدة أو أكثر."
+  },
+  "textToPdf": {
+    "name": "نص إلى PDF",
+    "subtitle": "تحويل ملف نص عادي إلى PDF.",
+    "uploadFiles": "تحميل الملفات",
+    "typeText": "اكتب النص",
+    "acceptedFormats": "ملفات نصية (.txt)",
+    "fontFamily": "عائلة الخط",
+    "fontSize": "حجم الخط",
+    "textColor": "لون النص",
+    "pageSize": "حجم الصفحة",
+    "rtlAutoDetectNote": "يتم اكتشاف لغات RTL (العربية، الأردية، الفارسية، إلخ) تلقائيًا ويتم ضبط اتجاه النص.",
+    "createButton": "إنشاء PDF"
+  },
+  "jsonToPdf": {
+    "name": "JSON إلى PDF",
+    "subtitle": "تحويل ملفات JSON إلى تنسيق PDF.",
+    "noteLabel": "ملاحظة:",
+    "noteText": "يتم دعم ملفات JSON التي أنشأتها أداة محول PDF إلى JSON فقط. لن تعمل ملفات JSON القياسية من أدوات أخرى.",
+    "acceptedFormats": "ملفات JSON متعددة",
+    "status": {
+      "selectAtLeastOne": "يرجى تحديد ملف JSON واحد على الأقل",
+      "selectedReady": "تم تحديد {{count}} ملف. جاهز للتحويل!",
+      "readingFiles": "جارٍ قراءة الملفات (الخيط الرئيسي)...",
+      "converting": "جارٍ تحويل ملفات JSON إلى PDF...",
+      "readError": "خطأ في قراءة الملفات: {{message}}",
+      "creatingZip": "جارٍ إنشاء ملف ZIP...",
+      "success": "تم تحويل ملفات JSON إلى PDF بنجاح! بدأ تنزيل ZIP.",
+      "zipError": "خطأ في إنشاء ZIP: {{message}}",
+      "workerError": "خطأ في Worker: {{message}}",
+      "getStarted": "اختر ملفات JSON للبدء"
+    }
+  },
+  "pdfToJpg": {
+    "name": "PDF إلى JPG",
+    "subtitle": "تحويل كل صفحة PDF إلى صورة JPG.",
+    "imageQuality": "جودة الصورة",
+    "imageQualityExplanation": "جودة أعلى = حجم ملف أكبر",
+    "alert": {
+      "invalidFile": "ملف غير صالح",
+      "invalidFileExplanation": "يرجى تحميل ملف PDF.",
+      "noFile": "لا يوجد ملف",
+      "noFileExplanation": "يرجى تحميل ملف PDF أولاً.",
+      "conversionSuccess": "تم تحويل PDF إلى JPG بنجاح!",
+      "conversionError": "فشل تحويل PDF إلى JPG. قد يكون الملف تالفًا."
+    },
+    "loader": {
+      "converting": "جارٍ التحويل إلى JPG..."
+    }
+  },
+  "pdfToPng": {
+    "name": "PDF إلى PNG",
+    "subtitle": "تحويل كل صفحة PDF إلى صورة PNG.",
+    "imageScale": "مقياس الصورة",
+    "imageScaleExplanation": "مقياس أكبر = جودة أفضل لكن ملف أكبر",
+    "alert": {
+      "invalidFile": "ملف غير صالح",
+      "invalidFileExplanation": "يرجى تحميل ملف PDF.",
+      "noFile": "لا يوجد ملف",
+      "noFileExplanation": "يرجى تحميل ملف PDF أولاً.",
+      "conversionSuccess": "تم تحويل PDF إلى PNG بنجاح!",
+      "conversionError": "فشل تحويل PDF إلى PNG. قد يكون الملف تالفًا."
+    },
+    "loader": {
+      "converting": "جارٍ التحويل إلى PNG..."
+    }
+  },
+  "pdfToWebp": {
+    "name": "PDF إلى WebP",
+    "subtitle": "تحويل كل صفحة PDF إلى صورة WebP.",
+    "imageQuality": "جودة الصورة",
+    "imageQualityExplanation": "جودة أعلى = حجم ملف أكبر",
+    "alert": {
+      "invalidFile": "ملف غير صالح",
+      "invalidFileExplanation": "يرجى تحميل ملف PDF.",
+      "noFile": "لا يوجد ملف",
+      "noFileExplanation": "يرجى تحميل ملف PDF أولاً.",
+      "conversionSuccess": "تم تحويل PDF إلى WebP بنجاح!",
+      "conversionError": "فشل تحويل PDF إلى WebP. قد يكون الملف تالفًا."
+    },
+    "loader": {
+      "converting": "جارٍ التحويل إلى WebP..."
+    }
+  },
+  "pdfToBmp": {
+    "name": "PDF إلى BMP",
+    "subtitle": "تحويل كل صفحة PDF إلى صورة BMP.",
+    "alert": {
+      "invalidFile": "ملف غير صالح",
+      "invalidFileExplanation": "يرجى تحميل ملف PDF.",
+      "noFile": "لا يوجد ملف",
+      "noFileExplanation": "يرجى تحميل ملف PDF أولاً.",
+      "conversionSuccess": "تم تحويل PDF إلى BMP بنجاح!",
+      "conversionError": "فشل تحويل PDF إلى BMP. قد يكون الملف تالفًا."
+    },
+    "loader": {
+      "converting": "جارٍ التحويل إلى BMP..."
+    }
+  },
+  "pdfToTiff": {
+    "name": "PDF إلى TIFF",
+    "subtitle": "تحويل كل صفحة PDF إلى صورة TIFF.",
+    "dpi": "DPI (الدقة)",
+    "dpiExplanation": "DPI أعلى = جودة أفضل للطباعة، حجم ملف أكبر",
+    "compression": "الضغط",
+    "compressionExplanation": "LZW و Deflate بدون فقدان. CCITT Group 4 هو الأفضل للمستندات الممسوحة ضوئيًا بالأبيض والأسود.",
+    "colorMode": "وضع الألوان",
+    "multiPage": "حفظ كملف TIFF متعدد الصفحات (ملف واحد)",
+    "loadingVips": "جارٍ تحميل معالج الصور...",
+    "converting": "جارٍ التحويل إلى TIFF...",
+    "alert": {
+      "invalidFile": "ملف غير صالح",
+      "invalidFileExplanation": "يرجى تحميل ملف PDF.",
+      "noFile": "لا يوجد ملف",
+      "noFileExplanation": "يرجى تحميل ملف PDF أولاً.",
+      "conversionSuccess": "تم تحويل PDF إلى TIFF بنجاح!",
+      "conversionError": "فشل تحويل PDF إلى TIFF. قد يكون الملف تالفًا."
+    }
+  },
+  "pdfToCbz": {
+    "name": "PDF إلى CBZ",
+    "subtitle": "تحويل ملف PDF إلى ملف CBZ (أرشيف الكتب المصورة) لقارئات القصص المصورة.",
+    "imageFormat": "تنسيق الصورة",
+    "quality": "جودة الصورة",
+    "qualityExplanation": "جودة أعلى = حجم ملف أكبر",
+    "scale": "المقياس",
+    "scaleExplanation": "مقياس أعلى = جودة أفضل للشاشات عالية الدقة",
+    "grayscale": "تحويل إلى تدرج الرمادي",
+    "manga": "وضع المانغا (من اليمين إلى اليسار)",
+    "includeMetadata": "تضمين بيانات ComicInfo.xml الوصفية",
+    "titleLabel": "العنوان",
+    "seriesLabel": "السلسلة",
+    "authorLabel": "المؤلف(ون)",
+    "numberLabel": "#",
+    "volumeLabel": "المجلد",
+    "publisherLabel": "الناشر",
+    "tagsLabel": "الوسوم / النوع",
+    "yearLabel": "سنة النشر",
+    "ratingLabel": "التقييم (0-5)",
+    "converting": "جارٍ التحويل إلى CBZ...",
+    "alert": {
+      "invalidFile": "ملف غير صالح",
+      "invalidFileExplanation": "يرجى تحميل ملف PDF.",
+      "noFile": "لا يوجد ملف",
+      "noFileExplanation": "يرجى تحميل ملف PDF أولاً.",
+      "conversionSuccess": "تم تحويل PDF إلى CBZ بنجاح!",
+      "conversionError": "فشل تحويل PDF إلى CBZ. قد يكون الملف تالفاً."
+    }
+  },
+  "pdfToGreyscale": {
+    "name": "PDF إلى تدرج الرمادي",
+    "subtitle": "تحويل جميع الألوان إلى أبيض وأسود."
+  },
+  "pdfToJson": {
+    "name": "PDF إلى JSON",
+    "subtitle": "تحويل ملفات PDF إلى تنسيق JSON.",
+    "convertButton": "تحويل إلى JSON",
+    "status": {
+      "selectAtLeastOne": "يرجى تحديد ملف PDF واحد على الأقل",
+      "selectedReady": "تم تحديد {{count}} ملف. جاهز للتحويل!",
+      "checkingEncrypted": "جارٍ فحص ملفات PDF المشفرة...",
+      "readingFiles": "جارٍ قراءة الملفات (الخيط الرئيسي)...",
+      "converting": "جارٍ تحويل PDF إلى JSON...",
+      "readError": "خطأ في قراءة الملفات: {{message}}",
+      "creatingZip": "جارٍ إنشاء ملف ZIP...",
+      "success": "تم تحويل PDF إلى JSON بنجاح! بدأ تنزيل ZIP.",
+      "zipError": "خطأ في إنشاء ZIP: {{message}}",
+      "workerError": "خطأ في Worker: {{message}}",
+      "getStarted": "اختر ملفات PDF للبدء"
+    }
+  },
+  "ocrPdf": {
+    "name": "التعرف الضوئي على PDF",
+    "subtitle": "اجعل PDF قابلاً للبحث والنسخ.",
+    "languagesInDocument": "اللغات في المستند",
+    "searchLanguagesPlaceholder": "البحث عن لغات...",
+    "selectedLabel": "محدد:",
+    "none": "لا شيء",
+    "advancedSettingsSummary": "الإعدادات المتقدمة (مستحسنة لتحسين الدقة)",
+    "resolutionLabel": "الدقة",
+    "resolutionStandard": "قياسية (192 DPI)",
+    "resolutionHigh": "عالية (288 DPI)",
+    "resolutionUltra": "فائقة (384 DPI)",
+    "binarizeLabel": "تحويل الصورة إلى ثنائية (تحسين التباين للمسح النظيف)",
+    "embedFullFontsLabel": "تضمين خطوط كاملة (ملف أكبر، توافق أفضل)",
+    "whitelistPresetLabel": "إعداد قائمة الأحرف البيضاء",
+    "whitelistNone": "لا شيء (جميع الأحرف)",
+    "whitelistAlphanumeric": "حروف وأرقام + علامات ترقيم أساسية",
+    "whitelistNumbersCurrency": "أرقام + رموز عملة",
+    "whitelistLettersOnly": "حروف فقط (A-Z، a-z)",
+    "whitelistNumbersOnly": "أرقام فقط (0-9)",
+    "whitelistInvoice": "فاتورة/إيصال (أرقام، $، .، -، /)",
+    "whitelistForms": "النماذج (حروف وأرقام + رموز شائعة)",
+    "whitelistCustom": "مخصص...",
+    "whitelistHelp": "سيتم التعرف على هذه الأحرف فقط. اتركه فارغًا لجميع الأحرف.",
+    "whitelistInputLabel": "قائمة الأحرف البيضاء (اختياري)",
+    "whitelistInputPlaceholder": "مثال: abcdefghijklmnopqrstuvwxyz0123456789$.,",
+    "startButton": "بدء OCR",
+    "progressInitializing": "جارٍ التهيئة...",
+    "resultsTitle": "اكتمل OCR",
+    "resultsDescription": "ملف PDF القابل للبحث جاهز. يمكنك أيضًا نسخ أو تنزيل النص المستخرج أدناه.",
+    "copyToClipboard": "نسخ إلى الحافظة",
+    "downloadTxt": "تنزيل كـ .txt",
+    "downloadSearchablePdf": "تنزيل PDF قابل للبحث",
+    "statusPrefix": "الحالة: {{status}}",
+    "availabilityInvalidConfig": "لا يعرض هذا النشر أي لغات OCR صالحة. أعد بناءه باستخدام VITE_TESSERACT_AVAILABLE_LANGUAGES المضبوط على رموز Tesseract صالحة.",
+    "availabilityBundles": "يتضمن هذا النشر OCR للغات: {{languages}}.",
+    "noLanguagesAvailable": "لا توجد لغات OCR متوفرة في هذا النشر.",
+    "noLanguagesTitle": "لم يتم تحديد لغات",
+    "noLanguagesMessage": "يرجى تحديد لغة واحدة على الأقل لـ OCR.",
+    "noFileTitle": "لا يوجد ملف",
+    "noFileMessage": "يرجى تحميل ملف PDF أولاً.",
+    "languageUnavailableTitle": "لغة OCR غير متوفرة",
+    "ocrErrorTitle": "خطأ OCR",
+    "ocrErrorMessage": "حدث خطأ أثناء عملية OCR. ربما فشل تحميل العامل. يرجى المحاولة مرة أخرى.",
+    "howItWorksTitle": "كيف يعمل:",
+    "extractTextLabel": "استخراج النص:",
+    "extractTextDescription": "يستخدم Tesseract OCR للتعرف على النص من الصور الممسوحة ضوئيًا أو ملفات PDF.",
+    "searchableOutputLabel": "إخراج قابل للبحث:",
+    "searchableOutputDescription": "ينشئ ملف PDF جديدًا بطبقة نص غير مرئية، مما يجعل المستند قابلاً للبحث بالكامل مع الحفاظ على المظهر الأصلي.",
+    "characterFilteringLabel": "تصفية الأحرف:",
+    "characterFilteringDescription": "استخدم القوائم البيضاء لتصفية الأحرف غير المرغوب فيها وتحسين الدقة لأنواع المستندات المحددة (الفواتير، النماذج، إلخ).",
+    "multiLanguageSupportLabel": "دعم متعدد اللغات:",
+    "multiLanguageSupportDescription": "حدد لغات متعددة للمستندات التي تحتوي على محتوى بلغات مختلطة."
+  },
+  "alternateMerge": {
+    "name": "تبديل ومزج الصفحات",
+    "subtitle": "دمج ملفات PDF بتبديل الصفحات من كل ملف. يحافظ على الإشارات المرجعية.",
+    "retainPageLabels": "الاحتفاظ بتسميات الصفحات الأصلية لكل ملف",
+    "retainPageLabelsHint": "غير مفعّل (افتراضي): يستخدم ملف PDF المدمج ترقيمًا طبيعيًا من 1 إلى N. مفعّل: يتم الاحتفاظ بتسميات الصفحات الأصلية لكل ملف (قد ينتج عن ذلك تسميات مكررة)."
+  },
+  "duplexCollate": {
+    "name": "ترتيب المسح على الوجهين",
+    "subtitle": "أعد ترتيب ملف PDF ممسوح في كتلتين (كل الوجوه الأمامية أولًا، ثم كل الوجوه الخلفية) إلى ترتيب أمامي/خلفي صحيح.",
+    "totalPagesLabel": "إجمالي الصفحات:",
+    "splitAfterPageLabel": "التقسيم بعد الصفحة",
+    "splitAfterPagePlaceholder": "مثال: 50",
+    "backBlockOrderLabel": "ترتيب كتلة الوجه الخلفي",
+    "backBlockReverseOption": "عكس كتلة الوجه الخلفي (شائع عند قلب الرزمة)",
+    "backBlockKeepOption": "إبقاء كتلة الوجه الخلفي كما هي",
+    "autoSplitButton": "اكتشاف نقطة التقسيم تلقائيًا (المنتصف)",
+    "exportGroupedLabel": "تصدير ملفات مجمّعة حسب طول المستند الأصلي",
+    "pagesPerDocumentLabel": "عدد الصفحات لكل مستند أصلي",
+    "groupedHelp": "عند التفعيل، يكون الناتج ملف ZIP يحتوي على ملف PDF لكل مستند مجمّع.",
+    "collateButton": "ترتيب ملف PDF",
+    "invalidFileTitle": "ملف غير صالح",
+    "invalidFileMessage": "يرجى اختيار ملف PDF.",
+    "loadingPdf": "جارٍ تحميل ملف PDF...",
+    "loadErrorMessage": "تعذّر تحميل ملف PDF.",
+    "fileMeta": "{{size}} - {{count}} صفحة",
+    "oddPageWarning": "عدد الصفحات فردي ({{count}}). يجب أن يكون عدد صفحات المسح على الوجهين زوجيًا؛ قد تكون هناك صفحة ناقصة أو زائدة.",
+    "previewSummary": "كتلة الوجه الأمامي: {{frontCount}} صفحة، كتلة الوجه الخلفي: {{backCount}} صفحة. الناتج: {{outputCount}} صفحة بترتيب أمامي/خلفي.",
+    "previewMismatchWarning": "طول كتلتي الوجه الأمامي والخلفي مختلف ({{frontCount}} أمامية مقابل {{backCount}} خلفية). ستُضاف الصفحات الزائدة ({{extraCount}}) من الكتلة الأطول في النهاية دون مقابل.",
+    "missingFileTitle": "ملف مفقود",
+    "missingFileMessage": "يرجى رفع ملف PDF يحتوي على صفحتين على الأقل قبل المعالجة.",
+    "invalidSplitTitle": "نقطة تقسيم غير صالحة",
+    "invalidSplitMessage": "يجب أن تكون نقطة التقسيم بين الصفحة 1 والصفحة {{maxSplit}}.",
+    "unevenConfirmTitle": "كتل غير متساوية",
+    "unevenConfirmMessage": "تحتوي كتلة الوجه الأمامي على {{frontCount}} صفحة وكتلة الوجه الخلفي على {{backCount}} صفحة.\nيعني ذلك عادةً أن صفحة مُسحت مرتين أو أنها مفقودة.\n\nستُضاف الصفحات غير المقترنة ({{extraCount}}) في النهاية.\n\nهل تريد المتابعة على أي حال؟",
+    "invalidGroupTitle": "حجم مجموعة غير صالح",
+    "invalidGroupMessage": "يرجى إدخال عدد صفحات صالح لكل مستند أصلي.",
+    "collatingLoader": "جارٍ ترتيب المسح على الوجهين...",
+    "successMessage": "تم إنشاء ملف PDF المرتَّب بنجاح.",
+    "successGroupedMessage": "اكتمل الترتيب. تم إنشاء {{fileCount}} ملف مجمّع.",
+    "processErrorMessage": "تعذّر ترتيب ملف PDF.",
+    "howItWorksStep1Title": "ارفع الملف الممسوح",
+    "howItWorksStep1": "أفلت ملف PDF واحدًا يحتوي على جميع الوجوه الأمامية يليها جميع الوجوه الخلفية.",
+    "howItWorksStep2Title": "حدّد نقطة التقسيم",
+    "howItWorksStep2": "حدّد أين تنتهي كتلة الوجوه الأمامية، ثم اختر ما إذا كانت كتلة الوجوه الخلفية بحاجة إلى عكس.",
+    "howItWorksStep3Title": "رتّب ونزّل",
+    "howItWorksStep3": "احصل على ملف PDF واحد بترتيب متعاقب، أو ملف ZIP يحتوي على ملف منفصل لكل مستند أصلي.",
+    "faqOddPagesQuestion": "ماذا لو كان عدد صفحات الملف الممسوح فرديًا؟",
+    "faqOddPagesAnswer": "يجب أن يكون عدد صفحات المسح على الوجهين زوجيًا. إذا لم يكن كذلك، فغالبًا مُسحت صفحة مرتين أو فُقدت صفحة. تنبّهك الأداة قبل المعالجة، وتُضاف الصفحات غير المقترنة في النهاية حتى لا يضيع أي شيء.",
+    "faqBackOrderQuestion": "لماذا قد أُبقي كتلة الوجوه الخلفية كما هي؟",
+    "faqBackOrderAnswer": "يعتمد ذلك على طريقة إدخال الرزمة في التمريرة الثانية. قلب الرزمة بالكامل ينتج وجوهًا خلفية بترتيب معكوس، وهو الإعداد الافتراضي. أما إذا أعادها الماسح الضوئي بالترتيب نفسه للوجوه الأمامية، فاختر إبقاء الكتلة كما هي."
+  },
+  "addAttachments": {
+    "name": "إضافة مرفقات",
+    "subtitle": "تضمين ملف واحد أو أكثر في PDF الخاص بك."
+  },
+  "extractAttachments": {
+    "name": "استخراج المرفقات",
+    "subtitle": "استخراج جميع الملفات المضمنة من PDF كملف ZIP."
+  },
+  "editAttachments": {
+    "name": "تعديل المرفقات",
+    "subtitle": "عرض أو إزالة المرفقات في PDF الخاص بك."
+  },
+  "dividePages": {
+    "name": "تقسيم الصفحات",
+    "subtitle": "تقسيم الصفحات أفقيًا أو عموديًا."
+  },
+  "addBlankPage": {
+    "name": "إضافة صفحة فارغة",
+    "subtitle": "إدراج صفحة فارغة في أي مكان في PDF الخاص بك."
+  },
+  "reversePages": {
+    "name": "عكس الصفحات",
+    "subtitle": "عكس ترتيب جميع الصفحات في مستندك."
+  },
+  "rotatePdf": {
+    "name": "تدوير PDF",
+    "subtitle": "تدوير الصفحات بزيادات 90 درجة."
+  },
+  "rotateCustom": {
+    "name": "تدوير بزاوية مخصصة",
+    "subtitle": "تدوير الصفحات بأي زاوية مخصصة."
+  },
+  "nUpPdf": {
+    "name": "N-Up PDF",
+    "subtitle": "ترتيب عدة صفحات على ورقة واحدة."
+  },
+  "combineToSinglePage": {
+    "name": "دمج في صفحة واحدة",
+    "subtitle": "دمج جميع الصفحات في تمرير مستمر واحد."
+  },
+  "viewMetadata": {
+    "name": "عرض البيانات الوصفية",
+    "subtitle": "فحص الخصائص المخفية لملف PDF الخاص بك."
+  },
+  "editMetadata": {
+    "name": "تعديل البيانات الوصفية",
+    "subtitle": "تغيير المؤلف والعنوان والخصائص الأخرى."
+  },
+  "pdfsToZip": {
+    "name": "PDF إلى ZIP",
+    "subtitle": "تجميع عدة ملفات PDF في أرشيف ZIP."
+  },
+  "comparePdfs": {
+    "name": "مقارنة ملفات PDF",
+    "subtitle": "مقارنة ملفي PDF جنبًا إلى جنب.",
+    "firstPdf": "ملف PDF الأول",
+    "secondPdf": "ملف PDF الثاني",
+    "clickOrDrop": "انقر أو أفلت",
+    "page": "الصفحة",
+    "overlay": "تراكب",
+    "sideBySide": "جنبًا إلى جنب",
+    "flicker": "وميض",
+    "syncScroll": "مزامنة التمرير",
+    "export": "تصدير",
+    "exportAsPdf": "تصدير كملف PDF",
+    "splitView": "عرض مقسوم",
+    "alternating": "بالتناوب",
+    "leftDocument": "المستند الأيسر",
+    "rightDocument": "المستند الأيمن",
+    "original": "الأصلي",
+    "modified": "المعدل",
+    "searchChanges": "ابحث في التغييرات...",
+    "deleted": "محذوف",
+    "added": "مضاف",
+    "prevPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية",
+    "prevChange": "التغيير السابق",
+    "nextChange": "التغيير التالي",
+    "uploadTwoPdfs": "حمّل ملفي PDF لرؤية الاختلافات.",
+    "noDifferences": "لم يتم اكتشاف اختلافات في هذه الصفحة.",
+    "noMatchingChanges": "لا توجد تغييرات تطابق عامل التصفية الحالي.",
+    "pageNotExist": "الصفحة {{page}} غير موجودة في ملف PDF هذا.",
+    "noPairedPage": "لا توجد صفحة مقترنة لهذا الجانب.",
+    "buildingModel": "جارٍ إنشاء نموذج إقران الصفحات...",
+    "indexingPdf": "جارٍ فهرسة PDF {{num}} الصفحة {{page}} من {{total}}...",
+    "loadingComparison": "جارٍ تحميل المقارنة {{current}} من {{total}}...",
+    "runningOcr": "جارٍ تشغيل OCR على الصفحة {{page}}...",
+    "preparingExport": "جارٍ تجهيز تصدير PDF...",
+    "renderingPage": "جارٍ عرض الصفحة {{current}} من {{total}}...",
+    "exportError": "خطأ في التصدير",
+    "exportFailed": "تعذر تصدير ملف PDF المقارن.",
+    "loadingFile": "جارٍ تحميل {{name}}...",
+    "invalidFile": "ملف غير صالح",
+    "invalidFileMsg": "يرجى اختيار ملف PDF صالح.",
+    "loadError": "تعذر تحميل ملف PDF. قد يكون تالفًا أو محميًا بكلمة مرور."
+  },
+  "posterizePdf": {
+    "name": "تقسيم PDF إلى ملصقات",
+    "subtitle": "تقسيم صفحة كبيرة إلى عدة صفحات أصغر."
+  },
+  "fixPageSize": {
+    "name": "توحيد حجم الصفحة",
+    "subtitle": "توحيد جميع الصفحات إلى حجم موحد."
+  },
+  "linearizePdf": {
+    "name": "تحسين PDF للويب",
+    "subtitle": "تحسين PDF للعرض السريع على الويب."
+  },
+  "pageDimensions": {
+    "name": "أبعاد الصفحة",
+    "subtitle": "تحليل حجم الصفحة والاتجاه والوحدات."
+  },
+  "removeRestrictions": {
+    "name": "إزالة القيود",
+    "subtitle": "إزالة حماية كلمة المرور وقيود الأمان المرتبطة بملفات PDF الموقعة رقميًا."
+  },
+  "repairPdf": {
+    "name": "إصلاح PDF",
+    "subtitle": "استرداد البيانات من ملفات PDF التالفة أو المعطوبة."
+  },
+  "encryptPdf": {
+    "name": "تشفير PDF",
+    "subtitle": "قفل PDF بإضافة كلمة مرور."
+  },
+  "sanitizePdf": {
+    "name": "تنظيف PDF",
+    "subtitle": "إزالة البيانات الوصفية والتعليقات والبرامج النصية والمزيد."
+  },
+  "decryptPdf": {
+    "name": "فك تشفير PDF",
+    "subtitle": "فتح PDF بإزالة حماية كلمة المرور."
+  },
+  "flattenPdf": {
+    "name": "تسطيح PDF",
+    "subtitle": "جعل حقول النماذج والتعليقات غير قابلة للتعديل."
+  },
+  "removeMetadata": {
+    "name": "إزالة البيانات الوصفية",
+    "subtitle": "حذف البيانات المخفية من PDF الخاص بك."
+  },
+  "changePermissions": {
+    "name": "تغيير الأذونات",
+    "subtitle": "تعيين أو تغيير أذونات المستخدم على PDF."
+  },
+  "odtToPdf": {
+    "name": "ODT إلى PDF",
+    "subtitle": "تحويل ملفات OpenDocument النصية إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات ODT",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "csvToPdf": {
+    "name": "CSV إلى PDF",
+    "subtitle": "تحويل ملفات جداول CSV إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات CSV",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "rtfToPdf": {
+    "name": "RTF إلى PDF",
+    "subtitle": "تحويل مستندات Rich Text إلى PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات RTF",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "wordToPdf": {
+    "name": "Word إلى PDF",
+    "subtitle": "تحويل مستندات Word (DOCX، DOC، ODT، RTF) إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات DOCX، DOC، ODT، RTF",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "excelToPdf": {
+    "name": "Excel إلى PDF",
+    "subtitle": "تحويل جداول Excel (XLSX، XLS، ODS، CSV) إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات XLSX، XLS، ODS، CSV",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "powerpointToPdf": {
+    "name": "PowerPoint إلى PDF",
+    "subtitle": "تحويل عروض PowerPoint (PPTX، PPT، ODP) إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات PPTX، PPT، ODP",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "markdownToPdf": {
+    "name": "Markdown إلى PDF",
+    "subtitle": "اكتب أو الصق Markdown وصدّره كـ PDF منسق بشكل جميل.",
+    "paneMarkdown": "Markdown",
+    "panePreview": "معاينة",
+    "btnUpload": "رفع",
+    "btnSyncScroll": "مزامنة التمرير",
+    "btnSettings": "الإعدادات",
+    "btnExportPdf": "تصدير PDF",
+    "settingsTitle": "إعدادات Markdown",
+    "settingsPreset": "إعداد مسبق",
+    "presetDefault": "افتراضي (شبيه بـ GFM)",
+    "presetCommonmark": "CommonMark (صارم)",
+    "presetZero": "أدنى (بدون ميزات)",
+    "settingsOptions": "خيارات Markdown",
+    "optAllowHtml": "السماح بوسوم HTML",
+    "optBreaks": "تحويل أسطر جديدة إلى <br>",
+    "optLinkify": "تحويل الروابط تلقائيًا",
+    "optTypographer": "المطبعي (علامات اقتباس ذكية، إلخ)"
+  },
+  "pdfBooklet": {
+    "name": "كتيّب PDF",
+    "subtitle": "إعادة ترتيب الصفحات لطباعة كتيّب مزدوج الوجه. اطوِ ودبّس لإنشاء كتيّب.",
+    "howItWorks": "كيف يعمل:",
+    "step1": "ارفع ملف PDF.",
+    "step2": "سيتم إعادة ترتيب الصفحات بترتيب الكتيّب.",
+    "step3": "اطبع مزدوج الوجه، اقلب على الحافة القصيرة، اطوِ ودبّس.",
+    "paperSize": "حجم الورق",
+    "orientation": "الاتجاه",
+    "portrait": "عمودي",
+    "landscape": "أفقي",
+    "pagesPerSheet": "صفحات لكل ورقة",
+    "createBooklet": "إنشاء كتيّب",
+    "processing": "جارٍ المعالجة...",
+    "pageCount": "سيتم تعبئة عدد الصفحات إلى مضاعف 4 إذا لزم الأمر."
+  },
+  "xpsToPdf": {
+    "name": "XPS إلى PDF",
+    "subtitle": "تحويل مستندات XPS/OXPS إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات XPS، OXPS",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "mobiToPdf": {
+    "name": "MOBI إلى PDF",
+    "subtitle": "تحويل كتب MOBI الإلكترونية إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات MOBI",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "epubToPdf": {
+    "name": "EPUB إلى PDF",
+    "subtitle": "تحويل كتب EPUB الإلكترونية إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات EPUB",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "fb2ToPdf": {
+    "name": "FB2 إلى PDF",
+    "subtitle": "تحويل كتب FictionBook (FB2) الإلكترونية إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات FB2",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "cbzToPdf": {
+    "name": "CBZ إلى PDF",
+    "subtitle": "تحويل أرشيفات القصص المصورة (CBZ/CBR) إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات CBZ، CBR",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "wpdToPdf": {
+    "name": "WPD إلى PDF",
+    "subtitle": "تحويل مستندات WordPerfect (WPD) إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات WPD",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "wpsToPdf": {
+    "name": "WPS إلى PDF",
+    "subtitle": "تحويل مستندات WPS Office إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات WPS",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "xmlToPdf": {
+    "name": "XML إلى PDF",
+    "subtitle": "تحويل مستندات XML إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات XML",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "pagesToPdf": {
+    "name": "Pages إلى PDF",
+    "subtitle": "تحويل مستندات Apple Pages إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات Pages",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "odgToPdf": {
+    "name": "ODG إلى PDF",
+    "subtitle": "تحويل ملفات OpenDocument Graphics (ODG) إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات ODG",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "odsToPdf": {
+    "name": "ODS إلى PDF",
+    "subtitle": "تحويل جداول OpenDocument (ODS) إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات ODS",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "odpToPdf": {
+    "name": "ODP إلى PDF",
+    "subtitle": "تحويل عروض OpenDocument (ODP) إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات ODP",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "pubToPdf": {
+    "name": "PUB إلى PDF",
+    "subtitle": "تحويل ملفات Microsoft Publisher (PUB) إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات PUB",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "vsdToPdf": {
+    "name": "VSD إلى PDF",
+    "subtitle": "تحويل ملفات Microsoft Visio (VSD، VSDX) إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات VSD، VSDX",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "psdToPdf": {
+    "name": "PSD إلى PDF",
+    "subtitle": "تحويل ملفات Adobe Photoshop (PSD) إلى تنسيق PDF. يدعم عدة ملفات.",
+    "acceptedFormats": "ملفات PSD",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "pdfToSvg": {
+    "name": "PDF إلى SVG",
+    "subtitle": "تحويل كل صفحة من ملف PDF إلى رسومات متجهة قابلة للتوسع (SVG) بجودة مثالية بأي حجم."
+  },
+  "extractTables": {
+    "name": "استخراج جداول PDF",
+    "subtitle": "استخراج الجداول من ملفات PDF وتصديرها كـ CSV أو JSON أو Markdown."
+  },
+  "pdfToCsv": {
+    "name": "PDF إلى CSV",
+    "subtitle": "استخراج الجداول من PDF وتحويلها إلى تنسيق CSV."
+  },
+  "pdfToExcel": {
+    "name": "PDF إلى Excel",
+    "subtitle": "استخراج الجداول من PDF وتحويلها إلى تنسيق Excel (XLSX)."
+  },
+  "pdfToText": {
+    "name": "PDF إلى نص",
+    "subtitle": "استخراج النص من ملفات PDF وحفظه كنص عادي (.txt). يدعم عدة ملفات.",
+    "noteLabel": "ملاحظة:",
+    "noteText": "تعمل هذه الأداة فقط مع ملفات PDF التي تم إنشاؤها رقميًا. للمستندات الممسوحة ضوئيًا أو ملفات PDF القائمة على الصور، استخدم أداة OCR PDF بدلاً من ذلك.",
+    "convertButton": "استخراج النص",
+    "note": "تعمل هذه الأداة فقط مع ملفات PDF المنشأة رقميًا. للمستندات الممسوحة ضوئيًا أو ملفات PDF المبنية على الصور، استخدم أداة التعرف الضوئي."
+  },
+  "digitalSignPdf": {
+    "name": "توقيع رقمي لـ PDF",
+    "pageTitle": "توقيع رقمي لـ PDF - إضافة توقيع تشفيري | BentoPDF",
+    "subtitle": "إضافة توقيع رقمي تشفيري إلى PDF باستخدام شهادات X.509. يدعم تنسيقات PKCS#12 (.pfx، .p12) وPEM. مفتاحك الخاص لا يغادر متصفحك أبدًا.",
+    "certificateSection": "الشهادة",
+    "uploadCert": "رفع شهادة (.pfx, .p12, .pem)",
+    "certPassword": "كلمة مرور الشهادة",
+    "privateKeyPassword": "كلمة مرور المفتاح الخاص",
+    "certPasswordPlaceholder": "أدخل كلمة مرور الشهادة",
+    "certInfo": "معلومات الشهادة",
+    "certSubject": "الموضوع",
+    "certIssuer": "المُصدر",
+    "certValidity": "صالحة",
+    "signatureDetails": "تفاصيل التوقيع (اختياري)",
+    "reason": "السبب",
+    "reasonPlaceholder": "مثلاً، أوافق على هذا المستند",
+    "location": "الموقع",
+    "locationPlaceholder": "مثلاً، نيويورك، الولايات المتحدة",
+    "contactInfo": "معلومات الاتصال",
+    "contactPlaceholder": "مثلاً، email@example.com",
+    "visibleSignature": "توقيع مرئي",
+    "visibleSignatureDescription": "عند التمكين، يظهر مربع توقيع مرئي على PDF. يمكنك تحميل صورة/شعار أو إضافة نص. إذا لم يتم توفير أي منهما، فسيتم عرض اسم الموقّع من الشهادة تلقائيًا.",
+    "signatureImage": "صورة/شعار التوقيع (اختياري)",
+    "uploadSignatureImage": "تحميل صورة (PNG، JPG، WebP)",
+    "signaturePreviewAlt": "معاينة التوقيع",
+    "remove": "إزالة",
+    "page": "صفحة",
+    "firstPage": "الصفحة الأولى",
+    "lastPage": "الصفحة الأخيرة",
+    "allPages": "جميع الصفحات",
+    "customPage": "صفحة مخصصة #",
+    "pageNumber": "صفحة #",
+    "xPosition": "موضع X (يسار)",
+    "yPosition": "موضع Y (أعلى)",
+    "width": "العرض",
+    "height": "الارتفاع",
+    "addTextOverlay": "إضافة تراكب نص",
+    "text": "نص",
+    "textPlaceholder": "مثال: موقّع رقميًا من قبل أحمد محمد",
+    "textColor": "لون النص",
+    "fontSize": "حجم الخط",
+    "invalidImageTitle": "صورة غير صالحة",
+    "invalidImageMessage": "يرجى تحديد صورة PNG أو JPG أو WebP.",
+    "invalidFileTitle": "ملف غير صالح",
+    "invalidFileMessage": "يرجى تحديد ملف PDF.",
+    "invalidCertificateTitle": "شهادة غير صالحة",
+    "invalidCertificateMessage": "يرجى تحديد ملف شهادة .pfx أو .p12 أو .pem.",
+    "certificateLoaded": "تم تحميل الشهادة",
+    "certificateUnlocked": "تم إلغاء قفل الشهادة",
+    "failedParsePem": "فشل في تحليل ملف PEM",
+    "enterPasswordToUnlock": "أدخل كلمة المرور لإلغاء القفل",
+    "invalidPasswordOrCertificate": "كلمة مرور أو شهادة غير صالحة",
+    "incorrectPassword": "كلمة مرور غير صحيحة",
+    "failedParseCertificate": "فشل في تحليل الشهادة",
+    "missingDataTitle": "بيانات مفقودة",
+    "missingDataMessage": "يرجى تحميل كل من PDF وشهادة صالحة.",
+    "applyingSignature": "جارٍ تطبيق التوقيع الرقمي...",
+    "signingFailedTitle": "فشل التوقيع",
+    "chainFetchFailed": "فشل في جلب سلسلة الشهادات. قد يكون ذلك بسبب مشكلات في الشبكة أو عدم توفر وكيل الشهادات. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى. إذا استمرت المشكلة، فاتصل بالدعم.",
+    "failedToSignPdf": "فشل في توقيع PDF: {{message}}",
+    "defaultSignatureText": "موقّع رقميًا من قبل {{signer}}\n{{date}}",
+    "pageCount": "{{count}} صفحات",
+    "howToStep1Title": "تحميل PDF",
+    "howToStep1Text": "حدد مستند PDF الذي تريد توقيعه",
+    "howToStep2Title": "تحميل الشهادة",
+    "howToStep2Text": "قدّم ملف الشهادة .pfx أو .p12 وكلمة المرور",
+    "howToStep3Title": "توقيع وتنزيل",
+    "howToStep3Text": "طبّق التوقيع الرقمي ونزّل ملف PDF الموقع",
+    "relatedEncryptDesc": "حماية PDF بكلمة مرور",
+    "relatedDecryptDesc": "إزالة كلمة مرور PDF",
+    "relatedFlattenDesc": "جعل التعليقات التوضيحية دائمة",
+    "relatedSanitizeDesc": "إزالة البيانات المخفية",
+    "relatedPermissionsDesc": "تعيين أذونات PDF",
+    "faqWhatIsQuestion": "ما هو التوقيع الرقمي؟",
+    "faqWhatIsAnswer": "التوقيع الرقمي هو آلية تشفير تتحقق من صحة وسلامة المستند. على عكس التوقيع المرسوم، يستخدم تشفير المفتاح العام (شهادات X.509) لإثبات هوية الموقّع.",
+    "faqFormatsQuestion": "ما تنسيقات الشهادات المدعومة؟",
+    "faqFormatsAnswer": "ندعم شهادات بتنسيق PKCS#12 (.pfx، .p12) التي تحتوي على كل من شهادتك والمفتاح الخاص في ملف مشفر واحد. عادة ما تصدر هذه الشهادات من قبل سلطات الشهادات.",
+    "faqPrivateKeyQuestion": "هل مفتاحي الخاص آمن؟",
+    "faqPrivateKeyAnswer": "نعم! تتم جميع المعالجة بالكامل في متصفحك. شهادتك ومفتاحك الخاص وملفات PDF لا تغادر جهازك أبدًا ولا تُرفع إلى أي خادم.",
+    "faqValidReadersQuestion": "هل سيكون التوقيع صالحًا في قارئات PDF؟",
+    "faqValidReadersAnswer": "نعم، تُنشئ الأداة توقيعات قياسية PKCS#7 منفصلة معترف بها في جميع قارئات PDF الرئيسية. للتحقق الكامل، استخدم شهادة من سلطة شهادات موثوقة.",
+    "applySignature": "تطبيق التوقيع الرقمي",
+    "successMessage": "تم توقيع PDF بنجاح! يمكن التحقق من التوقيع في أي قارئ PDF.",
+    "internetRequiredTitle": "يلزم الاتصال بالإنترنت",
+    "internetRequiredDescription": "قد يحتاج التوقيع إلى جلب معلومات سلسلة الشهادات من خادم مُصدر شهادتك للتحقق من صحة التوقيع."
+  },
+  "validateSignaturePdf": {
+    "name": "التحقق من توقيع PDF",
+    "pageTitle": "التحقق من توقيع PDF - التحقق من التوقيعات الرقمية | BentoPDF",
+    "subtitle": "التحقق من التوقيعات الرقمية في ملفات PDF. تحقق من صلاحية الشهادة، واعرض تفاصيل الموقّع، وتأكد من سلامة المستند. تتم جميع المعالجة في متصفحك."
+  },
+  "timestampPdf": {
+    "name": "ختم PDF بالوقت",
+    "pageTitle": "ختم PDF بالوقت مجاناً - ختم RFC 3161 | BentoPDF",
+    "subtitle": "أضف ختماً زمنياً RFC 3161 إلى ملف PDF باستخدام خادم TSA موثوق. يثبت أن مستندك كان موجوداً في وقت محدد. لا يتطلب شهادة.",
+    "tsaSectionTitle": "خادم الختم الزمني (TSA)",
+    "selectTsa": "اختر خادم TSA",
+    "applyTimestamp": "تطبيق الختم الزمني",
+    "successMessage": "تم ختم PDF بالوقت بنجاح! يمكن التحقق من الختم في أي قارئ PDF."
+  },
+  "emailToPdf": {
+    "name": "بريد إلكتروني إلى PDF",
+    "subtitle": "تحويل ملفات البريد الإلكتروني (EML، MSG) إلى تنسيق PDF. يدعم تصديرات Outlook وتنسيقات البريد القياسية.",
+    "acceptedFormats": "ملفات EML، MSG",
+    "convertButton": "تحويل إلى PDF"
+  },
+  "fontToOutline": {
+    "name": "تحويل الخطوط إلى مخططات",
+    "subtitle": "تحويل جميع الخطوط إلى مخططات متجهة لعرض متسق على جميع الأجهزة."
+  },
+  "deskewPdf": {
+    "name": "تصحيح انحراف PDF",
+    "subtitle": "تقويم الصفحات الممسوحة ضوئيًا المائلة تلقائيًا باستخدام OpenCV."
+  },
+  "pdfToWord": {
+    "name": "PDF إلى Word",
+    "subtitle": "تحويل ملفات PDF إلى مستندات Word قابلة للتعديل."
+  },
+  "extractImages": {
+    "name": "استخراج الصور",
+    "subtitle": "استخراج جميع الصور المضمنة من ملفات PDF."
+  },
+  "pdfToMarkdown": {
+    "name": "PDF إلى Markdown",
+    "subtitle": "تحويل نصوص وجداول PDF إلى تنسيق Markdown."
+  },
+  "preparePdfForAi": {
+    "name": "تحضير PDF للذكاء الاصطناعي",
+    "subtitle": "استخراج محتوى PDF كـ JSON بتنسيق LlamaIndex لخطوط RAG/LLM."
+  },
+  "pdfOcg": {
+    "name": "طبقات PDF OCG",
+    "subtitle": "عرض وتبديل وإضافة وحذف طبقات OCG في PDF."
+  },
+  "pdfToPdfa": {
+    "name": "PDF إلى PDF/A",
+    "subtitle": "تحويل PDF إلى PDF/A للأرشفة طويلة المدى."
+  },
+  "rasterizePdf": {
+    "name": "تحويل PDF إلى صور نقطية",
+    "subtitle": "تحويل PDF إلى PDF قائم على الصور. تسطيح الطبقات وإزالة النص القابل للتحديد."
+  },
+  "pdfWorkflow": {
+    "name": "منشئ سير عمل PDF",
+    "subtitle": "بناء خطوط معالجة PDF مخصصة باستخدام محرر عقد مرئي.",
+    "nodes": "العُقد",
+    "searchNodes": "البحث في العُقد...",
+    "run": "تشغيل",
+    "clear": "مسح",
+    "save": "حفظ",
+    "load": "تحميل",
+    "export": "تصدير",
+    "import": "استيراد",
+    "ready": "جاهز",
+    "settings": "الإعدادات",
+    "processing": "جارٍ المعالجة...",
+    "saveTemplate": "حفظ القالب",
+    "templateName": "اسم القالب",
+    "templatePlaceholder": "مثلاً سير عمل الفواتير",
+    "cancel": "إلغاء",
+    "loadTemplate": "تحميل القالب",
+    "noTemplates": "لا توجد قوالب محفوظة بعد.",
+    "ok": "حسنًا",
+    "workflowCompleted": "اكتمل سير العمل",
+    "errorDuringExecution": "خطأ أثناء التنفيذ",
+    "addNodeError": "أضف عقدة واحدة على الأقل لتشغيل سير العمل.",
+    "needInputOutput": "يحتاج سير العمل إلى عقدة إدخال واحدة وعقدة إخراج واحدة على الأقل للتشغيل.",
+    "enterName": "يرجى إدخال اسم.",
+    "templateExists": "يوجد قالب بهذا الاسم بالفعل.",
+    "templateSaved": "تم حفظ القالب \"{{name}}\".",
+    "templateLoaded": "تم تحميل القالب \"{{name}}\".",
+    "failedLoadTemplate": "فشل تحميل القالب.",
+    "noSettings": "لا توجد إعدادات قابلة للتخصيص لهذه العقدة.",
+    "advancedSettings": "إعدادات متقدمة",
+    "specialNodes": {
+      "pdfInput": {
+        "name": "إدخال PDF",
+        "description": "تحميل ملف PDF أو أكثر"
+      },
+      "download": {
+        "name": "تنزيل",
+        "description": "تنزيل تلقائيًا كملف PDF أو ZIP"
+      }
+    },
+    "errors": {
+      "noPdfsConnected": "لا توجد ملفات PDF متصلة بعقدة {{node}}",
+      "noPdfInputs": "لا توجد ملفات PDF في الإدخال",
+      "expectedPdfInput": "كان من المتوقع إدخال PDF",
+      "failedToRenderPage": "فشل عرض الصفحة {{page}}",
+      "failedToGetCanvasContext": "فشل الحصول على سياق اللوحة للصفحة {{page}}",
+      "failedToRenderPageToImage": "فشل عرض الصفحة {{page}} كصورة",
+      "noPagesProcessed": "لم تتم معالجة أي صفحة",
+      "cpdfNotConfigured": "لم يتم تكوين CoherentPDF. يرجى تكوينه في الإعدادات المتقدمة.",
+      "workerError": "خطأ في العامل: {{message}}",
+      "alternateMergeWorkerError": "خطأ في عامل الدمج المتناوب: {{message}}",
+      "noPdfFilesUploaded": "لم يتم تحميل ملفات PDF في عقدة إدخال PDF",
+      "failedToLoadFile": "فشل تحميل \"{{file}}\" — قد يكون الملف تالفًا",
+      "noImagesUploaded": "لم يتم تحميل صور في عقدة إدخال الصور",
+      "noWordDocsUploaded": "لم يتم تحميل مستندات في عقدة إدخال Word",
+      "noExcelUploaded": "لم يتم تحميل جداول بيانات في عقدة إدخال Excel",
+      "noPowerPointUploaded": "لم يتم تحميل عروض تقديمية في عقدة إدخال PowerPoint",
+      "noCbzUploaded": "لم يتم تحميل أرشيفات قصص مصورة في عقدة إدخال CBZ",
+      "noEmailUploaded": "لم يتم تحميل ملفات بريد إلكتروني في عقدة إدخال البريد الإلكتروني",
+      "noEpubUploaded": "لم يتم تحميل ملفات EPUB في عقدة إدخال EPUB",
+      "noFb2Uploaded": "لم يتم تحميل ملفات FB2 في عقدة إدخال FB2",
+      "noJsonUploaded": "لم يتم تحميل ملفات JSON في عقدة إدخال JSON",
+      "noMarkdownUploaded": "لم يتم تحميل ملفات Markdown في عقدة إدخال Markdown",
+      "noMobiUploaded": "لم يتم تحميل ملفات MOBI في عقدة إدخال MOBI",
+      "noOdgUploaded": "لم يتم تحميل ملفات ODG في عقدة إدخال ODG",
+      "noPagesUploaded": "لم يتم تحميل ملفات Pages في عقدة إدخال Pages",
+      "noPubUploaded": "لم يتم تحميل ملفات PUB في عقدة إدخال PUB",
+      "noSvgUploaded": "لم يتم تحميل ملفات SVG في عقدة إدخال SVG",
+      "noTextUploaded": "لم يتم تحميل ملفات نصية في عقدة إدخال النص",
+      "noVsdUploaded": "لم يتم تحميل ملفات Visio في عقدة إدخال VSD",
+      "noWpdUploaded": "لم يتم تحميل ملفات WPD في عقدة إدخال WPD",
+      "noWpsUploaded": "لم يتم تحميل ملفات WPS في عقدة إدخال WPS",
+      "noXmlUploaded": "لم يتم تحميل ملفات XML في عقدة إدخال XML",
+      "noXpsUploaded": "لم يتم تحميل ملفات XPS في عقدة إدخال XPS",
+      "alternateMergeNeedsTwo": "الدمج المتناوب يحتاج إلى ربط ملفي PDF على الأقل بإدخاله",
+      "cropMarginsExceed": "هوامش الاقتصاص تتجاوز أبعاد الصفحة. قلل من القيم.",
+      "digitalSignNoCertificate": "لم يتم تحميل أي شهادة في عقدة التوقيع الرقمي",
+      "encryptUserPasswordRequired": "كلمة مرور المستخدم مطلوبة للتشفير",
+      "extractImagesNoneFound": "لم يتم العثور على صور في ملفات PDF المتصلة",
+      "invertColorsFailedReadImage": "فشل قراءة بيانات الصورة",
+      "overlayRequiresPdf": "تتطلب عقدة التراكب إدخال PDF تراكبي.",
+      "pdfToCsvNoTables": "لم يتم العثور على جداول في PDF",
+      "pdfToXlsxNoTables": "لم يتم العثور على جداول في {{file}}",
+      "posterizeFailedTileCanvas": "فشل الحصول على سياق لوحة المربعات",
+      "redactNoText": "الإخفاء: لم يتم تحديد نص للإخفاء",
+      "removeBlankPagesAllBlank": "جميع الصفحات فارغة",
+      "svgFailedToConvert": "فشل تحويل SVG",
+      "svgFailedToLoad": "فشل تحميل SVG",
+      "timestampFailed": "فشل ختم الوقت باستخدام TSA {{tsa}}: {{message}}",
+      "noOutputNodes": "لم يتم العثور على عقد إخراج. أضف عقدة تنزيل لإكمال سير عملك.",
+      "circularDependency": "تم اكتشاف تبعية دائرية في سير العمل. يرجى إزالة أي حلقات بين العقد.",
+      "encryptOrdering": "عقدة التشفير تتغذى في \"{{target}}\"، والذي قد يفشل على البيانات المشفرة. انقل التشفير إلى ما قبل عقدة الإخراج مباشرةً.",
+      "invalidWorkflowFile": "ملف سير عمل غير صالح: مصفوفة العقد أو الاتصالات مفقودة.",
+      "storageQuotaExceeded": "فشل حفظ سير العمل: تم تجاوز حصة التخزين. حاول حذف القوالب القديمة.",
+      "failedToImport": "فشل استيراد سير العمل: {{message}}"
+    }
+  },
+  "wasmSettings": {
+    "title": "إعدادات الميزات المتقدمة",
+    "description": "قم بتكوين وحدات المعالجة الخارجية لتمكين ميزات PDF المتقدمة. هذه الوحدات اختيارية ومرخصة بشكل منفصل.",
+    "status": {
+      "testing": "جارٍ الاختبار...",
+      "customOverride": "تجاوز مخصص",
+      "preConfigured": "مهيأ مسبقًا",
+      "notConfigured": "غير مهيأ"
+    },
+    "preconfiguredTitle": "مهيأ مسبقًا وجاهز للاستخدام.",
+    "preconfiguredDescription": "يتم تحميل وحدات المعالجة المتقدمة تلقائيًا من CDN. يمكنك تجاوز عناوين URL أدناه إذا كنت بحاجة إلى استخدام مصدر مخصص (على سبيل المثال، لعمليات النشر المعزولة عن الإنترنت أو المستضافة ذاتيًا).",
+    "usingDefault": "استخدام الافتراضي: {{url}}",
+    "pymupdfSubtitle": "محرك معالجة المستندات",
+    "pymupdfFeatures": "يفعّل: PDF إلى نص، Markdown، SVG، DOCX، Excel • استخراج الصور/الجداول • تحويل التنسيق",
+    "testButton": "اختبار",
+    "recommendedLabel": "موصى به:",
+    "copyTitle": "نسخ إلى الحافظة",
+    "ghostscriptSubtitle": "محرك تحويل PDF/A",
+    "ghostscriptFeatures": "يفعّل: تحويل PDF/A-1b، PDF/A-2b، PDF/A-3b • الخط إلى مخطط",
+    "cpdfSubtitle": "محرك الإشارات المرجعية والبيانات الوصفية",
+    "cpdfFeatures": "يفعّل: التقسيم حسب الإشارات المرجعية • تحرير الإشارات المرجعية • بيانات تعريف PDF",
+    "saveConfiguration": "حفظ التكوين",
+    "savingConfiguration": "جارٍ حفظ التكوين...",
+    "savedTitle": "تم الحفظ",
+    "savedMessage": "تم حفظ التكوين بنجاح!",
+    "errorTitle": "خطأ",
+    "failedSave": "فشل حفظ التكوين: {{message}}",
+    "emptyUrlTitle": "عنوان URL فارغ",
+    "emptyUrlMessage": "يرجى إدخال عنوان URL للاختبار.",
+    "testSuccessTitle": "نجاح",
+    "connectionSuccess": "نجح الاتصال بـ {{package}}!",
+    "connectionFailedTitle": "فشل الاتصال",
+    "connectionFailedMessage": "تعذر الاتصال بعنوان URL.",
+    "resetDefaults": "إعادة التعيين إلى الافتراضي",
+    "resetTitle": "إعادة تعيين",
+    "resetWithDefaults": "تم مسح التجاوزات المخصصة. الإعدادات الافتراضية المهيأة مسبقًا نشطة.",
+    "resetNoDefaults": "تم مسح جميع التكوينات والوحدات المخزنة مؤقتًا.",
+    "licenseTitle": "إشعار الترخيص:",
+    "licenseDescription": "الوحدات الخارجية (PyMuPDF، Ghostscript، CoherentPDF) مرخصة بموجب AGPL-3.0 أو تراخيص copyleft مماثلة. بتكوين واستخدام هذه الوحدات، فإنك توافق على شروط الترخيص الخاصة بكل منها. BentoPDF متوافق مع أي تنفيذ Ghostscript WASM وPyMuPDF WASM يتبع الواجهة المتوقعة."
+  },
+  "pdfOverlay": {
+    "name": "تراكب PDF",
+    "subtitle": "وضع صفحات من ملف PDF فوق أو تحت صفحات ملف PDF آخر.",
+    "basePdfLabel": "ملف PDF الأساسي",
+    "uploadBasePdf": "رفع ملف PDF الأساسي",
+    "overlayPdfLabel": "ملف PDF للتراكب / التبطين",
+    "uploadOverlayPdf": "رفع ملف PDF للتراكب/التبطين",
+    "modeLabel": "الوضع",
+    "overlayOption": "تراكب (فوق الصفحات)",
+    "underlayOption": "تبطين (خلف الصفحات)",
+    "pageRangeLabel": "تطبيق على الصفحات (اختياري)",
+    "pageRangeHint": "استخدم \"z\" للصفحة الأخيرة. اتركه فارغاً للتطبيق على جميع الصفحات.",
+    "repeatLabel": "تكرار صفحات التراكب/التبطين إذا كان الملف الأساسي أطول",
+    "processButton": "تطبيق التراكب / التبطين",
+    "howItWorksUploadTitle": "رفع ملفي PDF",
+    "howItWorksUploadDescription": "ارفع ملف PDF الأساسي والملف الذي تريد تراكبه أو تبطينه.",
+    "howItWorksModeTitle": "اختر الوضع",
+    "howItWorksModeDescription": "اختر التراكب (فوق) أو التبطين (خلف). يمكنك تحديد نطاق صفحات والتكرار اختيارياً.",
+    "howItWorksDownloadTitle": "تنزيل",
+    "howItWorksDownloadDescription": "قم بتنزيل ملف PDF مع التراكب أو التبطين المطبق.",
+    "faqDifferenceQuestion": "ما الفرق بين التراكب والتبطين؟",
+    "faqDifferenceAnswer": "التراكب يضع الصفحات فوق ملف PDF الأساسي (مثل العلامة المائية). التبطين يضع الصفحات خلف ملف PDF الأساسي (مثل الترويسة أو الخلفية).",
+    "faqSinglePageQuestion": "هل يمكنني استخدام ملف PDF من صفحة واحدة كتراكب لجميع الصفحات؟",
+    "faqSinglePageAnswer": "نعم! فعّل خيار \"التكرار\" وستتكرر صفحات التراكب على جميع صفحات الملف الأساسي. العلامة المائية ذات الصفحة الواحدة ستُطبق على كل صفحة.",
+    "faqPrivacyQuestion": "هل ملفاتي خاصة وآمنة؟",
+    "faqPrivacyAnswer": "بالتأكيد! تتم جميع المعالجة في متصفحك. لا تغادر ملفاتك جهازك أبداً، مما يضمن خصوصية كاملة."
+  },
+  "unlockPdf": {
+    "name": "فك تشفير PDF",
+    "subtitle": "فتح PDF بإزالة حماية كلمة المرور."
+  },
+  "protectPdf": {
+    "name": "تشفير PDF",
+    "subtitle": "قفل PDF بإضافة كلمة مرور."
+  }
+}

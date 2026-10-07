@@ -1,0 +1,226 @@
+import { downloadFile, formatBytes } from '../utils/helpers';
+import { initializeGlobalShortcuts } from '../utils/shortcuts-init.js';
+import { isCpdfAvailable } from '../utils/cpdf-helper.js';
+import {
+  showWasmRequiredDialog,
+  WasmProvider,
+} from '../utils/wasm-provider.js';
+import { loadPdfWithPasswordPrompt } from '../utils/password-prompt.js';
+import { t } from '../i18n/index.js';
+
+const worker = new Worker(
+  import.meta.env.BASE_URL + 'workers/table-of-contents.worker.js'
+);
+
+let pdfFile: File | null = null;
+
+const dropZone = document.getElementById('drop-zone') as HTMLElement;
+const fileInput = document.getElementById('file-input') as HTMLInputElement;
+const generateBtn = document.getElementById(
+  'generate-btn'
+) as HTMLButtonElement;
+const tocTitleInput = document.getElementById('toc-title') as HTMLInputElement;
+const fontSizeSelect = document.getElementById(
+  'font-size'
+) as HTMLSelectElement;
+const fontFamilySelect = document.getElementById(
+  'font-family'
+) as HTMLSelectElement;
+const addBookmarkCheckbox = document.getElementById(
+  'add-bookmark'
+) as HTMLInputElement;
+const statusMessage = document.getElementById('status-message') as HTMLElement;
+const fileDisplayArea = document.getElementById(
+  'file-display-area'
+) as HTMLElement;
+const backToToolsBtn = document.getElementById(
+  'back-to-tools'
+) as HTMLButtonElement;
+
+interface TOCSuccessResponse {
+  status: 'success';
+  pdfBytes: ArrayBuffer;
+}
+
+interface TOCErrorResponse {
+  status: 'error';
+  message: string;
+}
+
+type TOCWorkerResponse = TOCSuccessResponse | TOCErrorResponse;
+
+function showStatus(
+  message: string,
+  type: 'success' | 'error' | 'info' = 'info'
+) {
+  statusMessage.textContent = message;
+  statusMessage.className = `mt-4 p-3 rounded-lg text-sm ${
+    type === 'success'
+      ? 'bg-green-900 text-green-200'
+      : type === 'error'
+        ? 'bg-red-900 text-red-200'
+        : 'bg-blue-900 text-blue-200'
+  }`;
+  statusMessage.classList.remove('hidden');
+}
+
+function hideStatus() {
+  statusMessage.classList.add('hidden');
+}
+
+function renderFileDisplay(file: File) {
+  fileDisplayArea.innerHTML = '';
+  fileDisplayArea.classList.remove('hidden');
+
+  const fileDiv = document.createElement('div');
+  fileDiv.className =
+    'flex items-center justify-between bg-gray-700 p-3 rounded-lg text-sm';
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'truncate font-medium text-gray-200';
+  nameSpan.textContent = file.name;
+
+  const sizeSpan = document.createElement('span');
+  sizeSpan.className = 'flex-shrink-0 ml-4 text-gray-400';
+  sizeSpan.textContent = formatBytes(file.size);
+
+  fileDiv.append(nameSpan, sizeSpan);
+  fileDisplayArea.appendChild(fileDiv);
+}
+
+async function handleFileSelect(file: File) {
+  if (file.type !== 'application/pdf') {
+    showStatus('Please select a PDF file.', 'error');
+    return;
+  }
+
+  const result = await loadPdfWithPasswordPrompt(file);
+  if (!result) return;
+  result.pdf.destroy();
+  pdfFile = result.file;
+  generateBtn.disabled = false;
+  renderFileDisplay(pdfFile);
+}
+
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.classList.add('border-blue-500');
+});
+
+dropZone.addEventListener('dragleave', () => {
+  dropZone.classList.remove('border-blue-500');
+});
+
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('border-blue-500');
+  const file = e.dataTransfer?.files[0];
+  if (file) {
+    handleFileSelect(file);
+  }
+});
+
+fileInput.addEventListener('change', (e) => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (file) {
+    handleFileSelect(file);
+  }
+});
+
+async function generateTableOfContents() {
+  if (!pdfFile) {
+    showStatus(t('tools:tableOfContents.selectPdfFirst'), 'error');
+    return;
+  }
+
+  // Check if CPDF is configured
+  if (!isCpdfAvailable()) {
+    showWasmRequiredDialog('cpdf');
+    return;
+  }
+
+  try {
+    generateBtn.disabled = true;
+    showStatus(t('tools:tableOfContents.statusReadingFileMainThread'), 'info');
+
+    const arrayBuffer = await pdfFile.arrayBuffer();
+
+    showStatus(t('tools:tableOfContents.statusGenerating'), 'info');
+
+    const title = tocTitleInput.value || t('tools:tableOfContents.name');
+    const fontSize = parseInt(fontSizeSelect.value, 10);
+    const fontFamily = parseInt(fontFamilySelect.value, 10);
+    const addBookmark = addBookmarkCheckbox.checked;
+
+    const message = {
+      command: 'generate-toc',
+      pdfData: arrayBuffer,
+      title,
+      fontSize,
+      fontFamily,
+      addBookmark,
+      cpdfUrl: WasmProvider.getUrl('cpdf')! + 'coherentpdf.browser.min.js',
+    };
+
+    worker.postMessage(message, [arrayBuffer]);
+  } catch (error) {
+    console.error('Error reading file:', error);
+    showStatus(
+      t('tools:tableOfContents.errorReadingFileWithMessage', {
+        message:
+          error instanceof Error ? error.message : t('common.unknownError'),
+      }),
+      'error'
+    );
+    generateBtn.disabled = false;
+  }
+}
+
+worker.onmessage = (e: MessageEvent<TOCWorkerResponse>) => {
+  generateBtn.disabled = false;
+
+  if (e.data.status === 'success') {
+    const pdfBytesBuffer = e.data.pdfBytes;
+    const pdfBytes = new Uint8Array(pdfBytesBuffer);
+
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    downloadFile(blob, pdfFile?.name || 'document.pdf');
+
+    showStatus(
+      t('tools:tableOfContents.successGeneratedDownloadStarted'),
+      'success'
+    );
+
+    hideStatus();
+    pdfFile = null;
+    fileInput.value = '';
+    fileDisplayArea.innerHTML = '';
+    fileDisplayArea.classList.add('hidden');
+    generateBtn.disabled = true;
+  } else if (e.data.status === 'error') {
+    const errorMessage = e.data.message || t('common.unknownError');
+    console.error('Worker Error:', errorMessage);
+    showStatus(
+      t('tools:tableOfContents.workerErrorWithMessage', {
+        message: errorMessage,
+      }),
+      'error'
+    );
+  }
+};
+
+worker.onerror = (error) => {
+  console.error('Worker error:', error);
+  showStatus(t('tools:tableOfContents.workerErrorOccurred'), 'error');
+  generateBtn.disabled = false;
+};
+
+if (backToToolsBtn) {
+  backToToolsBtn.addEventListener('click', () => {
+    window.location.href = import.meta.env.BASE_URL;
+  });
+}
+
+generateBtn.addEventListener('click', generateTableOfContents);
+
+initializeGlobalShortcuts();

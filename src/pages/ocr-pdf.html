@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <meta
+      name="title"
+      content="OCR PDF Free Online - Make Scanned PDFs Searchable | BentoPDF"
+    />
+    <meta
+      name="description"
+      content="Make a PDF searchable and copyable. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta
+      name="keywords"
+      content="ocr pdf, pdf ocr, scan to text, pdf text recognition"
+    />
+    <meta name="author" content="BentoPDF" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.bentopdf.com/ocr-pdf" />
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.bentopdf.com/ocr-pdf" />
+    <meta
+      property="og:title"
+      content="OCR PDF Free Online - Make Scanned PDFs Searchable | BentoPDF"
+    />
+    <meta
+      property="og:description"
+      content="Make a PDF searchable and copyable. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta
+      property="og:image"
+      content="https://www.bentopdf.com/images/og-ocr-pdf.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="BentoPDF" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://www.bentopdf.com/ocr-pdf" />
+    <meta
+      name="twitter:title"
+      content="OCR PDF Free Online - Make Scanned PDFs Searchable | BentoPDF"
+    />
+    <meta
+      name="twitter:description"
+      content="Make a PDF searchable and copyable. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.bentopdf.com/images/twitter-ocr-pdf.png"
+    />
+    <meta name="twitter:site" content="@BentoPDF" />
+
+    <!-- Mobile Web App -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="OCR PDF" />
+
+    <title>OCR PDF Free Online - Make Scanned PDFs Searchable | BentoPDF</title>
+
+    <link href="/src/css/styles.css" rel="stylesheet" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/favicon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/images/favicon-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/images/apple-touch-icon.png"
+    />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  </head>
+
+  <body class="antialiased bg-gray-900">
+    {{> navbar }}
+
+    <div
+      id="uploader"
+      class="min-h-screen flex flex-col items-center justify-start py-12 p-4 bg-gray-900"
+    >
+      <div
+        id="tool-uploader"
+        class="bg-gray-800 rounded-xl shadow-xl px-4 py-8 md:p-8 max-w-2xl w-full text-gray-200 border border-gray-700"
+      >
+        <button
+          id="back-to-tools"
+          class="flex items-center gap-2 text-indigo-300 hover:text-indigo-400 mb-6 font-semibold"
+        >
+          <i data-lucide="arrow-left" class="cursor-pointer"></i>
+          <span class="cursor-pointer" data-i18n="tools.backToTools">
+            Back to Tools
+          </span>
+        </button>
+
+        <h1
+          class="text-2xl font-bold text-white mb-2"
+          data-i18n="tools:ocrPdf.name"
+        >
+          OCR PDF
+        </h1>
+        <p class="text-gray-400 mb-6" data-i18n="tools:ocrPdf.subtitle">
+          Make a PDF searchable and copyable.
+        </p>
+
+        <!-- How it works info box -->
+        <div class="p-3 bg-gray-900 rounded-lg border border-gray-700 mb-6">
+          <p class="text-sm text-gray-300">
+            <strong class="text-white" data-i18n="tools:ocrPdf.howItWorksTitle"
+              >How it works:</strong
+            >
+          </p>
+          <ul
+            class="list-disc list-inside text-xs text-gray-400 mt-1 space-y-1"
+          >
+            <li>
+              <strong
+                class="text-white"
+                data-i18n="tools:ocrPdf.extractTextLabel"
+                >Extract Text:</strong
+              >
+              <span data-i18n="tools:ocrPdf.extractTextDescription"
+                >Uses Tesseract OCR to recognize text from scanned images or
+                PDFs.</span
+              >
+            </li>
+            <li>
+              <strong
+                class="text-white"
+                data-i18n="tools:ocrPdf.searchableOutputLabel"
+                >Searchable Output:</strong
+              >
+              <span data-i18n="tools:ocrPdf.searchableOutputDescription"
+                >Creates a new PDF with an invisible text layer, making your
+                document fully searchable while preserving the original
+                appearance.</span
+              >
+            </li>
+            <li>
+              <strong
+                class="text-white"
+                data-i18n="tools:ocrPdf.characterFilteringLabel"
+                >Character Filtering:</strong
+              >
+              <span data-i18n="tools:ocrPdf.characterFilteringDescription"
+                >Use whitelists to filter out unwanted characters and improve
+                accuracy for specific document types (invoices, forms,
+                etc.).</span
+              >
+            </li>
+            <li>
+              <strong
+                class="text-white"
+                data-i18n="tools:ocrPdf.multiLanguageSupportLabel"
+                >Multi-language Support:</strong
+              >
+              <span data-i18n="tools:ocrPdf.multiLanguageSupportDescription"
+                >Select multiple languages for documents containing mixed
+                language content.</span
+              >
+            </li>
+          </ul>
+        </div>
+
+        <div
+          id="drop-zone"
+          class="relative flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer bg-gray-900 hover:bg-gray-700 transition-colors duration-300"
+        >
+          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <i class="ph ph-upload-simple text-4xl mb-3 text-gray-400"></i>
+            <p class="mb-2 text-sm text-gray-400">
+              <span class="font-semibold" data-i18n="upload.clickToSelect"
+                >Click to select PDF</span
+              >
+              <span data-i18n="upload.orDragAndDrop">or drag and drop</span>
+            </p>
+            <p class="text-xs text-gray-500" data-i18n="upload.filesNeverLeave">
+              Your files never leave your device.
+            </p>
+          </div>
+          <input
+            id="file-input"
+            type="file"
+            class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+            accept="application/pdf"
+          />
+        </div>
+
+        <div id="file-display-area" class="mt-4 space-y-2"></div>
+
+        <!-- OCR Options -->
+        <div id="tool-options" class="hidden mt-6 space-y-4">
+          <div>
+            <label
+              class="block mb-2 text-sm font-medium text-gray-300"
+              data-i18n="tools:ocrPdf.languagesInDocument"
+              >Languages in Document</label
+            >
+            <div class="relative">
+              <input
+                type="text"
+                id="lang-search"
+                class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg p-2.5 mb-2"
+                placeholder="Search for languages..."
+                data-i18n-placeholder="tools:ocrPdf.searchLanguagesPlaceholder"
+              />
+              <div
+                id="lang-list"
+                class="max-h-48 overflow-y-auto border border-gray-600 rounded-lg p-2 bg-gray-900"
+              >
+                <!-- Language checkboxes will be populated by JS -->
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">
+              <span data-i18n="tools:ocrPdf.selectedLabel">Selected:</span>
+              <span
+                id="selected-langs-display"
+                class="font-semibold"
+                data-i18n="tools:ocrPdf.none"
+                >None</span
+              >
+            </p>
+            <p
+              id="lang-availability-note"
+              class="hidden text-xs text-amber-300 mt-2"
+            ></p>
+          </div>
+
+          <!-- Advanced settings -->
+          <details class="faq-d">
+            <summary class="faq-d-q">
+              <span data-i18n="tools:ocrPdf.advancedSettingsSummary"
+                >Advanced Settings (Recommended to improve accuracy)</span
+              >
+              <i data-lucide="plus" class="faq-d-icon"></i>
+            </summary>
+            <div class="mt-4 space-y-4">
+              <!-- Resolution -->
+              <div>
+                <label
+                  for="ocr-resolution"
+                  class="block mb-1 text-xs font-medium text-gray-400"
+                  data-i18n="tools:ocrPdf.resolutionLabel"
+                  >Resolution</label
+                >
+                <select
+                  id="ocr-resolution"
+                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm"
+                >
+                  <option
+                    value="2.0"
+                    data-i18n="tools:ocrPdf.resolutionStandard"
+                  >
+                    Standard (192 DPI)
+                  </option>
+                  <option
+                    value="3.0"
+                    selected
+                    data-i18n="tools:ocrPdf.resolutionHigh"
+                  >
+                    High (288 DPI)
+                  </option>
+                  <option value="4.0" data-i18n="tools:ocrPdf.resolutionUltra">
+                    Ultra (384 DPI)
+                  </option>
+                </select>
+              </div>
+              <!-- Binarization -->
+              <label
+                class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  id="ocr-binarize"
+                  class="w-4 h-4 rounded text-indigo-600 bg-gray-700 border-gray-600"
+                />
+                <span data-i18n="tools:ocrPdf.binarizeLabel"
+                  >Binarize Image (Enhance Contrast for Clean Scans)</span
+                >
+              </label>
+              <label
+                class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  id="ocr-embed-full-fonts"
+                  class="w-4 h-4 rounded text-indigo-600 bg-gray-700 border-gray-600"
+                />
+                <span data-i18n="tools:ocrPdf.embedFullFontsLabel"
+                  >Embed Full Fonts (Larger file, better compatibility)</span
+                >
+              </label>
+              <!-- Whitelist Presets -->
+              <div>
+                <label
+                  for="whitelist-preset"
+                  class="block mb-1 text-xs font-medium text-gray-400"
+                  data-i18n="tools:ocrPdf.whitelistPresetLabel"
+                  >Character Whitelist Preset</label
+                >
+                <select
+                  id="whitelist-preset"
+                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm mb-2"
+                >
+                  <option value="" data-i18n="tools:ocrPdf.whitelistNone">
+                    None (All characters)
+                  </option>
+                  <option
+                    value="alphanumeric"
+                    data-i18n="tools:ocrPdf.whitelistAlphanumeric"
+                  >
+                    Alphanumeric + Basic Punctuation
+                  </option>
+                  <option
+                    value="numbers-currency"
+                    data-i18n="tools:ocrPdf.whitelistNumbersCurrency"
+                  >
+                    Numbers + Currency Symbols
+                  </option>
+                  <option
+                    value="letters-only"
+                    data-i18n="tools:ocrPdf.whitelistLettersOnly"
+                  >
+                    Letters Only (A-Z, a-z)
+                  </option>
+                  <option
+                    value="numbers-only"
+                    data-i18n="tools:ocrPdf.whitelistNumbersOnly"
+                  >
+                    Numbers Only (0-9)
+                  </option>
+                  <option
+                    value="invoice"
+                    data-i18n="tools:ocrPdf.whitelistInvoice"
+                  >
+                    Invoice/Receipt (Numbers, $, ., -, /)
+                  </option>
+                  <option value="forms" data-i18n="tools:ocrPdf.whitelistForms">
+                    Forms (Alphanumeric + Common Symbols)
+                  </option>
+                  <option
+                    value="custom"
+                    data-i18n="tools:ocrPdf.whitelistCustom"
+                  >
+                    Custom...
+                  </option>
+                </select>
+                <p
+                  class="text-xs text-gray-500 mt-1"
+                  data-i18n="tools:ocrPdf.whitelistHelp"
+                >
+                  Only these characters will be recognized. Leave empty for all
+                  characters.
+                </p>
+              </div>
+              <!-- Whitelist Input -->
+              <div>
+                <label
+                  for="ocr-whitelist"
+                  class="block mb-1 text-xs font-medium text-gray-400"
+                  data-i18n="tools:ocrPdf.whitelistInputLabel"
+                  >Character Whitelist (Optional)</label
+                >
+                <input
+                  type="text"
+                  id="ocr-whitelist"
+                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm"
+                  placeholder="e.g., abcdefghijklmnopqrstuvwxyz0123456789$.,"
+                  data-i18n-placeholder="tools:ocrPdf.whitelistInputPlaceholder"
+                />
+                <p
+                  class="text-xs text-gray-500 mt-1"
+                  data-i18n="tools:ocrPdf.whitelistHelp"
+                >
+                  Only these characters will be recognized. Leave empty for all
+                  characters.
+                </p>
+              </div>
+            </div>
+          </details>
+
+          <button
+            id="process-btn"
+            class="btn-gradient w-full disabled:opacity-50"
+            disabled
+            data-i18n="tools:ocrPdf.startButton"
+          >
+            Start OCR
+          </button>
+        </div>
+
+        <!-- Progress Section -->
+        <div
+          id="ocr-progress"
+          class="hidden mt-6 p-4 bg-gray-900 border border-gray-700 rounded-lg"
+        >
+          <p
+            id="progress-status"
+            class="text-white mb-2"
+            data-i18n="tools:ocrPdf.progressInitializing"
+          >
+            Initializing...
+          </p>
+          <div class="w-full bg-gray-700 rounded-full h-4">
+            <div
+              id="progress-bar"
+              class="bg-indigo-600 h-4 rounded-full transition-all duration-300"
+              style="width: 0%"
+            ></div>
+          </div>
+          <pre
+            id="progress-log"
+            class="mt-4 text-xs text-gray-400 max-h-32 overflow-y-auto bg-black p-2 rounded-md"
+          ></pre>
+        </div>
+
+        <!-- Results Section -->
+        <div id="ocr-results" class="hidden mt-6">
+          <h3
+            class="text-xl font-bold text-white mb-2"
+            data-i18n="tools:ocrPdf.resultsTitle"
+          >
+            OCR Complete
+          </h3>
+          <p
+            class="mb-4 text-gray-400"
+            data-i18n="tools:ocrPdf.resultsDescription"
+          >
+            Your searchable PDF is ready. You can also copy or download the
+            extracted text below.
+          </p>
+          <div class="relative">
+            <textarea
+              id="ocr-text-output"
+              rows="10"
+              class="w-full bg-gray-900 border border-gray-600 text-gray-300 rounded-lg p-2.5 font-sans"
+              readonly
+            ></textarea>
+            <button
+              id="copy-text-btn"
+              class="absolute top-2 right-2 bg-gray-700 hover:bg-gray-600 p-2 rounded-md"
+              title="Copy to Clipboard"
+              data-i18n-title="tools:ocrPdf.copyToClipboard"
+            >
+              <i data-lucide="clipboard-copy" class="w-4 h-4 text-gray-300"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <button
+              id="download-txt-btn"
+              class="w-full bg-gray-700 text-white font-semibold py-3 rounded-lg hover:bg-gray-600"
+              data-i18n="tools:ocrPdf.downloadTxt"
+            >
+              Download as .txt
+            </button>
+            <button
+              id="download-searchable-pdf"
+              class="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700"
+              data-i18n="tools:ocrPdf.downloadSearchablePdf"
+            >
+              Download Searchable PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader Modal -->
+    <div
+      id="loader-modal"
+      class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-gray-800 p-8 rounded-lg flex flex-col items-center gap-4 border border-gray-700 shadow-xl"
+      >
+        <div class="solid-spinner"></div>
+        <p
+          id="loader-text"
+          class="text-white text-lg font-medium"
+          data-i18n="loader.processing"
+          data-i18n="loader.processing"
+        >
+          Processing...
+        </p>
+      </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div
+      id="alert-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-gray-700"
+      >
+        <h3
+          id="alert-title"
+          class="text-xl font-bold text-white mb-2"
+          data-i18n="alert.title"
+          data-i18n="alert.title"
+        >
+          Alert
+        </h3>
+        <p id="alert-message" class="text-gray-300 mb-6"></p>
+        <button
+          id="alert-ok"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-8 text-center"
+        data-i18n="howItWorks.title"
+      >
+        How It Works
+      </h2>
+      <div class="space-y-6">
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            1
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Upload File</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step1">
+              Click or drag and drop your file to begin
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            2
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Process</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step2">
+              Click the process button to start
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            3
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Download</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step3">
+              Save your processed file instantly
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Tools Section -->
+    <section class="max-w-6xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="relatedTools.title"
+      >
+        Related PDF Tools
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <a
+          href="merge-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Merge PDF</h3>
+          <p class="text-gray-400 text-sm">Free online merge PDF tool</p>
+        </a>
+        <a
+          href="compress-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Compress PDF</h3>
+          <p class="text-gray-400 text-sm">Free online compress PDF tool</p>
+        </a>
+        <a
+          href="split-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Split PDF</h3>
+          <p class="text-gray-400 text-sm">Free online split PDF tool</p>
+        </a>
+        <a
+          href="edit-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Edit PDF</h3>
+          <p class="text-gray-400 text-sm">Free online edit PDF tool</p>
+        </a>
+        <a
+          href="rotate-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Rotate PDF</h3>
+          <p class="text-gray-400 text-sm">Free online rotate PDF tool</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="faq.sectionTitle"
+      >
+        Frequently Asked Questions
+      </h2>
+      <div class="faq-list">
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            How do I know if my PDF needs OCR?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Open the file in any viewer and try to select a line of text. If
+            nothing highlights or search finds no matches, the pages are just
+            images (a scan or a photo) and OCR is what adds the missing text. A
+            PDF that already has selectable text doesn't need this tool.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Which languages can it recognize?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Over 100 Tesseract language packs are listed, from English and
+            Spanish to Arabic, Hindi, Japanese, and Chinese. Tick every language
+            that appears in the document; the packs are loaded together so
+            mixed-language pages are recognized in one pass. Some self-hosted
+            deployments bundle a shorter list and say so above the language
+            picker.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Does OCR change how my document looks?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            No. The original pages are copied unchanged and an invisible text
+            layer is drawn on top, positioned word by word to match the scan.
+            You see the same image as before, but you can now search, select,
+            and copy the text.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Which resolution setting should I use?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            High (288 DPI) is the default and handles typical office documents.
+            Drop to Standard (192 DPI) when speed matters or the file is long,
+            and use Ultra (384 DPI) for small print, footnotes, or poor scans.
+            Higher settings take noticeably longer since every page is rendered
+            at that size before recognition.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What does the character whitelist do?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            It restricts the output to a fixed set of characters, which cuts
+            down on errors like a lowercase l being read as a 1. The Invoice
+            preset allows only digits and the symbols $ . , / - # :, Numbers
+            Only suits serial numbers or meter readings, and Custom lets you
+            type your own set.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can it read handwriting?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Not reliably. Tesseract is trained on printed text, so neat block
+            capitals sometimes work but cursive mostly produces noise. Results
+            are best on clean, well-lit printed pages; the Binarize option helps
+            with faded or low-contrast scans, and
+            <a href="/deskew-pdf" class="text-indigo-300 hover:text-indigo-400"
+              >Deskew PDF</a
+            >
+            straightens tilted ones first.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can I get just the recognized text instead of a PDF?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Yes. When OCR finishes, the extracted text appears in a box where
+            you can review it, copy it to the clipboard, or download it as
+            ocr-text.txt. The searchable PDF download is separate, so you can
+            take either or both.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Does OCR upload my scans to a server?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            No. Tesseract runs as WebAssembly inside your browser; the only
+            downloads are the OCR engine and the language packs you selected,
+            fetched the first time they're needed. The scanned pages and the
+            recognized text stay on your device.
+          </p>
+        </details>
+      </div>
+    </section>
+    {{> footer }}
+    <script type="module" src="/src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="/src/js/utils/full-width.ts"></script>
+    <script type="module" src="/src/js/utils/simple-mode-footer.ts"></script>
+    <script type="module" src="/src/js/logic/ocr-pdf-page.ts"></script>
+    <script type="module" src="/src/js/mobileMenu.ts"></script>
+
+    <script type="module" src="/src/js/main.ts"></script>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "OCR PDF - BentoPDF",
+        "applicationCategory": "PDF Tool",
+        "operatingSystem": "Any - Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to OCR online",
+        "description": "Learn how to OCR using BentoPDF",
+        "step": [
+          {
+            "@type": "HowToStep",
+            "position": 1,
+            "name": "Upload File",
+            "text": "Click or drag and drop your file"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 2,
+            "name": "Process",
+            "text": "Click the process button"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 3,
+            "name": "Download",
+            "text": "Download your processed file"
+          }
+        ]
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.bentopdf.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "OCR PDF",
+            "item": "https://www.bentopdf.com/ocr-pdf"
+          }
+        ]
+      }
+    </script>
+  </body>
+</html>

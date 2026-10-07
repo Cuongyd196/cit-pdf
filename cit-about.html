@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Giới thiệu CIT-PDF</title>
+    <meta
+      name="description"
+      content="CIT-PDF là bộ công cụ PDF chạy hoàn toàn trên máy tính, do Cường IT xây dựng lại dựa trên BentoPDF."
+    />
+    <meta name="author" content="Cường IT" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link href="/src/css/styles.css" rel="stylesheet" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/favicon-192x192.png"
+    />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  </head>
+
+  <body class="antialiased bg-gray-900">
+    {{> navbar }}
+
+    <main class="container mx-auto max-w-5xl px-4 py-12 text-gray-200">
+      <a
+        href="{{baseUrl}}"
+        class="inline-flex items-center gap-2 text-indigo-300 hover:text-indigo-400 mb-8 font-semibold"
+      >
+        <i data-lucide="arrow-left"></i>
+        <span data-i18n="tools.backToTools">Back to Tools</span>
+      </a>
+
+      <!-- Giới thiệu -->
+      <section class="text-center mb-14">
+        <img
+          src="{{baseUrl}}{{#if brandLogo}}{{brandLogo}}{{else}}images/favicon-no-bg.svg{{/if}}"
+          alt="CIT-PDF Logo"
+          class="h-20 w-20 mx-auto mb-4"
+        />
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-3">CIT-PDF</h1>
+        <p class="text-lg text-gray-400 max-w-2xl mx-auto">
+          Bộ công cụ PDF chạy hoàn toàn trên máy tính của bạn. Tệp không bao giờ
+          được tải lên máy chủ.
+        </p>
+        <p class="text-sm text-gray-500 mt-3">
+          Phiên bản <span>{{appVersion}}</span> · Phát triển bởi
+          <span class="text-gray-300 font-semibold">Cường IT</span>
+        </p>
+      </section>
+
+      <section class="mb-14">
+        <h2 class="text-2xl font-bold text-white mb-4">CIT-PDF là gì?</h2>
+        <p class="text-gray-300 leading-relaxed mb-6">
+          CIT-PDF do <strong class="text-white">Cường IT</strong> xây dựng lại
+          dựa trên dự án mã nguồn mở
+          <a
+            href="https://www.bentopdf.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-indigo-300 hover:text-indigo-400 underline"
+            >BentoPDF</a
+          >, được đóng gói thành ứng dụng desktop để người dùng cuối cài đặt và
+          sử dụng ngay mà không cần trình duyệt hay máy chủ.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-5">
+            <i class="ph ph-git-fork text-3xl text-indigo-400"></i>
+            <h3 class="text-white font-semibold mt-3 mb-1">
+              Xây dựng lại từ BentoPDF
+            </h3>
+            <p class="text-sm text-gray-400">
+              Kế thừa toàn bộ bộ công cụ xử lý PDF của BentoPDF: gộp, tách, nén,
+              chuyển đổi, chỉnh sửa, ký và bảo mật.
+            </p>
+          </div>
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-5">
+            <i class="ph ph-desktop-tower text-3xl text-indigo-400"></i>
+            <h3 class="text-white font-semibold mt-3 mb-1">
+              Đóng gói bản desktop
+            </h3>
+            <p class="text-sm text-gray-400">
+              Bộ cài cho Windows, macOS và Linux. Cài đặt không cần quyền quản
+              trị, bộ cài gọn nhẹ, các bộ xử lý nặng chỉ tải khi cần.
+            </p>
+          </div>
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-5">
+            <i class="ph ph-paint-brush-broad text-3xl text-indigo-400"></i>
+            <h3 class="text-white font-semibold mt-3 mb-1">
+              Thay đổi giao diện
+            </h3>
+            <p class="text-sm text-gray-400">
+              Giao diện riêng cho desktop: thanh bên với tìm kiếm, Yêu thích và
+              Gần đây, mở tệp trực tiếp từ Windows, logo CIT-PDF và mặc định
+              Tiếng Việt.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Có sẵn -->
+      <section class="mb-14">
+        <h2 class="text-2xl font-bold text-white mb-2">
+          <i class="ph ph-check-circle text-green-400 align-middle"></i>
+          Chức năng có sẵn trong bộ cài
+        </h2>
+        <p class="text-gray-400 mb-5">
+          Dùng được ngay sau khi cài đặt, không cần kết nối mạng.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-5">
+            <h3 class="text-white font-semibold mb-2">Sắp xếp &amp; quản lý</h3>
+            <p class="text-sm text-gray-400">
+              Gộp, gộp xen kẽ, tách, trích xuất, xóa, xoay, đảo thứ tự, sắp xếp
+              trang; thêm trang trắng; chia trang; N-up; tạo sách nhỏ; so sánh
+              PDF; đánh dấu trang (bookmark), mục lục, nhãn trang; tệp đính kèm;
+              siêu dữ liệu.
+            </p>
+          </div>
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-5">
+            <h3 class="text-white font-semibold mb-2">Chỉnh sửa</h3>
+            <p class="text-sm text-gray-400">
+              Sửa văn bản trong PDF, chú thích, cắt xén, đánh số trang, đánh số
+              Bates, hình mờ, đầu/chân trang, đóng dấu, đổi màu nền và màu chữ,
+              đảo màu, tạo và điền biểu mẫu, ký tay.
+            </p>
+          </div>
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-5">
+            <h3 class="text-white font-semibold mb-2">Chuyển đổi</h3>
+            <p class="text-sm text-gray-400">
+              PNG, WebP, SVG, BMP, HEIC, TIFF, Markdown, JSON, CSV, XML sang
+              PDF; PDF sang JPG, PNG, WebP, BMP, TIFF, CBZ, JSON, ZIP, thang
+              xám.
+            </p>
+          </div>
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-5">
+            <h3 class="text-white font-semibold mb-2">Bảo mật &amp; tối ưu</h3>
+            <p class="text-sm text-gray-400">
+              Đặt và gỡ mật khẩu, đổi quyền, gỡ hạn chế, làm sạch (sanitize),
+              xóa siêu dữ liệu, làm phẳng, sửa lỗi PDF, tuyến tính hóa, nén kiểu
+              Photon, xóa trang trắng, ký số và xác minh chữ ký.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cần tải thêm -->
+      <section class="mb-14">
+        <h2 class="text-2xl font-bold text-white mb-2">
+          <i class="ph ph-download-simple text-amber-400 align-middle"></i>
+          Chức năng cần tải thêm bộ xử lý
+        </h2>
+        <p class="text-gray-400 mb-5">
+          Ba bộ xử lý nặng không nằm trong bộ cài. Lần đầu bạn chạy một công cụ
+          cần đến chúng, CIT-PDF hiện hộp thoại xác nhận kèm dung lượng, tải về
+          từ nguồn chính thức và kiểm tra mã băm. Sau đó chúng được lưu trên máy
+          và dùng offline vĩnh viễn.
+        </p>
+
+        <div class="overflow-x-auto rounded-xl border border-gray-700">
+          <table class="w-full text-sm text-left">
+            <thead class="bg-gray-800 text-gray-300">
+              <tr>
+                <th class="px-4 py-3 font-semibold">Bộ xử lý</th>
+                <th class="px-4 py-3 font-semibold whitespace-nowrap">
+                  Dung lượng tải
+                </th>
+                <th class="px-4 py-3 font-semibold">Công cụ sử dụng</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-700 text-gray-400">
+              <tr>
+                <td class="px-4 py-3 text-white font-medium align-top">
+                  PyMuPDF<br /><span class="text-xs text-gray-500"
+                    >tải kèm Ghostscript</span
+                  >
+                </td>
+                <td class="px-4 py-3 align-top whitespace-nowrap">~49 MB</td>
+                <td class="px-4 py-3">
+                  PDF sang Word, Excel, CSV, Text, Markdown, SVG; trích xuất ảnh
+                  và bảng; EPUB, MOBI, FB2, XPS, CBZ, PSD, JPG, ảnh, TXT, email
+                  sang PDF; nén kiểu Condense; raster hóa; chỉnh nghiêng
+                  (deskew); lớp PDF (layers); chuẩn bị PDF cho AI.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 text-white font-medium align-top">
+                  Ghostscript
+                </td>
+                <td class="px-4 py-3 align-top whitespace-nowrap">~11 MB</td>
+                <td class="px-4 py-3">
+                  Chuyển PDF sang PDF/A; chuyển phông chữ thành đường nét (font
+                  to outline).
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 text-white font-medium align-top">
+                  LibreOffice
+                </td>
+                <td class="px-4 py-3 align-top whitespace-nowrap">~74 MB</td>
+                <td class="px-4 py-3">
+                  Word, Excel, PowerPoint, ODT, ODS, ODP, ODG, RTF, Pages,
+                  Publisher, Visio, WPD, WPS sang PDF.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="text-sm text-gray-500 mt-4">
+          <i class="ph ph-wifi-high align-middle"></i>
+          Một số công cụ cần kết nối mạng mỗi khi sử dụng: OCR (tải dữ liệu nhận
+          dạng ngôn ngữ) và đóng dấu thời gian (kết nối máy chủ cấp dấu thời
+          gian).
+        </p>
+      </section>
+
+      <!-- Giấy phép -->
+      <section class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+        <h2 class="text-xl font-bold text-white mb-2">
+          Giấy phép &amp; ghi nhận
+        </h2>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          CIT-PDF là sản phẩm phái sinh của
+          <a
+            href="https://www.bentopdf.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-indigo-300 hover:text-indigo-400 underline"
+            >BentoPDF</a
+          >
+          (© BentoPDF Contributors) và được phân phối theo giấy phép
+          <a
+            href="https://www.gnu.org/licenses/agpl-3.0.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-indigo-300 hover:text-indigo-400 underline"
+            >GNU AGPL-3.0</a
+          >. Các bộ xử lý PyMuPDF, Ghostscript, CoherentPDF và LibreOffice thuộc
+          về tác giả tương ứng và tuân theo giấy phép riêng của chúng.
+        </p>
+        <p class="text-sm text-gray-400 leading-relaxed mt-3">
+          Bản này đã được Cường IT sửa đổi so với BentoPDF gốc (năm 2026): bổ
+          sung giao diện máy tính, đóng gói bản cài và đổi tên thành CIT-PDF.
+          Toàn bộ mã nguồn, bao gồm các phần sửa đổi, được công khai tại
+          <a
+            href="https://github.com/Cuongyd196/cit-pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-indigo-300 hover:text-indigo-400 underline"
+            >github.com/Cuongyd196/cit-pdf</a
+          >. Bạn có quyền sử dụng, sửa đổi và phân phối lại theo các điều khoản
+          của AGPL-3.0; văn bản giấy phép đầy đủ nằm trong tệp LICENSE.txt đi
+          kèm bản cài.
+        </p>
+      </section>
+    </main>
+
+    {{> footer }}
+    <script type="module" src="/src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="/src/js/utils/simple-mode-footer.ts"></script>
+    <script type="module" src="/src/js/mobileMenu.ts"></script>
+    <script type="module" src="/src/js/main.ts"></script>
+  </body>
+</html>

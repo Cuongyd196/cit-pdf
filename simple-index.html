@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <title>PDF Tools</title>
+    <meta name="title" content="PDF Tools" />
+    <meta
+      name="description"
+      content="Free online PDF tools - Merge, split, compress, convert PDFs. 100% browser-based, no signup required, unlimited files."
+    />
+
+    <!-- Mobile Web App -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="PDF Tools" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/favicon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/images/favicon-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/images/apple-touch-icon.png"
+    />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+
+    <link href="src/css/styles.css" rel="stylesheet" />
+  </head>
+
+  <body class="antialiased">
+    <!-- Simple Mode Navbar -->
+    {{#if desktop}} {{> desktop-sidebar }} {{else}}
+    <nav
+      class="bg-gray-800 border-b border-gray-700 sticky top-0 z-30"
+      data-simple-nav="true"
+    >
+      <div class="container mx-auto px-4">
+        <div class="flex justify-start items-center h-16">
+          <div class="flex-shrink-0 flex items-center cursor-pointer">
+            <img
+              src="{{baseUrl}}{{#if brandLogo}}{{brandLogo}}{{else}}images/favicon-no-bg.svg{{/if}}"
+              alt="{{#if brandName}}{{brandName}}{{else}}Bento PDF{{/if}} Logo"
+              class="h-8 w-8"
+            />
+            <span class="text-white font-bold text-xl ml-2">
+              <a href="/"
+                >{{#if brandName}}{{brandName}}{{else}}BentoPDF{{/if}}</a
+              >
+            </span>
+          </div>
+        </div>
+      </div>
+    </nav>
+    {{/if}}
+
+    <div id="app" class="min-h-screen container mx-auto p-4 md:p-8">
+      <!-- Simple Mode Header -->
+      <div id="tools-header" class="text-center mb-12 pt-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-3">
+          <span data-i18n="simpleMode.title">PDF Tools</span>
+        </h1>
+        <p class="text-gray-400" data-i18n="simpleMode.subtitle">
+          Select a tool to get started
+        </p>
+      </div>
+
+      <div id="grid-view">
+        <div class="mb-8 max-w-lg mx-auto">
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+              <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
+            </span>
+            <input
+              type="text"
+              id="search-bar"
+              class="w-full pl-10 pr-4 py-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Search for a tool (e.g., 'split', 'organize'...)"
+              data-i18n-placeholder="tools.searchPlaceholder"
+            />
+            <span
+              class="absolute inset-y-0 right-0 flex items-center rounded-lg pr-2 gap-2"
+            >
+              <kbd
+                id="shortcut"
+                class="bg-gray-800 px-2.5 py-1.5 rounded-md text-xs font-semibold text-gray-300 border border-gray-700 shadow-sm"
+              ></kbd>
+              {{#if desktop}}
+              <a
+                href="{{baseUrl}}cit-settings.html#shortcuts"
+                class="p-1 hover:bg-gray-600 rounded-md text-gray-400 hover:text-white transition-colors"
+                data-desktop-i18n-title="settings"
+              >
+                <i data-lucide="settings" class="w-4 h-4"></i>
+              </a>
+              {{else}}
+              <button
+                id="open-shortcuts-btn"
+                class="p-1 hover:bg-gray-600 rounded-md text-gray-400 hover:text-white transition-colors"
+                title="Keyboard Shortcuts"
+              >
+                <i data-lucide="settings" class="w-4 h-4"></i>
+              </button>
+              {{/if}}
+            </span>
+          </div>
+        </div>
+
+        <div
+          id="tool-grid"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"
+        ></div>
+      </div>
+
+      <div
+        id="tool-interface"
+        class="hidden w-full max-w-4xl mx-auto bg-gray-800 rounded-xl shadow-2xl p-6 md:p-8 border border-gray-700"
+      >
+        <button
+          id="back-to-grid"
+          class="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 mb-6 font-semibold"
+        >
+          <i data-lucide="arrow-left" class="cursor-pointer"></i>
+          <span class="cursor-pointer" data-i18n="tools.backToTools">
+            Back to Tools
+          </span>
+        </button>
+        <div id="tool-content"></div>
+      </div>
+
+      <div
+        id="loader-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+      >
+        <div
+          class="bg-gray-800 p-8 rounded-lg flex flex-col items-center gap-4 border border-gray-700 shadow-xl"
+        >
+          <div class="solid-spinner"></div>
+          <p
+            id="loader-text"
+            class="text-white text-lg font-medium"
+            data-i18n="loader.processing"
+          >
+            Processing...
+          </p>
+        </div>
+      </div>
+
+      <div
+        id="alert-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+      >
+        <div
+          class="bg-gray-800 max-w-sm w-full p-6 rounded-lg border border-gray-700 shadow-xl text-center"
+        >
+          <h3 id="alert-title" class="text-xl font-bold text-white mb-2">
+            Alert
+          </h3>
+          <p id="alert-message" class="text-gray-300 mb-6 whitespace-pre-line">
+            This is an alert message.
+          </p>
+          <button
+            id="alert-ok"
+            class="btn bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="preview-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40 p-4"
+      >
+        <div
+          class="bg-white text-black rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col"
+        >
+          <div class="p-4 border-b flex justify-between items-center">
+            <h3 class="text-xl font-bold">Document Preview</h3>
+            <div class="flex gap-4">
+              <button
+                id="preview-download-btn"
+                class="btn bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700"
+              >
+                Download as PDF
+              </button>
+              <button
+                id="preview-close-btn"
+                class="btn bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+          <div id="preview-content" class="p-8 overflow-y-auto flex-grow"></div>
+        </div>
+      </div>
+
+      <!-- Shortcuts Modal. The desktop app keeps every setting on its
+           settings page instead. -->
+      {{#unless desktop}} {{> settings-modal }} {{/unless}}
+
+      <!-- Warning Modal -->
+      {{> warning-modal }}
+
+      <div id="signature-ghost" class="hidden"></div>
+
+      <!-- Scroll to Top Button -->
+      <button
+        id="scroll-to-top-btn"
+        class="fixed bottom-12 right-8 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 opacity-0 translate-y-10 invisible z-40"
+        aria-label="Scroll to top"
+      >
+        <i data-lucide="arrow-up" class="w-6 h-6"></i>
+      </button>
+    </div>
+
+    <!-- Simple mode footer -->
+    {{#if desktop}} {{> desktop-statusbar }} {{else}}
+    <footer
+      class="mt-16 border-t-2 border-gray-700 py-8"
+      data-simple-footer="true"
+    >
+      <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <div class="flex items-center mb-2">
+              <img
+                src="{{baseUrl}}{{#if brandLogo}}{{brandLogo}}{{else}}images/favicon.svg{{/if}}"
+                alt="{{#if brandName}}{{brandName}}{{else}}Bento PDF{{/if}} Logo"
+                class="h-8 w-8 mr-2"
+              />
+              <span class="text-white font-bold text-lg"
+                >{{#if brandName}}{{brandName}}{{else}}BentoPDF{{/if}}</span
+              >
+            </div>
+            <p class="text-gray-400 text-sm">
+              {{#if footerText}}{{footerText}}{{else}}&copy; 2026 BentoPDF. All
+              rights reserved.{{/if}}
+            </p>
+            <p class="text-gray-500 text-xs mt-2">
+              <span data-i18n="footer.version">Version</span>
+              <span id="app-version">{{appVersion}}</span>
+            </p>
+          </div>
+          <div id="simple-mode-lang-switcher" class="flex-shrink-0"></div>
+        </div>
+      </div>
+    </footer>
+    {{/if}}
+
+    <script type="module" src="src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="src/js/utils/simple-mode-footer.ts"></script>
+    <script type="module" src="src/js/main.ts"></script>
+    <script type="module" src="src/js/sw-register.ts"></script>
+  </body>
+</html>

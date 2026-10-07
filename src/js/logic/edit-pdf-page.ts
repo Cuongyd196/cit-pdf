@@ -1,0 +1,380 @@
+// Logic for PDF Editor Page
+import { createIcons, icons } from 'lucide';
+import { showAlert, showLoader, hideLoader } from '../ui.js';
+import { formatBytes, downloadFile } from '../utils/helpers.js';
+import { makeUniqueFileKey } from '../utils/deduplicate-filename.js';
+import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
+import { getEditorDisabledCategories } from '../utils/disabled-tools.js';
+import { editorFontFallback } from '../config/editor-fonts.js';
+import { needsFontEmbedding } from '../utils/freetext-script.js';
+
+const embedPdfWasmUrl = new URL(
+  'bentopdf-pdfium/editcore.wasm',
+  import.meta.url
+).href;
+
+import type { EmbedPdfContainer } from 'bentopdf-viewer';
+import type {
+  AnnotationPluginLite,
+  DocManagerPlugin,
+  FreeTextSystemFontAnnotation,
+} from '@/types';
+
+const FREETEXT_SUBTYPE = 3;
+
+function collectAllFreeTexts(
+  annotationPlugin: AnnotationPluginLite | null
+): FreeTextSystemFontAnnotation[] {
+  if (!annotationPlugin) return [];
+  try {
+    const state = annotationPlugin.getState();
+    const out: FreeTextSystemFontAnnotation[] = [];
+    for (const tracked of Object.values(state.byUid)) {
+      const obj = tracked.object;
+      if (obj.type !== FREETEXT_SUBTYPE) continue;
+      if (obj.intent === 'FreeTextCallout') continue;
+      if (!obj.id || obj.pageIndex == null || !obj.rect) continue;
+      out.push({
+        id: obj.id,
+        pageIndex: obj.pageIndex,
+        contents: obj.contents ?? '',
+        fontSize: obj.fontSize ?? 12,
+        fontColor: obj.fontColor ?? '#000000',
+        textAlign: obj.textAlign ?? 0,
+        verticalAlign: obj.verticalAlign ?? 0,
+        opacity: obj.opacity ?? 1,
+        backgroundColor: obj.color ?? obj.backgroundColor,
+        rect: obj.rect,
+        fontPostScriptName: obj.fontPostScriptName ?? '',
+        rotation: obj.rotation ?? 0,
+      });
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+let viewerInstance: EmbedPdfContainer | null = null;
+let docManagerPlugin: DocManagerPlugin | null = null;
+let isViewerInitialized = false;
+let currentFileName = 'document.pdf';
+const fileEntryMap = new Map<string, HTMLElement>();
+
+function resetViewer() {
+  const pdfWrapper = document.getElementById('embed-pdf-wrapper');
+  const pdfContainer = document.getElementById('embed-pdf-container');
+  const downloadBtn = document.getElementById('download-edited-pdf');
+  const fileDisplayArea = document.getElementById('file-display-area');
+  const fileInput = document.getElementById('file-input') as HTMLInputElement;
+  if (pdfContainer) pdfContainer.textContent = '';
+  if (pdfWrapper) pdfWrapper.classList.add('hidden');
+  if (downloadBtn) downloadBtn.classList.add('hidden');
+  if (fileDisplayArea) fileDisplayArea.innerHTML = '';
+  if (fileInput) fileInput.value = '';
+  viewerInstance = null;
+  docManagerPlugin = null;
+  isViewerInitialized = false;
+  fileEntryMap.clear();
+}
+
+function removeFileEntry(documentId: string) {
+  const entry = fileEntryMap.get(documentId);
+  if (entry) {
+    entry.remove();
+    fileEntryMap.delete(documentId);
+  }
+  if (fileEntryMap.size === 0) {
+    resetViewer();
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializePage);
+} else {
+  initializePage();
+}
+
+function initializePage() {
+  createIcons({ icons });
+
+  const fileInput = document.getElementById('file-input') as HTMLInputElement;
+  const dropZone = document.getElementById('drop-zone');
+
+  if (fileInput) {
+    fileInput.addEventListener('change', handleFileUpload);
+  }
+
+  if (dropZone) {
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-indigo-500');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-indigo-500');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-indigo-500');
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        handleFiles(files);
+      }
+    });
+
+    fileInput?.addEventListener('click', () => {
+      if (fileInput) fileInput.value = '';
+    });
+  }
+
+  document.getElementById('back-to-tools')?.addEventListener('click', () => {
+    window.location.href = import.meta.env.BASE_URL;
+  });
+}
+
+async function handleFileUpload(e: Event) {
+  const input = e.target as HTMLInputElement;
+  if (input.files && input.files.length > 0) {
+    await handleFiles(input.files);
+  }
+}
+
+async function handleFiles(files: FileList) {
+  const pdfFiles = Array.from(files).filter(
+    (f) => f.type === 'application/pdf'
+  );
+  if (pdfFiles.length === 0) {
+    showAlert('Invalid File', 'Please upload a valid PDF file.');
+    return;
+  }
+
+  showLoader('Loading PDF Editor...');
+
+  try {
+    const pdfWrapper = document.getElementById('embed-pdf-wrapper');
+    const pdfContainer = document.getElementById('embed-pdf-container');
+    const fileDisplayArea = document.getElementById('file-display-area');
+
+    if (!pdfWrapper || !pdfContainer || !fileDisplayArea) return;
+
+    hideLoader();
+    const decryptedFiles = await batchDecryptIfNeeded(pdfFiles);
+    showLoader('Loading PDF Editor...');
+
+    if (decryptedFiles.length === 0) {
+      hideLoader();
+      return;
+    }
+
+    if (!isViewerInitialized) {
+      const firstFile = decryptedFiles[0];
+      currentFileName = firstFile.name;
+      const firstBuffer = await firstFile.arrayBuffer();
+
+      pdfContainer.textContent = '';
+      pdfWrapper.classList.remove('hidden');
+
+      const { default: EmbedPDF } = await import('bentopdf-viewer');
+      const disabledCategories = getEditorDisabledCategories();
+      viewerInstance = EmbedPDF.init({
+        disabledCategories,
+        type: 'container',
+        target: pdfContainer,
+        worker: true,
+        wasmUrl: embedPdfWasmUrl,
+        fontFallback: editorFontFallback,
+        export: {
+          defaultFileName: firstFile.name,
+        },
+        documentManager: {
+          maxDocuments: 10,
+        },
+        tabBar: 'always',
+      });
+
+      const registry = await viewerInstance.registry;
+      docManagerPlugin = registry
+        .getPlugin('document-manager')
+        .provides() as unknown as DocManagerPlugin;
+
+      docManagerPlugin.onDocumentClosed((data: { id?: string }) => {
+        const docId = data?.id || '';
+        removeFileEntry(docId);
+      });
+
+      docManagerPlugin.onDocumentOpened(
+        (data: { id?: string; name?: string }) => {
+          const docId = data?.id;
+          const docKey = data?.name;
+          if (!docId) return;
+          const pendingEntry = fileDisplayArea.querySelector(
+            `[data-pending-name="${CSS.escape(docKey)}"]`
+          ) as HTMLElement;
+          if (pendingEntry) {
+            pendingEntry.removeAttribute('data-pending-name');
+            fileEntryMap.set(docId, pendingEntry);
+            const removeBtn = pendingEntry.querySelector(
+              '[data-remove-btn]'
+            ) as HTMLElement;
+            if (removeBtn) {
+              removeBtn.onclick = () => {
+                docManagerPlugin.closeDocument(docId);
+              };
+            }
+          }
+        }
+      );
+
+      addFileEntries(fileDisplayArea, decryptedFiles);
+
+      docManagerPlugin.openDocumentBuffer({
+        buffer: firstBuffer,
+        name: makeUniqueFileKey(0, firstFile.name),
+        autoActivate: true,
+      });
+
+      for (let i = 1; i < decryptedFiles.length; i++) {
+        const buffer = await decryptedFiles[i].arrayBuffer();
+        docManagerPlugin.openDocumentBuffer({
+          buffer,
+          name: makeUniqueFileKey(i, decryptedFiles[i].name),
+          autoActivate: false,
+        });
+      }
+
+      isViewerInitialized = true;
+
+      let downloadBtn = document.getElementById('download-edited-pdf');
+      if (!downloadBtn) {
+        downloadBtn = document.createElement('button');
+        downloadBtn.id = 'download-edited-pdf';
+        downloadBtn.className = 'btn-gradient w-full mt-6';
+        downloadBtn.textContent = 'Download Edited PDF';
+        pdfWrapper.appendChild(downloadBtn);
+      }
+      downloadBtn.classList.remove('hidden');
+
+      downloadBtn.onclick = async () => {
+        try {
+          const exportPlugin = registry.getPlugin('export').provides();
+          const arrayBuffer = await exportPlugin.saveAsCopy().toPromise();
+          let outBytes = new Uint8Array(arrayBuffer);
+          let annotationPlugin: AnnotationPluginLite | null = null;
+          try {
+            annotationPlugin = registry
+              .getPlugin('annotation')
+              .provides() as unknown as AnnotationPluginLite;
+          } catch {
+            annotationPlugin = null;
+          }
+          const allFreeTexts = collectAllFreeTexts(annotationPlugin);
+          let pending = allFreeTexts;
+          if (pending.length > 0) {
+            try {
+              const { flattenFreeTextToPageText } =
+                await import('../utils/freetext-flatten.js');
+              const res = await flattenFreeTextToPageText(outBytes, pending);
+              if (res.flattened > 0) {
+                outBytes = res.bytes;
+                pending = [];
+              }
+            } catch (err) {
+              console.error('Flatten pass failed:', err);
+            }
+          }
+          const customFontAnnots = pending.filter(
+            (a) =>
+              a.fontPostScriptName.trim() !== '' ||
+              needsFontEmbedding(a.contents)
+          );
+          if (customFontAnnots.length > 0) {
+            try {
+              const { embedFreeTextSystemFonts } =
+                await import('../utils/freetext-font-embed.js');
+              outBytes = await embedFreeTextSystemFonts(
+                outBytes,
+                customFontAnnots
+              );
+            } catch (err) {
+              console.error('Font embed pass failed:', err);
+            }
+          }
+          const blob = new Blob([new Uint8Array(outBytes)], {
+            type: 'application/pdf',
+          });
+          downloadFile(blob, currentFileName);
+        } catch (err) {
+          console.error('Error downloading PDF:', err);
+          showAlert('Error', 'Failed to download the edited PDF.');
+        }
+      };
+
+      const backBtn = document.getElementById('back-to-tools');
+      if (backBtn) {
+        const newBackBtn = backBtn.cloneNode(true);
+        backBtn.parentNode?.replaceChild(newBackBtn, backBtn);
+
+        newBackBtn.addEventListener('click', () => {
+          window.location.href = import.meta.env.BASE_URL;
+        });
+      }
+    } else {
+      addFileEntries(fileDisplayArea, decryptedFiles);
+
+      for (let i = 0; i < decryptedFiles.length; i++) {
+        const buffer = await decryptedFiles[i].arrayBuffer();
+        docManagerPlugin.openDocumentBuffer({
+          buffer,
+          name: makeUniqueFileKey(i, decryptedFiles[i].name),
+          autoActivate: true,
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error loading PDF Editor:', error);
+    showAlert('Error', 'Failed to load the PDF Editor.');
+  } finally {
+    hideLoader();
+  }
+}
+
+function addFileEntries(fileDisplayArea: HTMLElement, files: File[]) {
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const fileDiv = document.createElement('div');
+    fileDiv.className =
+      'flex items-center justify-between bg-gray-700 p-3 rounded-lg';
+    fileDiv.setAttribute('data-pending-name', makeUniqueFileKey(i, file.name));
+
+    const infoContainer = document.createElement('div');
+    infoContainer.className = 'flex flex-col flex-1 min-w-0';
+
+    const nameSpan = document.createElement('div');
+    nameSpan.className = 'truncate font-medium text-gray-200 text-sm mb-1';
+    nameSpan.textContent = file.name;
+
+    const metaSpan = document.createElement('div');
+    metaSpan.className = 'text-xs text-gray-400';
+    metaSpan.textContent = formatBytes(file.size);
+
+    infoContainer.append(nameSpan, metaSpan);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'ml-4 text-red-400 hover:text-red-300 flex-shrink-0';
+    removeBtn.innerHTML = '<i data-lucide="trash-2" class="w-4 h-4"></i>';
+    removeBtn.setAttribute('data-remove-btn', 'true');
+    removeBtn.onclick = () => {
+      fileDiv.remove();
+      if (fileDisplayArea.children.length === 0) {
+        resetViewer();
+      }
+    };
+
+    fileDiv.append(infoContainer, removeBtn);
+    fileDisplayArea.appendChild(fileDiv);
+  }
+
+  createIcons({ icons });
+}

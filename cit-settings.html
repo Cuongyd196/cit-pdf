@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Cài đặt - CIT-PDF</title>
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link href="/src/css/styles.css" rel="stylesheet" />
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+  </head>
+
+  <body class="antialiased bg-gray-900">
+    {{> navbar }}
+
+    <main class="container mx-auto max-w-3xl px-4 py-8 text-gray-200">
+      <h1
+        class="text-2xl font-bold text-white mb-6"
+        data-desktop-i18n="settingsTitle"
+      >
+        Settings
+      </h1>
+
+      <section class="settings-card">
+        <h2 class="settings-card-title" data-desktop-i18n="themeTitle">
+          Appearance
+        </h2>
+        <div
+          id="desktop-theme-options"
+          class="inline-flex rounded-lg border border-gray-700 bg-gray-900 p-1"
+          role="radiogroup"
+        >
+          <button
+            type="button"
+            role="radio"
+            data-theme-option="light"
+            class="desktop-theme-option"
+          >
+            <i class="ph ph-sun"></i>
+            <span data-desktop-i18n="themeLight">Light</span>
+          </button>
+          <button
+            type="button"
+            role="radio"
+            data-theme-option="dark"
+            class="desktop-theme-option"
+          >
+            <i class="ph ph-moon"></i>
+            <span data-desktop-i18n="themeDark">Dark</span>
+          </button>
+        </div>
+
+        <div class="mt-5 space-y-3">
+          <div class="settings-row">
+            <label
+              for="desktop-language-select"
+              class="flex-1 text-sm font-medium text-gray-200"
+              data-desktop-i18n="language"
+            >
+              Language
+            </label>
+            <select
+              id="desktop-language-select"
+              class="ml-4 w-56 rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            ></select>
+          </div>
+          <div class="settings-row">
+            <div class="flex-1">
+              <label
+                for="full-width-toggle"
+                class="text-sm font-medium text-gray-200 cursor-pointer"
+                data-i18n="settings.fullWidthMode"
+              >
+                Full Width Mode
+              </label>
+              <p
+                class="text-xs text-gray-400 mt-1"
+                data-i18n="settings.fullWidthDescription"
+              >
+                Use the full screen width for all tools instead of a centered
+                container
+              </p>
+            </div>
+            <label
+              class="relative inline-flex items-center cursor-pointer ml-4"
+            >
+              <input
+                type="checkbox"
+                id="full-width-toggle"
+                class="sr-only peer"
+              />
+              <div
+                class="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"
+              ></div>
+            </label>
+          </div>
+          <div class="settings-row">
+            <div class="flex-1">
+              <label
+                for="compact-mode-toggle"
+                class="text-sm font-medium text-gray-200 cursor-pointer"
+                data-i18n="settings.compactMode"
+              >
+                Compact Mode
+              </label>
+              <p
+                class="text-xs text-gray-400 mt-1"
+                data-i18n="settings.compactModeDescription"
+              >
+                Display tools as a compact list instead of cards
+              </p>
+            </div>
+            <label
+              class="relative inline-flex items-center cursor-pointer ml-4"
+            >
+              <input
+                type="checkbox"
+                id="compact-mode-toggle"
+                class="sr-only peer"
+              />
+              <div
+                class="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"
+              ></div>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-card">
+        <div class="mb-1 flex flex-wrap items-center justify-between gap-3">
+          <h2 class="settings-card-title mb-0" data-desktop-i18n="modulesTitle">
+            Engines
+          </h2>
+          <div id="desktop-modules-actions"></div>
+        </div>
+        <p class="text-sm text-gray-400 mb-4" data-desktop-i18n="modulesIntro">
+          Heavy engines are downloaded on demand and kept on this computer for
+          offline use.
+        </p>
+        <div id="desktop-modules-list" class="shortcut-group"></div>
+      </section>
+
+      <section id="shortcuts" class="settings-card">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h2 class="settings-card-title mb-0" data-i18n="settings.shortcuts">
+            Shortcuts
+          </h2>
+          <div class="flex items-center gap-2">
+            <button id="import-shortcuts-btn" class="settings-footer-btn">
+              <i data-lucide="upload" class="w-4 h-4"></i>
+              <span data-i18n="settings.import">Import</span>
+            </button>
+            <button id="export-shortcuts-btn" class="settings-footer-btn">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span data-i18n="settings.export">Export</span>
+            </button>
+            <button
+              id="reset-shortcuts-btn"
+              class="rounded-md px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+            >
+              <span data-i18n="settings.resetToDefaults"
+                >Reset to Defaults</span
+              >
+            </button>
+          </div>
+        </div>
+
+        <div class="relative mb-3">
+          <i
+            data-lucide="search"
+            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500"
+          ></i>
+          <input
+            type="text"
+            id="shortcut-search"
+            data-i18n-placeholder="settings.searchShortcuts"
+            placeholder="Search shortcuts..."
+            class="w-full bg-gray-900 border border-gray-700 text-white placeholder:text-gray-500 text-sm rounded-lg pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+        </div>
+
+        <div
+          class="mb-3 flex items-start gap-2 rounded-lg bg-gray-900 px-3 py-2.5"
+        >
+          <i
+            data-lucide="info"
+            class="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5"
+          ></i>
+          <p class="text-xs leading-relaxed text-gray-400">
+            <span class="text-gray-300" data-i18n="settings.shortcutsInfo"
+              >Press and hold keys to set a shortcut. Changes are
+              auto-saved.</span
+            >
+            <span class="block" data-i18n="settings.shortcutsWarning"
+              >Avoid common browser shortcuts (Cmd/Ctrl+W, Cmd/Ctrl+T,
+              Cmd/Ctrl+N etc.) as they may not work reliably.</span
+            >
+          </p>
+        </div>
+
+        <div id="shortcuts-list" class="max-h-[28rem] overflow-y-auto pr-1">
+          <!-- Filled in by main.ts -->
+        </div>
+        <p
+          id="shortcuts-empty"
+          class="hidden py-10 text-center text-sm text-gray-500"
+          data-i18n="settings.noShortcutsFound"
+        >
+          No tools match your search.
+        </p>
+      </section>
+    </main>
+
+    {{> warning-modal }} {{> footer }}
+    <script type="module" src="/src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="/src/js/utils/simple-mode-footer.ts"></script>
+    <script type="module" src="/src/js/desktop/settings-page.ts"></script>
+    <script type="module" src="/src/js/main.ts"></script>
+  </body>
+</html>

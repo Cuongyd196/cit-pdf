@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <meta
+      name="title"
+      content="PDF to TIFF Online Free - PDF to TIFF Tool | BentoPDF"
+    />
+    <meta
+      name="description"
+      content="Convert each PDF page into a TIFF image. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta name="keywords" content="pdf to tiff, online pdf" />
+    <meta name="author" content="BentoPDF" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.bentopdf.com/pdf-to-tiff" />
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.bentopdf.com/pdf-to-tiff" />
+    <meta
+      property="og:title"
+      content="PDF to TIFF Online Free - PDF to TIFF Tool | BentoPDF"
+    />
+    <meta
+      property="og:description"
+      content="Convert each PDF page into a TIFF image. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta
+      property="og:image"
+      content="https://www.bentopdf.com/images/og-pdf-to-tiff.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="BentoPDF" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://www.bentopdf.com/pdf-to-tiff" />
+    <meta name="twitter:title" content="PDF to TIFF Free" />
+    <meta
+      name="twitter:description"
+      content="Convert each PDF page into a TIFF image. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.bentopdf.com/images/twitter-pdf-to-tiff.png"
+    />
+    <meta name="twitter:site" content="@BentoPDF" />
+
+    <!-- Mobile Web App -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="PDF to TIFF" />
+
+    <title>PDF to TIFF - BentoPDF</title>
+
+    <link href="/src/css/styles.css" rel="stylesheet" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/favicon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/images/favicon-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/images/apple-touch-icon.png"
+    />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  </head>
+
+  <body class="antialiased bg-gray-900">
+    {{> navbar }}
+    <div
+      id="uploader"
+      class="min-h-screen flex flex-col items-center justify-start py-12 p-4 bg-gray-900"
+    >
+      <div
+        id="tool-uploader"
+        class="bg-gray-800 rounded-xl shadow-xl px-4 py-8 md:p-8 max-w-2xl w-full text-gray-200 border border-gray-700"
+      >
+        <button
+          id="back-to-tools"
+          class="flex items-center gap-2 text-indigo-300 hover:text-indigo-400 mb-6 font-semibold"
+        >
+          <i data-lucide="arrow-left" class="cursor-pointer"></i
+          ><span class="cursor-pointer" data-i18n="tools.backToTools">
+            Back to Tools
+          </span>
+        </button>
+        <h1
+          class="text-2xl font-bold text-white mb-2"
+          data-i18n="tools:pdfToTiff.name"
+        >
+          PDF to TIFF
+        </h1>
+        <p class="text-gray-400 mb-6" data-i18n="tools:pdfToTiff.subtitle">
+          Convert each PDF page into a TIFF image.
+        </p>
+        <div
+          id="drop-zone"
+          class="relative flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer bg-gray-900 hover:bg-gray-700 transition-colors duration-300"
+        >
+          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <i class="ph ph-upload-simple text-4xl mb-3 text-gray-400"></i>
+            <p class="mb-2 text-sm text-gray-400">
+              <span class="font-semibold" data-i18n="upload.clickToSelect"
+                >Click to select a file</span
+              >
+              <span data-i18n="upload.orDragAndDrop">or drag and drop</span>
+            </p>
+            <p class="text-xs text-gray-500" data-i18n="upload.hints.singlePdf">
+              A single PDF file
+            </p>
+            <p class="text-xs text-gray-500" data-i18n="upload.filesNeverLeave">
+              Your files never leave your device.
+            </p>
+          </div>
+          <input
+            id="file-input"
+            type="file"
+            class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+            accept="application/pdf"
+          />
+        </div>
+        <div id="file-display-area" class="mt-4 space-y-2"></div>
+        <div id="options-panel" class="hidden mt-6 space-y-4">
+          <div>
+            <label
+              for="tiff-dpi"
+              class="block mb-2 text-sm font-medium text-gray-300"
+              data-i18n="tools:pdfToTiff.dpi"
+              >DPI (Resolution)</label
+            >
+            <div class="flex items-center gap-4">
+              <input
+                type="range"
+                id="tiff-dpi"
+                min="72"
+                max="600"
+                step="1"
+                value="300"
+                class="flex-1"
+              />
+              <span
+                id="tiff-dpi-value"
+                class="text-white font-medium w-16 text-right"
+                >300</span
+              >
+            </div>
+            <p
+              class="mt-1 text-xs text-gray-400"
+              data-i18n="tools:pdfToTiff.dpiExplanation"
+            >
+              Higher DPI = better quality for printing, larger file size
+            </p>
+          </div>
+
+          <div>
+            <label
+              for="tiff-compression"
+              class="block mb-2 text-sm font-medium text-gray-300"
+              data-i18n="tools:pdfToTiff.compression"
+              >Compression</label
+            >
+            <select
+              id="tiff-compression"
+              class="w-full bg-gray-700 border border-gray-600 text-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              <option value="lzw">LZW (Lossless)</option>
+              <option value="deflate">Deflate / ZIP (Lossless)</option>
+              <option value="ccittfax4">CCITT Group 4 (B&W documents)</option>
+              <option value="jpeg">JPEG (Lossy)</option>
+              <option value="packbits">PackBits</option>
+              <option value="none">None (Uncompressed)</option>
+            </select>
+            <p
+              class="mt-1 text-xs text-gray-400"
+              data-i18n="tools:pdfToTiff.compressionExplanation"
+            >
+              LZW and Deflate are lossless. CCITT Group 4 is best for B&W
+              scanned documents.
+            </p>
+          </div>
+
+          <div>
+            <label
+              for="tiff-color-mode"
+              class="block mb-2 text-sm font-medium text-gray-300"
+              data-i18n="tools:pdfToTiff.colorMode"
+              >Color Mode</label
+            >
+            <select
+              id="tiff-color-mode"
+              class="w-full bg-gray-700 border border-gray-600 text-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              <option value="rgb">Color (RGB)</option>
+              <option value="greyscale">Greyscale</option>
+              <option value="bw">Black & White (1-bit)</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="tiff-multipage"
+              class="w-4 h-4 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500"
+            />
+            <label
+              for="tiff-multipage"
+              class="text-sm font-medium text-gray-300"
+              data-i18n="tools:pdfToTiff.multiPage"
+              >Save as multi-page TIFF (single file)</label
+            >
+          </div>
+
+          <button
+            id="process-btn"
+            class="btn-gradient w-full"
+            data-i18n="common.convert"
+          >
+            Convert
+          </button>
+        </div>
+      </div>
+    </div>
+    <div
+      id="loader-modal"
+      class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-gray-800 p-8 rounded-lg flex flex-col items-center gap-4 border border-gray-700 shadow-xl"
+      >
+        <div class="solid-spinner"></div>
+        <p
+          id="loader-text"
+          class="text-white text-lg font-medium"
+          data-i18n="loader.processing"
+          data-i18n="loader.processing"
+        >
+          Processing...
+        </p>
+      </div>
+    </div>
+    <div
+      id="alert-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-gray-700"
+      >
+        <h3
+          id="alert-title"
+          class="text-xl font-bold text-white mb-2"
+          data-i18n="alert.title"
+          data-i18n="alert.title"
+        >
+          Alert
+        </h3>
+        <p id="alert-message" class="text-gray-300 mb-6"></p>
+        <button
+          id="alert-ok"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+          data-i18n="alert.ok"
+          data-i18n="alert.ok"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-8 text-center"
+        data-i18n="howItWorks.title"
+      >
+        How It Works
+      </h2>
+      <div class="space-y-6">
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            1
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Upload File</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step1">
+              Click or drag and drop your file to begin
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            2
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Process</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step2">
+              Click the process button to start
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            3
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Download</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step3">
+              Save your processed file instantly
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Tools Section -->
+    <section class="max-w-6xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="relatedTools.title"
+      >
+        Related PDF Tools
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <a
+          href="merge-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Merge PDF</h3>
+          <p class="text-gray-400 text-sm">Free online merge PDF tool</p>
+        </a>
+        <a
+          href="compress-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Compress PDF</h3>
+          <p class="text-gray-400 text-sm">Free online compress PDF tool</p>
+        </a>
+        <a
+          href="split-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Split PDF</h3>
+          <p class="text-gray-400 text-sm">Free online split PDF tool</p>
+        </a>
+        <a
+          href="edit-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Edit PDF</h3>
+          <p class="text-gray-400 text-sm">Free online edit PDF tool</p>
+        </a>
+        <a
+          href="rotate-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Rotate PDF</h3>
+          <p class="text-gray-400 text-sm">Free online rotate PDF tool</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="faq.sectionTitle"
+      >
+        Frequently Asked Questions
+      </h2>
+      <div class="faq-list">
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can I get all pages in a single multi-page TIFF?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Yes. Check "Save as multi-page TIFF (single file)" and every page is
+            written into one .tiff named after the PDF. Leave it unchecked and a
+            multi-page PDF downloads as a ZIP containing page_1.tiff,
+            page_2.tiff, and so on; a one-page PDF always gives a single .tiff.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What DPI should I use?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            The slider runs from 72 to 600 and defaults to 300, the usual choice
+            for print and archival scans. Fax and document management systems
+            typically expect 200 to 300, and 150 is enough for screen use. Very
+            high DPI on large pages can run the browser out of memory, and
+            you'll see an error if that happens.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Which compression should I choose?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            LZW, the default, and Deflate are lossless and suit any content.
+            CCITT Group 4 gives the smallest files for black-and-white scans and
+            automatically switches the color mode to 1-bit. JPEG is lossy
+            (quality 85) but keeps photo-heavy pages small, and PackBits or None
+            are there for older systems that require them.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            How do I make a black-and-white TIFF for fax or e-filing?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Set Color Mode to "Black &amp; White (1-bit)" and Compression to
+            CCITT Group 4, then pick 200 or 300 DPI. That combination is what
+            most fax gateways and document management systems expect, and it
+            produces very small files.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Why is my TIFF so large?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            TIFF stores a bitmap of every page. An uncompressed 300 DPI color
+            Letter page is roughly 25 MB, so lower the DPI, switch the color
+            mode to grayscale or black and white, or use CCITT Group 4 for text
+            scans. If you only need lossless images for the screen,
+            <a href="/pdf-to-png" class="text-indigo-300 hover:text-indigo-400"
+              >PDF to PNG</a
+            >
+            makes smaller files.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can I batch-convert PDFs to TIFF?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            No. This tool takes one PDF at a time; if you drop several, only the
+            first is used. Convert them one after another.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Will a password-protected PDF convert to TIFF?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Yes. If the PDF needs a password to open, you're asked for it before
+            conversion, and the pages are rendered once it's entered. The TIFF
+            output itself has no password protection.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Are my pages uploaded to convert them?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            No. Pages are rendered with PDF.js and encoded with libvips compiled
+            to WebAssembly, all inside your browser. That does require a browser
+            with SharedArrayBuffer support, which is why the tool must run over
+            HTTPS.
+          </p>
+        </details>
+      </div>
+    </section>
+    {{> footer }}
+    <script type="module" src="/src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="/src/js/utils/full-width.ts"></script>
+    <script type="module" src="/src/js/utils/simple-mode-footer.ts"></script>
+    <script type="module" src="/src/js/logic/pdf-to-tiff-page.ts"></script>
+    <script type="module" src="/src/js/mobileMenu.ts"></script>
+    <script type="module" src="/src/js/main.ts"></script>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "PDF to TIFF - BentoPDF",
+        "applicationCategory": "PDF Tool",
+        "operatingSystem": "Any - Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to pdf to tiff online",
+        "description": "Learn how to pdf to tiff using BentoPDF",
+        "step": [
+          {
+            "@type": "HowToStep",
+            "position": 1,
+            "name": "Upload File",
+            "text": "Click or drag and drop your file"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 2,
+            "name": "Process",
+            "text": "Click the process button"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 3,
+            "name": "Download",
+            "text": "Download your processed file"
+          }
+        ]
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.bentopdf.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "PDF to TIFF",
+            "item": "https://www.bentopdf.com/pdf-to-tiff"
+          }
+        ]
+      }
+    </script>
+  </body>
+</html>

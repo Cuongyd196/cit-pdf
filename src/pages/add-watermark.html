@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <meta
+      name="title"
+      content="Watermark PDF Free - Add Text or Image Watermarks | BentoPDF"
+    />
+    <meta
+      name="description"
+      content="Stamp text or an image over your PDF pages. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta name="keywords" content="add watermark, online pdf" />
+    <meta name="author" content="BentoPDF" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.bentopdf.com/add-watermark" />
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.bentopdf.com/add-watermark" />
+    <meta
+      property="og:title"
+      content="Watermark PDF Free - Add Text or Image Watermarks | BentoPDF"
+    />
+    <meta
+      property="og:description"
+      content="Stamp text or an image over your PDF pages. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta
+      property="og:image"
+      content="https://www.bentopdf.com/images/og-add-watermark.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="BentoPDF" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://www.bentopdf.com/add-watermark" />
+    <meta
+      name="twitter:title"
+      content="Watermark PDF Free - Add Text or Image Watermarks | BentoPDF"
+    />
+    <meta
+      name="twitter:description"
+      content="Stamp text or an image over your PDF pages. Free, no uploads, no signup. Runs entirely in your browser."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.bentopdf.com/images/twitter-add-watermark.png"
+    />
+    <meta name="twitter:site" content="@BentoPDF" />
+
+    <!-- Mobile Web App -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Add Watermark" />
+
+    <title>Watermark PDF Free - Add Text or Image Watermarks | BentoPDF</title>
+
+    <link href="/src/css/styles.css" rel="stylesheet" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/favicon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/images/favicon-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/images/apple-touch-icon.png"
+    />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  </head>
+
+  <body class="antialiased bg-gray-900">
+    {{> navbar }}
+
+    <div
+      id="uploader"
+      class="min-h-screen flex flex-col items-center justify-start py-12 p-4 bg-gray-900"
+    >
+      <div
+        id="tool-uploader"
+        class="bg-gray-800 rounded-xl shadow-xl px-4 py-8 md:p-8 max-w-2xl w-full text-gray-200 border border-gray-700"
+      >
+        <button
+          id="back-to-tools"
+          class="flex items-center gap-2 text-indigo-300 hover:text-indigo-400 mb-6 font-semibold"
+        >
+          <i data-lucide="arrow-left" class="cursor-pointer"></i>
+          <span class="cursor-pointer" data-i18n="tools.backToTools">
+            Back to Tools
+          </span>
+        </button>
+
+        <h1
+          class="text-2xl font-bold text-white mb-2"
+          data-i18n="tools:addWatermark.name"
+        >
+          Add Watermark
+        </h1>
+        <p class="text-gray-400 mb-6" data-i18n="tools:addWatermark.subtitle">
+          Stamp text or an image over your PDF pages.
+        </p>
+
+        <div
+          id="drop-zone"
+          class="relative flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer bg-gray-900 hover:bg-gray-700 transition-colors duration-300"
+        >
+          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <i class="ph ph-upload-simple text-4xl mb-3 text-gray-400"></i>
+            <p class="mb-2 text-sm text-gray-400">
+              <span class="font-semibold" data-i18n="upload.clickToSelect"
+                >Click to select a file</span
+              >
+              <span data-i18n="upload.orDragAndDrop">or drag and drop</span>
+            </p>
+            <p class="text-xs text-gray-500" data-i18n="upload.hints.pdfFile">
+              PDF file
+            </p>
+            <p class="text-xs text-gray-500" data-i18n="upload.filesNeverLeave">
+              Your files never leave your device.
+            </p>
+          </div>
+          <input
+            id="file-input"
+            type="file"
+            class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+            accept="application/pdf"
+          />
+        </div>
+
+        <div id="file-display-area" class="mt-4 space-y-2"></div>
+      </div>
+    </div>
+
+    <div id="editor-panel" class="hidden bg-gray-900 px-2 sm:px-4 py-4 sm:py-8">
+      <div class="max-w-7xl mx-auto">
+        <div
+          class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0 sm:justify-between mb-4 sm:mb-6"
+        >
+          <button
+            id="editor-back-btn"
+            class="flex items-center gap-2 text-indigo-300 hover:text-indigo-400 font-semibold text-sm"
+          >
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Change File</span>
+          </button>
+          <div
+            id="editor-file-info"
+            class="text-xs sm:text-sm text-gray-400 truncate max-w-full sm:max-w-[60%]"
+          ></div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-4 sm:gap-6">
+          <div class="flex-1 min-w-0 flex flex-col">
+            <div
+              class="bg-gray-800 rounded-xl border border-gray-700 p-2 sm:p-4 flex-1 flex flex-col"
+            >
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-xs sm:text-sm font-medium text-gray-300"
+                  >Preview</span
+                >
+                <div class="flex items-center gap-2">
+                  <button
+                    id="prev-page-btn"
+                    disabled
+                    class="p-1 rounded hover:bg-gray-700 text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                  </button>
+                  <div class="flex items-center gap-1 text-xs text-gray-300">
+                    <input
+                      id="page-num-input"
+                      type="number"
+                      min="1"
+                      value="1"
+                      class="w-10 bg-gray-700 border border-gray-600 text-white rounded text-center text-xs py-0.5"
+                    />
+                    <span>/ <span id="total-pages">1</span></span>
+                  </div>
+                  <button
+                    id="next-page-btn"
+                    disabled
+                    class="p-1 rounded hover:bg-gray-700 text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                  </button>
+                </div>
+                <span
+                  id="drag-hint"
+                  class="text-xs text-gray-500 hidden sm:inline"
+                  >Drag watermark to position</span
+                >
+              </div>
+              <div
+                id="preview-wrapper"
+                class="flex-1 min-h-[200px] lg:min-h-0 flex items-center justify-center bg-gray-900 rounded-lg overflow-hidden"
+              >
+                <div
+                  id="preview-container"
+                  class="relative overflow-hidden select-none"
+                  style="touch-action: none"
+                >
+                  <canvas id="preview-canvas"></canvas>
+                  <canvas
+                    id="tile-preview-canvas"
+                    class="hidden absolute top-0 left-0 pointer-events-none"
+                  ></canvas>
+                  <div
+                    id="watermark-box"
+                    class="absolute pointer-events-auto"
+                    style="
+                      left: 50%;
+                      top: 50%;
+                      transform: translate(-50%, -50%);
+                    "
+                  >
+                    <div
+                      class="relative border border-dashed border-indigo-400/60 cursor-grab active:cursor-grabbing"
+                    >
+                      <div id="watermark-overlay" class="whitespace-nowrap">
+                        CONFIDENTIAL
+                      </div>
+                      <img id="image-watermark-overlay" class="hidden" alt="" />
+                      <div
+                        data-handle="nw"
+                        class="resize-handle absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-indigo-500 rounded-sm cursor-nw-resize pointer-events-auto z-10"
+                      ></div>
+                      <div
+                        data-handle="ne"
+                        class="resize-handle absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-indigo-500 rounded-sm cursor-ne-resize pointer-events-auto z-10"
+                      ></div>
+                      <div
+                        data-handle="sw"
+                        class="resize-handle absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-indigo-500 rounded-sm cursor-sw-resize pointer-events-auto z-10"
+                      ></div>
+                      <div
+                        data-handle="se"
+                        class="resize-handle absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-indigo-500 rounded-sm cursor-se-resize pointer-events-auto z-10"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full lg:w-80 flex-shrink-0">
+            <div
+              class="bg-gray-800 rounded-xl border border-gray-700 p-3 sm:p-5 space-y-3 sm:space-y-5"
+            >
+              <div class="flex gap-2">
+                <button
+                  id="type-text-btn"
+                  class="flex-1 py-2 px-3 text-sm font-medium rounded-lg bg-indigo-600 text-white transition-colors"
+                >
+                  Text
+                </button>
+                <button
+                  id="type-image-btn"
+                  class="flex-1 py-2 px-3 text-sm font-medium rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+                >
+                  Image
+                </button>
+              </div>
+
+              <div>
+                <label class="block mb-1.5 text-sm font-medium text-gray-300"
+                  >Layout</label
+                >
+                <div class="flex gap-2">
+                  <button
+                    id="layout-single-btn"
+                    class="flex-1 py-2 px-3 text-sm font-medium rounded-lg bg-indigo-600 text-white transition-colors"
+                  >
+                    Single
+                  </button>
+                  <button
+                    id="layout-tile-btn"
+                    class="flex-1 py-2 px-3 text-sm font-medium rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+                  >
+                    Tiled
+                  </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1.5">
+                  Tiled repeats the watermark across the whole page.
+                </p>
+              </div>
+
+              <div
+                class="flex items-center gap-2 bg-gray-900 rounded-lg px-3 py-2"
+              >
+                <input
+                  type="checkbox"
+                  id="apply-all-pages"
+                  checked
+                  class="w-4 h-4 accent-indigo-500 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500"
+                />
+                <label
+                  for="apply-all-pages"
+                  class="text-sm text-gray-300 cursor-pointer"
+                  data-i18n="tools:addWatermark.applyToAllPages"
+                  >Apply to all pages</label
+                >
+              </div>
+
+              <div id="page-range-section" class="space-y-1.5">
+                <label
+                  for="page-range-input"
+                  class="block text-sm font-medium text-gray-300"
+                  >Page Range</label
+                >
+                <input
+                  type="text"
+                  id="page-range-input"
+                  value="all"
+                  placeholder="all  or  1-3, 5, 7-9"
+                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 text-sm placeholder-gray-500"
+                />
+                <p class="text-xs text-gray-500">
+                  Use "all" or specify pages, e.g. 1-3, 5, 7-9
+                </p>
+              </div>
+
+              <div id="text-watermark-options">
+                <div class="space-y-4">
+                  <div>
+                    <label
+                      for="watermark-text"
+                      class="block mb-1.5 text-sm font-medium text-gray-300"
+                      >Text</label
+                    >
+                    <input
+                      type="text"
+                      id="watermark-text"
+                      placeholder="CONFIDENTIAL"
+                      class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 text-sm"
+                    />
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label
+                        for="font-size"
+                        class="block mb-1.5 text-sm font-medium text-gray-300"
+                        >Font Size</label
+                      >
+                      <input
+                        type="number"
+                        id="font-size"
+                        value="72"
+                        min="10"
+                        max="200"
+                        class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="text-color"
+                        class="block mb-1.5 text-sm font-medium text-gray-300"
+                        >Color</label
+                      >
+                      <input
+                        type="color"
+                        id="text-color"
+                        value="#888888"
+                        class=""
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      for="opacity-text"
+                      class="block mb-1.5 text-sm font-medium text-gray-300"
+                    >
+                      Opacity: <span id="opacity-value-text">0.3</span>
+                    </label>
+                    <input
+                      type="range"
+                      id="opacity-text"
+                      min="0.05"
+                      max="1"
+                      step="0.05"
+                      value="0.3"
+                      class="w-full h-2 bg-gray-700 rounded-lg cursor-pointer accent-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="angle-text"
+                      class="block mb-1.5 text-sm font-medium text-gray-300"
+                    >
+                      Angle: <span id="angle-value-text">-45</span>&deg;
+                    </label>
+                    <input
+                      type="range"
+                      id="angle-text"
+                      min="-90"
+                      max="90"
+                      step="1"
+                      value="-45"
+                      class="w-full h-2 bg-gray-700 rounded-lg cursor-pointer accent-indigo-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div id="image-watermark-options" class="hidden">
+                <div class="space-y-4">
+                  <div>
+                    <label
+                      for="image-watermark-input"
+                      class="block mb-1.5 text-sm font-medium text-gray-300"
+                      >Watermark Image</label
+                    >
+                    <input
+                      type="file"
+                      id="image-watermark-input"
+                      accept="image/png, image/jpeg"
+                      class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="image-scale"
+                      class="block mb-1.5 text-sm font-medium text-gray-300"
+                    >
+                      Scale: <span id="image-scale-value">100</span>%
+                    </label>
+                    <input
+                      type="range"
+                      id="image-scale"
+                      min="10"
+                      max="200"
+                      step="5"
+                      value="100"
+                      class="w-full h-2 bg-gray-700 rounded-lg cursor-pointer accent-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="opacity-image"
+                      class="block mb-1.5 text-sm font-medium text-gray-300"
+                    >
+                      Opacity: <span id="opacity-value-image">0.3</span>
+                    </label>
+                    <input
+                      type="range"
+                      id="opacity-image"
+                      min="0.05"
+                      max="1"
+                      step="0.05"
+                      value="0.3"
+                      class="w-full h-2 bg-gray-700 rounded-lg cursor-pointer accent-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="angle-image"
+                      class="block mb-1.5 text-sm font-medium text-gray-300"
+                    >
+                      Angle: <span id="angle-value-image">0</span>&deg;
+                    </label>
+                    <input
+                      type="range"
+                      id="angle-image"
+                      min="-90"
+                      max="90"
+                      step="1"
+                      value="0"
+                      class="w-full h-2 bg-gray-700 rounded-lg cursor-pointer accent-indigo-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div id="tile-options" class="hidden space-y-4">
+                <div>
+                  <label
+                    for="tile-gap-x"
+                    class="block mb-1.5 text-sm font-medium text-gray-300"
+                  >
+                    Horizontal gap: <span id="tile-gap-x-value">25</span>%
+                  </label>
+                  <input
+                    type="range"
+                    id="tile-gap-x"
+                    min="0"
+                    max="200"
+                    step="5"
+                    value="25"
+                    class="w-full h-2 bg-gray-700 rounded-lg cursor-pointer accent-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label
+                    for="tile-gap-y"
+                    class="block mb-1.5 text-sm font-medium text-gray-300"
+                  >
+                    Vertical gap: <span id="tile-gap-y-value">75</span>%
+                  </label>
+                  <input
+                    type="range"
+                    id="tile-gap-y"
+                    min="0"
+                    max="200"
+                    step="5"
+                    value="75"
+                    class="w-full h-2 bg-gray-700 rounded-lg cursor-pointer accent-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div id="position-section">
+                <label class="block mb-1.5 text-sm font-medium text-gray-300"
+                  >Position</label
+                >
+                <div class="grid grid-cols-3 gap-1.5">
+                  <button
+                    data-pos="0.15,0.15"
+                    class="pos-preset-btn py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition-colors"
+                  >
+                    Top Left
+                  </button>
+                  <button
+                    data-pos="0.5,0.15"
+                    class="pos-preset-btn py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition-colors"
+                  >
+                    Top
+                  </button>
+                  <button
+                    data-pos="0.85,0.15"
+                    class="pos-preset-btn py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition-colors"
+                  >
+                    Top Right
+                  </button>
+                  <button
+                    data-pos="0.15,0.5"
+                    class="pos-preset-btn py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition-colors"
+                  >
+                    Left
+                  </button>
+                  <button
+                    data-pos="0.5,0.5"
+                    class="pos-preset-btn py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-md transition-colors"
+                  >
+                    Center
+                  </button>
+                  <button
+                    data-pos="0.85,0.5"
+                    class="pos-preset-btn py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition-colors"
+                  >
+                    Right
+                  </button>
+                  <button
+                    data-pos="0.15,0.85"
+                    class="pos-preset-btn py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition-colors"
+                  >
+                    Bottom Left
+                  </button>
+                  <button
+                    data-pos="0.5,0.85"
+                    class="pos-preset-btn py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition-colors"
+                  >
+                    Bottom
+                  </button>
+                  <button
+                    data-pos="0.85,0.85"
+                    class="pos-preset-btn py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition-colors"
+                  >
+                    Bottom Right
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3 bg-gray-900 rounded-lg p-3">
+                <input
+                  type="checkbox"
+                  id="flatten-watermark"
+                  class="mt-0.5 w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500"
+                />
+                <div>
+                  <label
+                    for="flatten-watermark"
+                    class="text-sm font-medium text-gray-300 cursor-pointer"
+                    >Flatten watermark</label
+                  >
+                  <p class="text-xs text-gray-500 mt-0.5">
+                    Bakes the watermark into page pixels, making it
+                    tamper-resistant. Text will no longer be selectable.
+                  </p>
+                </div>
+              </div>
+
+              <button id="process-btn" class="btn-gradient w-full">
+                Add Watermark
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="loader-modal"
+      class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-gray-800 p-8 rounded-lg flex flex-col items-center gap-4 border border-gray-700 shadow-xl"
+      >
+        <div class="solid-spinner"></div>
+        <p
+          id="loader-text"
+          class="text-white text-lg font-medium"
+          data-i18n="loader.processing"
+          data-i18n="loader.processing"
+        >
+          Processing...
+        </p>
+      </div>
+    </div>
+
+    <div
+      id="alert-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-gray-700"
+      >
+        <h3
+          id="alert-title"
+          class="text-xl font-bold text-white mb-2"
+          data-i18n="alert.title"
+          data-i18n="alert.title"
+        >
+          Alert
+        </h3>
+        <p id="alert-message" class="text-gray-300 mb-6"></p>
+        <button
+          id="alert-ok"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-8 text-center"
+        data-i18n="howItWorks.title"
+      >
+        How It Works
+      </h2>
+      <div class="space-y-6">
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            1
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Upload File</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step1">
+              Click or drag and drop your file to begin
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            2
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Process</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step2">
+              Click the process button to start
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div
+            class="flex-shrink-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            3
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">Download</h3>
+            <p class="text-gray-400" data-i18n="howItWorks.step3">
+              Save your processed file instantly
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Tools Section -->
+    <section class="max-w-6xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="relatedTools.title"
+      >
+        Related PDF Tools
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <a
+          href="merge-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Merge PDF</h3>
+          <p class="text-gray-400 text-sm">Free online merge PDF tool</p>
+        </a>
+        <a
+          href="compress-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Compress PDF</h3>
+          <p class="text-gray-400 text-sm">Free online compress PDF tool</p>
+        </a>
+        <a
+          href="split-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Split PDF</h3>
+          <p class="text-gray-400 text-sm">Free online split PDF tool</p>
+        </a>
+        <a
+          href="edit-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Edit PDF</h3>
+          <p class="text-gray-400 text-sm">Free online edit PDF tool</p>
+        </a>
+        <a
+          href="rotate-pdf.html"
+          class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <h3 class="text-white font-semibold mb-1">Rotate PDF</h3>
+          <p class="text-gray-400 text-sm">Free online rotate PDF tool</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+      <h2
+        class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"
+        data-i18n="faq.sectionTitle"
+      >
+        Frequently Asked Questions
+      </h2>
+      <div class="faq-list">
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can I watermark only certain pages of a PDF?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Yes. Type a range such as 1-3, 5, 7-9 in the Page Range field, or
+            leave it set to "all". If you want different text or a different
+            position on individual pages, uncheck "Apply to all pages" and use
+            the page arrows above the preview to set each page separately.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            How do I add a diagonal CONFIDENTIAL or DRAFT watermark across the
+            page?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Stay in Text mode, type the word, and raise the font size (10 to 200
+            points, default 72) until it spans the page. The angle slider
+            already defaults to -45 degrees for the classic diagonal look, so
+            usually you only need to enlarge the text and drag it to the center
+            of the preview.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can I use a logo image as the watermark?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Switch to Image mode and upload a PNG or JPG; other image formats
+            aren't accepted. A PNG with a transparent background blends best
+            with the page. You can scale it from 10% to 200%, set its opacity
+            and angle, and drag it into position on the preview.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What does the Tiled layout do?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            Tiled repeats the watermark across the whole page in a diagonal grid
+            that follows the rotation angle, so the mark runs edge to edge. The
+            horizontal and vertical gap sliders control the spacing between
+            tiles as a percentage of the watermark size. Lower the opacity when
+            tiling so the document underneath stays readable.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Can someone remove the watermark afterward?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            The watermark is drawn into the page content rather than added as a
+            separate annotation, so it can't be deleted with one click in a PDF
+            viewer. It isn't tamper-proof though. For a harder-to-strip result,
+            use Tiled mode, or check "Flatten watermark" to bake every page into
+            pixels, which also makes the document's text unselectable.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Does adding a watermark change the original text or image quality?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            No. The pages keep their original text, images, and dimensions, and
+            the watermark is placed on top, so text stays selectable and
+            searchable. The exception is the "Flatten watermark" option, which
+            re-renders every page as an image at 2.5x scale and removes
+            selectable text.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            What opacity should I use for a watermark?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            The slider runs from 0.05 to 1 and defaults to 0.3. Values between
+            0.2 and 0.4 keep the mark visible without hiding the content beneath
+            it; go higher only for small marks placed in a margin or corner.
+          </p>
+        </details>
+        <details class="faq-d">
+          <summary class="faq-d-q">
+            Is my PDF uploaded when I add a watermark?
+            <i data-lucide="plus" class="faq-d-icon"></i>
+          </summary>
+          <p class="faq-d-a">
+            No. The live preview, the drag-and-drop editor, and the final
+            rendering all run inside your browser with pdf-lib, so neither the
+            PDF nor a logo image you add leaves your device.
+          </p>
+        </details>
+      </div>
+    </section>
+    {{> footer }}
+    <script type="module" src="/src/js/utils/lucide-init.ts"></script>
+    <script type="module" src="/src/js/utils/full-width.ts"></script>
+    <script type="module" src="/src/js/utils/simple-mode-footer.ts"></script>
+    <script type="module" src="/src/js/logic/add-watermark-page.ts"></script>
+    <script type="module" src="/src/js/mobileMenu.ts"></script>
+    <script type="module" src="/src/js/main.ts"></script>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Add Watermark - BentoPDF",
+        "applicationCategory": "PDF Tool",
+        "operatingSystem": "Any - Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to add watermark online",
+        "description": "Learn how to add watermark using BentoPDF",
+        "step": [
+          {
+            "@type": "HowToStep",
+            "position": 1,
+            "name": "Upload File",
+            "text": "Click or drag and drop your file"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 2,
+            "name": "Process",
+            "text": "Click the process button"
+          },
+          {
+            "@type": "HowToStep",
+            "position": 3,
+            "name": "Download",
+            "text": "Download your processed file"
+          }
+        ]
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.bentopdf.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Add Watermark",
+            "item": "https://www.bentopdf.com/add-watermark"
+          }
+        ]
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.cuongit.citpdf",
+  "productName": "CIT-PDF",
+  "copyright": "Copyright © 2026 Cường IT. Based on BentoPDF © BentoPDF Contributors (AGPL-3.0)",
+  "directories": {
+    "app": "desktop",
+    "output": "release",
+    "buildResources": "build-resources"
+  },
+  "files": [
+    "dist/**/*",
+    "dist-web/**/*",
+    "app/**/*",
+    "bundled-modules/**/*",
+    "../node_modules/tar/**/*",
+    "../node_modules/minipass/**/*",
+    "../node_modules/yallist/**/*"
+  ],
+  "extraResources": [
+    {
+      "from": "LICENSE",
+      "to": "LICENSE.txt"
+    }
+  ],
+  "npmRebuild": false,
+  "nodeGypRebuild": false,
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "build-resources/icon.png",
+    "fileAssociations": [
+      {
+        "ext": "pdf",
+        "name": "PDF Document",
+        "role": "Editor"
+      }
+    ]
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowElevation": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "CIT-PDF",
+    "uninstallDisplayName": "CIT-PDF"
+  },
+  "mac": {
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["universal", "x64", "arm64"]
+      }
+    ],
+    "icon": "build-resources/icon.png",
+    "category": "public.app-category.productivity"
+  },
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      },
+      {
+        "target": "deb",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "build-resources/icon.png",
+    "category": "Office;Utility;"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$comment": "Engine modules for BentoPDF Desktop. Every module is fetched from its official upstream source and verified against the pinned hash before being installed. 'bundled: true' modules are always shipped inside the installer.",
+  "modules": {
+    "cpdf": {
+      "version": "2.5.5",
+      "bundled": true,
+      "mount": "/modules/cpdf/",
+      "probe": "dist/coherentpdf.browser.min.js",
+      "label": { "en": "CoherentPDF engine", "vi": "Bộ xử lý CoherentPDF" },
+      "source": "npm registry · coherentpdf@2.5.5",
+      "kind": "npm-tarball",
+      "url": "https://registry.npmjs.org/coherentpdf/-/coherentpdf-2.5.5.tgz",
+      "integrity": "sha512-AAD3RG7lq2n34AtH352sbNDhJ82yfp2vFUp63/+Vu7snAqW0vyvY33XuhZdj6ubZUlFe1DNSSEaYcyc7+jTJ5Q==",
+      "size": 0
+    },
+    "pymupdf": {
+      "version": "0.11.16",
+      "mount": "/modules/pymupdf/",
+      "probe": "dist/index.js",
+      "label": {
+        "en": "PyMuPDF engine (PDF → Word/Excel/Text, e-books, tables…)",
+        "vi": "Bộ xử lý PyMuPDF (PDF → Word/Excel/Text, sách điện tử, bảng…)"
+      },
+      "source": "npm registry · @bentopdf/pymupdf-wasm@0.11.16",
+      "kind": "npm-tarball",
+      "url": "https://registry.npmjs.org/@bentopdf/pymupdf-wasm/-/pymupdf-wasm-0.11.16.tgz",
+      "integrity": "sha512-GPxxH2BokrS49fJa17mrt3hTBGRIDlMkLfJwk+tk45+ICTmIzcti7ACXT2JHK3FUJX916OQvnrJQb29ZajN3CA==",
+      "size": 40422880
+    },
+    "ghostscript": {
+      "version": "0.1.1",
+      "mount": "/modules/ghostscript/",
+      "probe": "assets/gs.js",
+      "label": {
+        "en": "Ghostscript engine (PDF/A, strong compression)",
+        "vi": "Bộ xử lý Ghostscript (PDF/A, nén mạnh)"
+      },
+      "source": "npm registry · @bentopdf/gs-wasm@0.1.1",
+      "kind": "npm-tarball",
+      "url": "https://registry.npmjs.org/@bentopdf/gs-wasm/-/gs-wasm-0.1.1.tgz",
+      "integrity": "sha512-EAliG+AxKLf46lOoDreddjOQtyTZGekJ2KRUXjygMFeg8vimOX44QKpim+t3HGHn0eXKbtsItcdN7qcjMSiuYQ==",
+      "size": 11108131
+    },
+    "libreoffice": {
+      "version": "f30a084",
+      "mount": "/libreoffice-wasm/",
+      "probe": "soffice.wasm.gz",
+      "label": {
+        "en": "LibreOffice engine (Word/Excel/PowerPoint → PDF)",
+        "vi": "Bộ xử lý LibreOffice (Word/Excel/PowerPoint → PDF)"
+      },
+      "source": "GitHub · alam00000/bentopdf @ f30a084 (public/libreoffice-wasm)",
+      "kind": "files",
+      "files": [
+        {
+          "path": "soffice.wasm.gz",
+          "url": "https://raw.githubusercontent.com/alam00000/bentopdf/f30a084fceae5e0dfe9c6b9455def11be7b2644e/public/libreoffice-wasm/soffice.wasm.gz",
+          "sha256": "36a7d3171b99961c04eb804a5faa5be5079b670935df2b068a1746a7ddc449b8",
+          "size": 48763638
+        },
+        {
+          "path": "soffice.data.gz",
+          "url": "https://raw.githubusercontent.com/alam00000/bentopdf/f30a084fceae5e0dfe9c6b9455def11be7b2644e/public/libreoffice-wasm/soffice.data.gz",
+          "sha256": "2bb76a56f6ebf5dfe214dfb4ceb7ec1370b9d0d5d7c4d66796cf66f762c098e0",
+          "size": 28604373
+        }
+      ],
+      "size": 77368011
+    }
+  }
+}
