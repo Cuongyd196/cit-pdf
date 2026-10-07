@@ -21,6 +21,10 @@
     {
       "from": "LICENSE",
       "to": "LICENSE.txt"
+    },
+    {
+      "from": "desktop/bundled-modules/cpdf/LICENSE.md",
+      "to": "licenses/coherentpdf-LICENSE.md"
     }
   ],
   "npmRebuild": false,

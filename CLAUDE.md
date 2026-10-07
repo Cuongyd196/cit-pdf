@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-BentoPDF is a client-side PDF toolkit: every tool runs in the browser, no server processing. It is a **multi-page Vite app in vanilla TypeScript** (no UI framework; Tailwind v4, Handlebars partials), not an SPA. This checkout additionally carries an in-progress **Electron desktop wrapper** (`desktop/`, `src/js/desktop/`, `scripts/build-desktop.mjs`, `electron-builder.json`, `DESKTOP.md`) that is not yet committed.
+BentoPDF is a client-side PDF toolkit: every tool runs in the browser, no server processing. It is a **multi-page Vite app in vanilla TypeScript** (no UI framework; Tailwind v4, Handlebars partials), not an SPA. This fork additionally carries an **Electron desktop wrapper** (`desktop/`, `src/js/desktop/`, `scripts/build-desktop.mjs`, `electron-builder.json`, `DESKTOP.md`), released as CIT-PDF.
 
 Licence is AGPL-3.0 with a commercial dual licence; contributions require a signed CLA (`ICLA.md` / `CCLA.md`).
 
@@ -28,7 +28,7 @@ npm run desktop:dist        # + electron-builder --win  -> release/
 npm run desktop:dist:all    # + electron-builder -mwl
 ```
 
-- CI (`.github/workflows/tests.yml`) runs `npx tsc --noEmit` then `npm run test:run` on Node 20. Lint is not in CI; it runs via husky `lint-staged` on commit (eslint --fix + prettier).
+- This fork has no CI (`.github/` is not in the repo; upstream runs `npx tsc --noEmit` then `npm run test:run` on Node 20), so run both by hand. Lint runs via husky `lint-staged` on commit (eslint --fix + prettier).
 - **Windows caveat:** `npm run build` and the `build:*` / `serve*` scripts use POSIX inline env syntax (`NODE_OPTIONS='…' node …`, `COMPRESSION_MODE=g npm run build`) and do not work under cmd/PowerShell. Use Git Bash/WSL, or run the steps individually. The `desktop*` scripts are cross-platform because `scripts/build-desktop.mjs` sets env vars itself and calls `npx vite build` directly.
 - `npm run build` is a long pipeline, not just `vite build`: generate blog → generate static tool links → `tsc` → `vite build` → SEO enhancement → per-language static pages → sitemap → security headers → SEO audit. `build:docker` and the desktop build run plain `vite build` and skip the rest.
 - `vitest.config.ts` is the effective test config (jsdom, globals, `src/tests/setup.ts`, includes `src/**/*.{test,spec}.{js,ts}`); the `test` block in `vite.config.ts` is shadowed by it.
@@ -76,7 +76,7 @@ SharedArrayBuffer-based engines need cross-origin isolation, so dev/preview serv
 
 - `desktop/src/main.ts` — single-instance window loading `app://bentopdf/index.html`; external links go to the OS browser.
 - `desktop/src/protocol.ts` — custom privileged `app://` scheme serving `desktop/dist-web`, replicating clean-URL and `/<lang>/…` fallbacks and the COOP/COEP headers. It first asks `ModulesManager.resolveMountedFile`, so `/modules/<name>/…` and `/libreoffice-wasm/…` are served from installed modules.
-- `desktop/src/modules-manager.ts` + `desktop/app/modules-manifest.json` — heavy engines are **not in the installer**. On first use they are downloaded from the npm registry / upstream repo, hash-verified (SHA-512 integrity or per-file SHA-256), and cached in `userData/modules`. cpdf is pre-bundled in `desktop/bundled-modules/`.
+- `desktop/src/modules-manager.ts` + `desktop/app/modules-manifest.json` — heavy engines are **not in the installer**. On first use they are downloaded from the npm registry / upstream repo, hash-verified (SHA-512 integrity or per-file SHA-256), and cached in `userData/modules`. cpdf is pre-bundled in `desktop/bundled-modules/` (the build copies the script there; its `LICENSE.md` is tracked and shipped).
 - `desktop/src/preload.ts` exposes `window.bentoDesktop`; `src/js/desktop/bridge.ts` wraps it. The web-side contract is: **each WASM loader calls `await ensureDesktopModules([...])` before fetching engine files** (a no-op on the web). In desktop builds `wasm-provider.ts` points defaults at `/modules/<name>/` instead of the CDN. A new heavy engine needs a manifest entry, a mount, and that call in its loader.
 - The desktop build is branded **CIT-PDF** (defaults set in `scripts/build-desktop.mjs`: `VITE_BRAND_NAME`, `VITE_BRAND_LOGO`, `VITE_DEFAULT_LANGUAGE=vi`). The upstream name stays in page titles/locales; `main.ts` rewrites window titles.
 - Desktop UI shell: when the Handlebars context has `desktop`, `navbar-simple`/`footer-simple` render `partials/desktop-sidebar.html` and `desktop-statusbar.html` instead. `src/js/desktop/shell.ts` (dynamically imported from `src/js/main.ts` under `__DESKTOP__`) fills the sidebar (search, favorites, recent, tool groups) and handles files opened from the OS: it injects them into the tool page's `#file-input`. Desktop-only strings live in `src/js/desktop/strings.ts` (vi/en), not in the locale files. Desktop-only pages `cit-about.html` and `cit-settings.html` sit at the repo root.
@@ -105,4 +105,4 @@ Most tool pages and their scripts still carry English text that never went throu
 - `innerHTML` with interpolated values trips `no-unsanitized` (warn in lint, error in `lint:security`); use `escapeHtml` from `utils/helpers.ts`, DOMPurify, or DOM APIs.
 - Use `utils/safe-storage.ts` rather than raw `localStorage`.
 - Tests live in `src/tests/*.test.ts` with fixtures/builders under `src/tests/helpers/`.
-- Releases go through `npm run release[:minor|:major]` (`scripts/release.js`, see `RELEASE.md`); pushing a `v*` tag triggers `.github/workflows/desktop-release.yml`.
+- Releases go through `npm run release[:minor|:major]` (`scripts/release.js`, see `RELEASE.md`). Desktop installers are built locally with `npm run desktop:dist`; there is no release workflow in this fork.
