@@ -1,7 +1,7 @@
 // Renders public/images/cit-pdf-logo.svg into the PNG icons used by the
 // desktop app. Run with Electron (it provides the SVG rasterizer):
 //   npx electron scripts/generate-desktop-icons.mjs
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, nativeImage } from 'electron';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,25 +20,27 @@ const outputs = [
 app.disableHardwareAcceleration();
 
 app.whenReady().then(async () => {
-  const win = new BrowserWindow({
-    width: SIZE,
-    height: SIZE,
-    show: false,
-    frame: false,
-    transparent: true,
-    useContentSize: true,
-    webPreferences: { offscreen: true },
-  });
+  // The logo is drawn on a canvas inside the page rather than captured from
+  // the window: a window cannot be taller than the screen, so a capture of a
+  // 1024px window comes back cropped on smaller displays.
+  const win = new BrowserWindow({ width: 200, height: 200, show: false });
+  await win.loadURL('about:blank');
 
-  const html = `<html><body style="margin:0;background:transparent;overflow:hidden">
-    <img src="data:image/svg+xml;base64,${svg.toString('base64')}"
-         style="display:block;width:${SIZE}px;height:${SIZE}px"></body></html>`;
-  await win.loadURL(
-    `data:text/html;base64,${Buffer.from(html).toString('base64')}`
-  );
-  await new Promise((r) => setTimeout(r, 500));
+  const dataUrl = await win.webContents.executeJavaScript(`
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = ${SIZE};
+        canvas.getContext('2d').drawImage(img, 0, 0, ${SIZE}, ${SIZE});
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('Could not load the logo SVG'));
+      img.src = 'data:image/svg+xml;base64,${svg.toString('base64')}';
+    })
+  `);
 
-  const image = await win.webContents.capturePage();
+  const image = nativeImage.createFromDataURL(dataUrl);
   for (const { path, size } of outputs) {
     const target = resolve(root, path);
     mkdirSync(dirname(target), { recursive: true });
