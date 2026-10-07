@@ -18,8 +18,9 @@ const isDesktop = typeof __DESKTOP__ !== 'undefined' && __DESKTOP__;
 
 const DESKTOP_DEFAULTS: Record<WasmPackage, string> = {
   pymupdf: '/modules/pymupdf/',
-  ghostscript: '/modules/ghostscript/',
-  // Same layout as the CDN default: the script sits in the package's dist/.
+  // Same layout as the CDN defaults: the scripts sit in a subfolder of the
+  // package (assets/ for Ghostscript, dist/ for cpdf).
+  ghostscript: '/modules/ghostscript/assets/',
   cpdf: '/modules/cpdf/dist/',
 };
 

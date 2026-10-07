@@ -382,10 +382,15 @@ function buildMenu(): void {
     {
       label: text.menuView,
       submenu: [
-        { role: 'reload' as const, label: text.reload },
-        { role: 'forceReload' as const, label: text.forceReload },
-        { role: 'toggleDevTools' as const, label: text.devTools },
-        { type: 'separator' as const },
+        // Developer items only make sense when running from source.
+        ...(app.isPackaged
+          ? []
+          : [
+              { role: 'reload' as const, label: text.reload },
+              { role: 'forceReload' as const, label: text.forceReload },
+              { role: 'toggleDevTools' as const, label: text.devTools },
+              { type: 'separator' as const },
+            ]),
         { role: 'resetZoom' as const, label: text.resetZoom },
         { role: 'zoomIn' as const, label: text.zoomIn },
         { role: 'zoomOut' as const, label: text.zoomOut },

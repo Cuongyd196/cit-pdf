@@ -61,7 +61,8 @@ export function setPhrases(dictionary: Record<string, string>): void {
     const body = key
       .split(PLACEHOLDER)
       // split() with a capture group alternates literal, index, literal...
-      .map((part, i) => (i % 2 === 0 ? escapeRegex(part) : '(.+?)'))
+      // A value may be empty, e.g. the plural "s" in "page{1}".
+      .map((part, i) => (i % 2 === 0 ? escapeRegex(part) : '(.*?)'))
       .join('');
     patterns.push({
       regex: new RegExp(`^${body}$`),
@@ -89,7 +90,11 @@ export function translatePhrase(text: string): string | null {
       if (!match) continue;
       result = pattern.translation.replace(
         PLACEHOLDER,
-        (_whole, index: string) => match[Number(index) + 1] ?? ''
+        (_whole, index: string) => {
+          // A value can itself be a known phrase, e.g. an optional sentence.
+          const value = match[Number(index) + 1] ?? '';
+          return exact.get(value.trim()) ?? value;
+        }
       );
       break;
     }

@@ -9,6 +9,11 @@ describe('phrase translation', () => {
       'Loading page {0}...': 'Đang tải trang {0}...',
       'Page {0} of {1}': 'Trang {0} / {1}',
       'Total: {0}': 'Tổng: {0}',
+      'Added {0} blank page{1} successfully!':
+        'Đã thêm {0} trang trống thành công!',
+      'Deskewed {0} file(s). {1}': 'Đã chỉnh nghiêng {0} tệp. {1}',
+      'Downloads started for all files.':
+        'Đã bắt đầu tải xuống tất cả các tệp.',
     });
   });
 
@@ -23,6 +28,21 @@ describe('phrase translation', () => {
   it('fills placeholders from the source text', () => {
     expect(translatePhrase('Loading page 12...')).toBe('Đang tải trang 12...');
     expect(translatePhrase('Page 3 of 10')).toBe('Trang 3 / 10');
+  });
+
+  it('accepts an empty value, such as a missing plural ending', () => {
+    expect(translatePhrase('Added 1 blank page successfully!')).toBe(
+      'Đã thêm 1 trang trống thành công!'
+    );
+    expect(translatePhrase('Added 2 blank pages successfully!')).toBe(
+      'Đã thêm 2 trang trống thành công!'
+    );
+  });
+
+  it('translates a value that is itself a known phrase', () => {
+    expect(
+      translatePhrase('Deskewed 2 file(s). Downloads started for all files.')
+    ).toBe('Đã chỉnh nghiêng 2 tệp. Đã bắt đầu tải xuống tất cả các tệp.');
   });
 
   it('returns null for text it does not know', () => {
