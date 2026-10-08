@@ -100,4 +100,5 @@ export const IPC_CHANNELS = {
   LIST_PRINTERS: 'bento:list-printers',
   PRINT: 'bento:print',
   SET_LANGUAGE: 'bento:set-language',
+  REGISTER_PICKED_FILE: 'bento:register-picked-file',
 } as const;

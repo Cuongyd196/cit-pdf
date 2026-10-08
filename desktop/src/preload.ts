@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import {
   IPC_CHANNELS,
   type DesktopModuleName,
@@ -75,6 +75,14 @@ const bridge = {
   // showing the OS print dialog.
   print: (request: PrintRequest): Promise<PrintResult> => {
     return ipcRenderer.invoke(IPC_CHANNELS.PRINT, request);
+  },
+
+  // A file the user picked or dropped in a page. The path is read here, from
+  // the File object itself, so a page cannot name an arbitrary path.
+  registerPickedFile: (file: File): Promise<OpenedFile | null> => {
+    const filePath = webUtils.getPathForFile(file);
+    if (!filePath) return Promise.resolve(null);
+    return ipcRenderer.invoke(IPC_CHANNELS.REGISTER_PICKED_FILE, filePath);
   },
 
   // Keeps the menu bar and native dialogs in the language of the pages.

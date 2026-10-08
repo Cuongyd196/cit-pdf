@@ -222,6 +222,23 @@ ipcMain.handle(
   }
 );
 
+// Lets a PDF the user picked inside a page be handed to another tool the
+// same way as one opened from the OS. The path comes from the preload.
+ipcMain.handle(
+  IPC_CHANNELS.REGISTER_PICKED_FILE,
+  async (_event, filePath: unknown): Promise<OpenedFile | null> => {
+    if (typeof filePath !== 'string' || !path.isAbsolute(filePath)) return null;
+    if (path.extname(filePath).toLowerCase() !== '.pdf') return null;
+    try {
+      if (!(await fs.promises.stat(filePath)).isFile()) return null;
+    } catch {
+      return null;
+    }
+    allowedOpenPaths.add(filePath);
+    return { path: filePath, name: path.basename(filePath) };
+  }
+);
+
 ipcMain.handle(IPC_CHANNELS.SHOW_SAVE_DIALOG, async (_event, options) => {
   if (!mainWindow) return { canceled: true };
   return dialog.showSaveDialog(mainWindow, options);

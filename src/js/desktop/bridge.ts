@@ -80,6 +80,7 @@ interface DesktopBridge {
   listPrinters(): Promise<PrinterInfo[]>;
   print(request: PrintRequest): Promise<PrintResult>;
   setLanguage(lang: string): void;
+  registerPickedFile(file: File): Promise<OpenedFile | null>;
 }
 
 declare global {

@@ -724,6 +724,8 @@
     "subtitle": "Read a PDF: zoom, search, jump between pages, and print.",
     "uploadHint": "Open a PDF to read it: zoom, search the text, jump between pages, and print.",
     "close": "Close",
+    "tools": "Open with tool",
+    "twoPages": "Two-page view",
     "invalidFile": "Please choose a valid PDF file."
   },
   "viewMetadata": {

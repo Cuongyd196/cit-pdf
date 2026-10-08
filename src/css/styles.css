@@ -427,17 +427,8 @@ body:has(#desktop-statusbar) .pdf-view-panel {
   height: calc(100vh - 2rem);
 }
 
-.pdf-view-panel.hidden,
-.pdf-view-btn.hidden {
+.pdf-view-panel.hidden {
   display: none;
-}
-
-.pdf-view-bar {
-  @apply flex items-center gap-3 border-b border-gray-700 bg-gray-800 px-4 py-2;
-}
-
-.pdf-view-btn {
-  @apply flex flex-shrink-0 items-center gap-1.5 rounded-md border border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-700 hover:text-white;
 }
 
 /* Pages without the status bar (full-screen editors) use the full height. */

@@ -722,6 +722,8 @@
     "subtitle": "Đọc PDF: thu phóng, tìm kiếm, chuyển trang và in.",
     "uploadHint": "Mở một tệp PDF để đọc: thu phóng, tìm trong văn bản, chuyển trang và in.",
     "close": "Đóng",
+    "tools": "Mở bằng công cụ",
+    "twoPages": "Xem 2 trang",
     "invalidFile": "Vui lòng chọn một tệp PDF hợp lệ."
   },
   "viewMetadata": {

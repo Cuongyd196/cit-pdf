@@ -149,22 +149,7 @@
     </div>
 
     <div id="viewer-panel" class="pdf-view-panel hidden">
-      <div class="pdf-view-bar">
-        <i class="ph ph-file-pdf text-xl text-indigo-400 flex-shrink-0"></i>
-        <span
-          id="viewer-file-name"
-          class="flex-1 truncate text-sm font-medium text-white"
-        ></span>
-        <!-- Shown by the desktop shell for files opened from the OS. -->
-        <button id="view-open-with" type="button" class="pdf-view-btn hidden">
-          <i class="ph ph-wrench text-base"></i>
-          <span data-desktop-i18n="viewerUseTool">Use another tool</span>
-        </button>
-        <button id="viewer-close" type="button" class="pdf-view-btn">
-          <i class="ph ph-x text-base"></i>
-          <span data-i18n="tools:viewPdf.close">Close</span>
-        </button>
-      </div>
+      <!-- The toolbar lives inside the viewer frame (pdf-viewer-chrome.ts). -->
       <div id="pdf-viewer-container" class="flex-1 min-h-0"></div>
     </div>
 

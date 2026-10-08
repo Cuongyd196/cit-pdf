@@ -10,6 +10,11 @@ import { getBridge, type OpenedFile } from './bridge.js';
 import { VIEWER_SLUG, openFileAction } from './open-file.js';
 import { applyDesktopStrings, ds } from './strings.js';
 import { THEME_EVENT, currentTheme, setTheme } from './theme.js';
+import { showAlert } from '../ui.js';
+import {
+  VIEWER_TOOLS_EVENT,
+  type ViewerToolsDetail,
+} from '../logic/view-pdf-events.js';
 
 interface ShellOptions {
   categoryTranslationKeys: Record<string, string>;
@@ -480,18 +485,23 @@ function initOpenedFiles(
 
   const onViewer = currentTool?.slug === VIEWER_SLUG;
 
-  // On the viewer page, a file that came from the OS can be handed on to
-  // another tool. Files the user picks in the page have no path to hand on.
+  // On the viewer page, the open file can be handed on to another tool. A
+  // file that came from the OS already has a path; one picked in the page
+  // gets its path from the bridge.
   let viewerFile: OpenedFile | null = null;
-  const openWith = onViewer ? document.getElementById('view-open-with') : null;
   const setViewerFile = (file: OpenedFile | null) => {
     viewerFile = file;
-    openWith?.classList.toggle('hidden', !file);
   };
-  openWith?.addEventListener('click', () => {
-    if (viewerFile) showOpenFilePicker(viewerFile, tools, undefined);
-  });
   if (onViewer) {
+    document.addEventListener(VIEWER_TOOLS_EVENT, (event) => {
+      const { file } = (event as CustomEvent<ViewerToolsDetail>).detail;
+      void (async () => {
+        const opened = viewerFile ?? (await bridge.registerPickedFile(file));
+        if (opened) showOpenFilePicker(opened, tools, undefined);
+        else showAlert(ds('openFileFailed'), ds('viewerNoPath'));
+      })();
+    });
+
     getFileInput()?.addEventListener('change', () => {
       if (!injecting) setViewerFile(null);
     });

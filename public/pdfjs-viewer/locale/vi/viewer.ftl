@@ -607,3 +607,34 @@ pdfjs-editor-add-signature-edit-button-label = Chỉnh sửa mô tả
 ## Edit signature description dialog
 
 pdfjs-editor-edit-signature-dialog-title = Chỉnh sửa mô tả
+
+## Comments
+## Added for CIT-PDF: these strings are missing from the upstream Vietnamese
+## translation, so the viewer would fall back to English for them.
+
+pdfjs-editor-comment-button =
+    .title = Bình luận
+    .aria-label = Bình luận
+pdfjs-editor-comment-button-label = Bình luận
+pdfjs-editor-comments-sidebar-close-button =
+    .title = Đóng thanh bên
+    .aria-label = Đóng thanh bên
+pdfjs-editor-comments-sidebar-close-button-label = Đóng thanh bên
+pdfjs-editor-comments-sidebar-no-comments-link = Tìm hiểu thêm
+pdfjs-editor-comments-sidebar-no-comments1 = Thấy điều gì đáng chú ý? Hãy tô sáng và để lại bình luận.
+pdfjs-editor-comments-sidebar-title = Bình luận
+pdfjs-editor-delete-comment-popup-button =
+    .title = Xóa bình luận
+pdfjs-editor-delete-comment-popup-button-label = Xóa bình luận
+pdfjs-editor-edit-comment-dialog-cancel-button = Hủy
+pdfjs-editor-edit-comment-dialog-save-button-when-adding = Thêm
+pdfjs-editor-edit-comment-dialog-save-button-when-editing = Cập nhật
+pdfjs-editor-edit-comment-dialog-text-input =
+    .placeholder = Bắt đầu nhập…
+pdfjs-editor-edit-comment-dialog-title-when-adding = Thêm bình luận
+pdfjs-editor-edit-comment-dialog-title-when-editing = Sửa bình luận
+pdfjs-editor-edit-comment-popup-button =
+    .title = Sửa bình luận
+pdfjs-editor-edit-comment-popup-button-label = Sửa bình luận
+pdfjs-show-comment-button =
+    .title = Hiện bình luận

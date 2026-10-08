@@ -16,7 +16,8 @@ const STRINGS = {
     openFileTitle: 'Bạn muốn làm gì với tệp này?',
     openFileCurrent: 'Dùng với công cụ đang mở',
     openFileFailed: 'Không đọc được tệp',
-    viewerUseTool: 'Dùng công cụ khác',
+    viewerNoPath:
+      'Không xác định được vị trí của tệp này trên máy. Hãy mở tệp bằng Tệp → Mở tệp PDF rồi thử lại.',
     printTitle: 'In tài liệu',
     printPrinter: 'Máy in',
     printDefault: 'mặc định',
@@ -84,7 +85,8 @@ const STRINGS = {
     openFileTitle: 'What do you want to do with this file?',
     openFileCurrent: 'Use with the current tool',
     openFileFailed: 'Could not read the file',
-    viewerUseTool: 'Use another tool',
+    viewerNoPath:
+      'Could not find where this file is stored. Open it with File → Open PDF and try again.',
     printTitle: 'Print',
     printPrinter: 'Printer',
     printDefault: 'default',

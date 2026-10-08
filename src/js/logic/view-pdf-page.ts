@@ -1,8 +1,18 @@
 // PDF viewer page: shows one PDF in the embedded PDF.js viewer, read-only.
 import { showAlert } from '../ui.js';
-import { t } from '../i18n/i18n.js';
+import { getLanguageFromUrl, t } from '../i18n/i18n.js';
 import { getBridge } from '../desktop/bridge.js';
+import { THEME_EVENT } from '../desktop/theme.js';
 import type { PrintSource } from '../desktop/print-dialog.js';
+import {
+  applyViewerChrome,
+  applyViewerTheme,
+  pdfjsLocale,
+} from './pdf-viewer-chrome.js';
+import {
+  VIEWER_TOOLS_EVENT,
+  type ViewerToolsDetail,
+} from './view-pdf-events.js';
 
 interface ViewerOptions {
   set(name: string, value: unknown): void;
@@ -17,6 +27,7 @@ interface ViewerWindow extends Window {
 }
 
 let blobUrl: string | null = null;
+let currentFile: File | null = null;
 
 function isPdf(file: File): boolean {
   return (
@@ -31,6 +42,7 @@ function releaseBlob() {
 
 function closeViewer() {
   releaseBlob();
+  currentFile = null;
   document.getElementById('pdf-viewer-container')?.replaceChildren();
   document.getElementById('viewer-panel')?.classList.add('hidden');
   document.getElementById('uploader')?.classList.remove('hidden');
@@ -75,25 +87,37 @@ function openFile(file: File) {
   if (!container) return;
 
   releaseBlob();
+  currentFile = file;
   blobUrl = URL.createObjectURL(file);
 
   const iframe = document.createElement('iframe');
   iframe.className = 'h-full w-full border-0';
   iframe.title = file.name;
   iframe.src = `${import.meta.env.BASE_URL}pdfjs-viewer/viewer.html?file=${encodeURIComponent(blobUrl)}`;
-  // Editing lives in the dedicated tools; this page only reads.
   iframe.addEventListener('load', () => {
-    const style = iframe.contentDocument?.createElement('style');
-    if (!style) return;
-    style.textContent =
-      '#editorModeButtons, #editorModeSeparator, #secondaryOpenFile { display: none !important; }';
-    iframe.contentDocument?.head.append(style);
     if (__DESKTOP__) installDesktopPrint(iframe);
+    void applyViewerChrome(iframe, {
+      fileName: file.name,
+      closeLabel: t('tools:viewPdf.close'),
+      twoPagesLabel: t('tools:viewPdf.twoPages'),
+      onClose: closeViewer,
+      tools: __DESKTOP__
+        ? {
+            label: t('tools:viewPdf.tools'),
+            onClick: () => {
+              if (!currentFile) return;
+              document.dispatchEvent(
+                new CustomEvent<ViewerToolsDetail>(VIEWER_TOOLS_EVENT, {
+                  detail: { file: currentFile },
+                })
+              );
+            },
+          }
+        : undefined,
+    });
   });
   container.replaceChildren(iframe);
 
-  const fileName = document.getElementById('viewer-file-name');
-  if (fileName) fileName.textContent = file.name;
   document.getElementById('uploader')?.classList.add('hidden');
   document.getElementById('viewer-panel')?.classList.remove('hidden');
 }
@@ -107,6 +131,16 @@ document.addEventListener('webviewerloaded', (event) => {
   if (!options) return;
   options.set('disablePreferences', true);
   options.set('annotationEditorMode', -1);
+  // Without this PDF.js follows the OS language, not the app's.
+  options.set('localeProperties', { lang: pdfjsLocale(getLanguageFromUrl()) });
+});
+
+// Follow the app's light/dark switch while a file is open.
+document.addEventListener(THEME_EVENT, () => {
+  const doc = document.querySelector<HTMLIFrameElement>(
+    '#pdf-viewer-container iframe'
+  )?.contentDocument;
+  if (doc) applyViewerTheme(doc);
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -138,10 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.files = files;
     fileInput.dispatchEvent(new Event('change', { bubbles: true }));
   });
-
-  document
-    .getElementById('viewer-close')
-    ?.addEventListener('click', closeViewer);
 
   // Ctrl+P while focus is outside the viewer frame.
   window.addEventListener('keydown', (e) => {

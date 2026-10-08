@@ -1,0 +1,290 @@
+/*
+ * CIT-PDF skin for the embedded PDF.js viewer (public/pdfjs-viewer).
+ * Injected into the viewer frame by src/js/logic/pdf-viewer-chrome.ts.
+ * Light or dark follows the app: the script sets `color-scheme` on the
+ * frame's root, and every colour below is a light-dark() pair.
+ */
+
+:root {
+  --cit-accent: light-dark(#0f766e, #2dd4bf);
+  --cit-accent-soft: light-dark(#ccfbf1, rgb(45 212 191 / 0.16));
+  --cit-surface: light-dark(#ffffff, rgb(42 42 42));
+  --cit-surface-2: light-dark(#f8fafc, rgb(34 34 34));
+  --cit-border: light-dark(#e5e7eb, rgb(64 64 64));
+  --cit-text: light-dark(#111827, #e5e7eb);
+  --cit-muted: light-dark(#6b7280, #9ca3af);
+
+  --main-color: var(--cit-text);
+  --body-bg-color: light-dark(#e5e7eb, rgb(24 24 24));
+  --progressBar-color: var(--cit-accent);
+  --progressBar-bg-color: var(--cit-border);
+  --progressBar-blend-color: var(--cit-accent-soft);
+  --scrollbar-color: light-dark(#cbd5e1, rgb(82 82 82));
+  --scrollbar-bg-color: transparent;
+  --toolbar-icon-bg-color: var(--cit-text);
+  --toolbar-icon-hover-bg-color: var(--cit-text);
+  --sidebar-narrow-bg-color: var(--cit-surface-2);
+  --sidebar-toolbar-bg-color: var(--cit-surface);
+  --toolbar-bg-color: var(--cit-surface);
+  --toolbar-border-color: var(--cit-border);
+  --toolbar-box-shadow: 0 1px 0 var(--cit-border);
+  --button-hover-color: light-dark(
+    rgb(15 118 110 / 0.1),
+    rgb(45 212 191 / 0.12)
+  );
+  --toggled-btn-color: var(--cit-accent);
+  --toggled-btn-bg-color: var(--cit-accent-soft);
+  --toggled-hover-active-btn-color: var(--cit-accent-soft);
+  --toggled-hover-btn-outline: none;
+  --dropdown-btn-bg-color: var(--cit-surface-2);
+  --dropdown-btn-border: 1px solid var(--cit-border);
+  --field-color: var(--cit-text);
+  --field-bg-color: var(--cit-surface-2);
+  --field-border-color: var(--cit-border);
+  --treeitem-color: var(--cit-text);
+  --treeitem-bg-color: var(--cit-accent-soft);
+  --treeitem-hover-color: var(--cit-accent);
+  --treeitem-selected-color: var(--cit-accent);
+  --treeitem-selected-bg-color: var(--cit-accent-soft);
+  --thumbnail-hover-color: var(--cit-accent-soft);
+  --thumbnail-selected-color: light-dark(
+    rgb(15 118 110 / 0.45),
+    rgb(45 212 191 / 0.5)
+  );
+  --doorhanger-bg-color: var(--cit-surface);
+  --doorhanger-border-color: var(--cit-border);
+  --doorhanger-hover-color: var(--cit-accent);
+  --doorhanger-hover-bg-color: var(--cit-accent-soft);
+  --doorhanger-separator-color: var(--cit-border);
+  --dialog-button-bg-color: var(--cit-surface-2);
+  --dialog-button-hover-bg-color: var(--cit-accent-soft);
+  --separator-color: var(--cit-border);
+}
+
+body,
+button,
+input,
+select,
+dialog {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ---------- Toolbar ---------- */
+
+/* Every bar in PDF.js (toolbar, sidebar header, find bar) is laid out from
+   this one height, so change it here rather than on the elements. */
+:root {
+  --toolbar-height: 40px;
+}
+
+#toolbarContainer {
+  box-shadow: none;
+}
+
+#toolbarContainer #toolbarViewer {
+  padding-inline: 6px;
+}
+
+/* Buttons fill the bar's height by default; keep them a fixed size. */
+.toolbarButton {
+  height: 30px;
+  align-self: center;
+}
+
+.toolbarButton,
+.dropdownToolbarButton,
+#pageNumber {
+  border-radius: 6px;
+}
+
+.toolbarButton:is(:hover, :focus-visible),
+.toolbarButton.toggled {
+  color: var(--cit-accent);
+}
+
+.toolbarButton:focus-visible,
+#pageNumber:focus-visible,
+#scaleSelect:focus-visible {
+  outline: 2px solid var(--cit-accent);
+  outline-offset: 1px;
+}
+
+.verticalToolbarSeparator {
+  background-color: var(--cit-border);
+}
+
+#pageNumber,
+#findInput {
+  border-radius: 6px;
+}
+
+#numPages {
+  color: var(--cit-muted);
+}
+
+/* Read-only viewer: these duplicate app features or lead nowhere here. */
+#editorModeButtons,
+#editorModeSeparator,
+#secondaryOpenFile,
+#viewBookmark,
+#viewBookmarkSeparator,
+#downloadButton {
+  display: none !important;
+}
+
+/* Save lives in the ⋯ menu at every width now that its button is gone. */
+#secondaryDownload {
+  display: flex !important;
+}
+
+/* ---------- Items added by CIT-PDF ---------- */
+
+.cit-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.cit-file-name {
+  min-width: 0;
+  max-width: 28vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-inline: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cit-text);
+}
+
+/* Moved menu items become plain icon buttons on the toolbar. */
+.cit-icon-only > span {
+  display: none;
+}
+
+.cit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--cit-text);
+  font:
+    500 13px 'Inter',
+    system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+
+.cit-button::before {
+  content: none !important;
+}
+
+.cit-button:hover,
+.cit-button:focus-visible {
+  background-color: var(--button-hover-color);
+  color: var(--cit-accent);
+}
+
+.cit-button:focus-visible {
+  outline: 2px solid var(--cit-accent);
+  outline-offset: 1px;
+}
+
+.cit-button[aria-pressed='true'] {
+  background-color: var(--cit-accent-soft);
+  color: var(--cit-accent);
+}
+
+.cit-button svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.cit-button.cit-primary {
+  background-color: var(--cit-accent);
+  color: light-dark(#ffffff, #042f2e);
+}
+
+.cit-button.cit-primary:hover {
+  background-color: var(--cit-accent);
+  color: light-dark(#ffffff, #042f2e);
+  filter: brightness(1.08);
+}
+
+/* Narrow windows: drop labels first, then the file name. */
+@media (max-width: 1100px) {
+  .cit-button .cit-label {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .cit-file-name {
+    display: none;
+  }
+}
+
+@media (max-width: 750px) {
+  .cit-hide-medium {
+    display: none !important;
+  }
+}
+
+/* ---------- Sidebar and menus ---------- */
+
+#sidebarContainer {
+  border-right: 1px solid var(--cit-border);
+}
+
+.doorHanger,
+.doorHangerRight,
+#secondaryToolbar,
+#findbar {
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.25);
+}
+
+dialog {
+  border-radius: 12px;
+  border: 1px solid var(--cit-border);
+}
+
+/* PDF.js only styles these icons inside its ⋯ menu; give them the same
+   icons on the toolbar. */
+#toolbarContainer #pageRotateCcw::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-rotateCcw-icon);
+  mask-image: var(--secondaryToolbarButton-rotateCcw-icon);
+}
+
+#toolbarContainer #pageRotateCw::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-rotateCw-icon);
+  mask-image: var(--secondaryToolbarButton-rotateCw-icon);
+}
+
+#toolbarContainer #presentationMode::before {
+  -webkit-mask-image: var(--toolbarButton-presentationMode-icon);
+  mask-image: var(--toolbarButton-presentationMode-icon);
+}
+
+/* PDF.js sets the system UI font on every toolbar item. */
+:is(#toolbarContainer #toolbarViewer) > *,
+:is(#toolbarContainer #toolbarViewer) input,
+#scaleSelect {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+:is(#toolbarContainer #toolbarViewer) .toolbarButtonSpacer {
+  width: 6px;
+}
+
+/* The vertical scrollbar would otherwise push thumbnails sideways. */
+#thumbnailView {
+  overflow-x: hidden;
+}
