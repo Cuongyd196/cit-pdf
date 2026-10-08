@@ -1,5 +1,9 @@
 import Tesseract from 'tesseract.js';
 import {
+  ensureDesktopModules,
+  type DesktopModuleName,
+} from '../desktop/bridge.js';
+import {
   assertTesseractLanguagesAvailable,
   TESSERACT_AVAILABLE_LANGUAGES_ENV_KEY,
 } from './tesseract-language-availability.js';
@@ -122,9 +126,36 @@ export async function createConfiguredTesseractWorker(
 ): Promise<TesseractWorker> {
   assertTesseractLanguagesAvailable(language, env);
 
+  if (typeof __DESKTOP__ !== 'undefined' && __DESKTOP__) {
+    return createDesktopTesseractWorker(language, oem, logger);
+  }
+
   return Tesseract.createWorker(
     language,
     oem,
     buildTesseractWorkerOptions(logger, env)
   );
+}
+
+/**
+ * Desktop: the OCR engine and each language pack are modules the app
+ * downloads once and then serves locally, so OCR works offline.
+ */
+async function createDesktopTesseractWorker(
+  language: string,
+  oem: Tesseract.OEM,
+  logger?: TesseractWorkerOptions['logger']
+): Promise<TesseractWorker> {
+  const packs = language
+    .split('+')
+    .map((code) => `ocr-${code.trim()}` as DesktopModuleName);
+  await ensureDesktopModules(['ocr', ...packs]);
+
+  return Tesseract.createWorker(language, oem, {
+    ...(logger ? { logger } : {}),
+    workerPath: '/modules/ocr/worker.min.js',
+    corePath: '/modules/ocr',
+    langPath: '/modules/ocr-lang',
+    gzip: true,
+  });
 }

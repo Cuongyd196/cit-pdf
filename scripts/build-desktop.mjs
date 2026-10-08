@@ -35,6 +35,8 @@ execSync('npx vite build', {
     VITE_FOOTER_TEXT:
       '© 2026 CIT-PDF · Cường IT. Dựa trên BentoPDF (AGPL-3.0).',
     VITE_DEFAULT_LANGUAGE: 'vi',
+    // OCR language packs offered as downloads (desktop/app/modules-manifest.json).
+    VITE_TESSERACT_AVAILABLE_LANGUAGES: 'vie,eng',
     ...process.env,
     VITE_DESKTOP: 'true',
     SIMPLE_MODE: 'true',

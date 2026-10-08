@@ -48,14 +48,16 @@ Hộp thoại in này hiện chỉ có ở trình xem. Các trang khác (Điền
 
 ### Bộ xử lý nặng tải khi cần
 
-Bộ cài chỉ chứa phần lõi. Ba bộ xử lý nặng được tải về **lần đầu người dùng mở công cụ cần đến chúng**, sau khi họ đồng ý trong hộp thoại xác nhận. Tải xong thì dùng offline.
+Bộ cài chỉ chứa phần lõi. Các bộ xử lý nặng và gói OCR được tải về **lần đầu người dùng mở công cụ cần đến chúng**, sau khi họ đồng ý trong hộp thoại xác nhận. Tải xong thì dùng offline.
 
-| Bộ xử lý                 | Dùng cho                                               | Nguồn                                  | Kiểm tra toàn vẹn |
-| ------------------------ | ------------------------------------------------------ | -------------------------------------- | ----------------- |
-| CoherentPDF (cpdf) 2.5.5 | Gộp, và một số thao tác trang                          | Có sẵn trong bộ cài                    | Không cần tải     |
-| PyMuPDF 0.11.16          | PDF sang Word/Excel/Markdown, trích bảng, sách điện tử | npm registry, `@bentopdf/pymupdf-wasm` | SHA-512           |
-| Ghostscript 0.1.1        | PDF/A, chuyển phông thành nét                          | npm registry, `@bentopdf/gs-wasm`      | SHA-512           |
-| LibreOffice              | Word, Excel, PowerPoint… sang PDF                      | Kho mã nguồn BentoPDF                  | SHA-256 từng tệp  |
+| Bộ xử lý                                | Dùng cho                                                                         | Nguồn                                                                             | Kiểm tra toàn vẹn |
+| --------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------- |
+| CoherentPDF (cpdf) 2.5.5                | Gộp, và một số thao tác trang                                                    | Có sẵn trong bộ cài                                                               | Không cần tải     |
+| PyMuPDF 0.11.16                         | PDF sang Word/Excel/Markdown, trích bảng, sách điện tử                           | npm registry, `@bentopdf/pymupdf-wasm`                                            | SHA-512           |
+| Ghostscript 0.1.1                       | PDF/A, chuyển phông thành nét                                                    | npm registry, `@bentopdf/gs-wasm`                                                 | SHA-512           |
+| LibreOffice                             | Word, Excel, PowerPoint… sang PDF                                                | Kho mã nguồn BentoPDF                                                             | SHA-256 từng tệp  |
+| OCR Tesseract 7.0.0                     | Nhận dạng chữ trong tài liệu quét (khoảng 8 MB, gồm phông Noto Sans cho lớp chữ) | jsDelivr, `tesseract.js` và `tesseract.js-core`; GitHub, `googlefonts/noto-fonts` | SHA-256 từng tệp  |
+| Gói ngôn ngữ OCR: tiếng Việt, tiếng Anh | Dữ liệu nhận dạng cho từng ngôn ngữ (1,4 MB và 3 MB), mỗi gói tải riêng          | jsDelivr, `@tesseract.js-data`                                                    | SHA-256 từng tệp  |
 
 Danh sách, phiên bản và mã băm khai báo trong [desktop/app/modules-manifest.json](desktop/app/modules-manifest.json). Bộ xử lý đã tải nằm trong thư mục `modules` thuộc thư mục dữ liệu người dùng của ứng dụng.
 

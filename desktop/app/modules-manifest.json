@@ -6,7 +6,10 @@
       "bundled": true,
       "mount": "/modules/cpdf/",
       "probe": "dist/coherentpdf.browser.min.js",
-      "label": { "en": "CoherentPDF engine", "vi": "Bộ xử lý CoherentPDF" },
+      "label": {
+        "en": "CoherentPDF engine",
+        "vi": "Bộ xử lý CoherentPDF"
+      },
       "source": "npm registry · coherentpdf@2.5.5",
       "kind": "npm-tarball",
       "url": "https://registry.npmjs.org/coherentpdf/-/coherentpdf-2.5.5.tgz",
@@ -66,6 +69,84 @@
         }
       ],
       "size": 77368011
+    },
+    "ocr": {
+      "version": "7.0.0",
+      "mount": "/modules/ocr/",
+      "probe": "worker.min.js",
+      "label": {
+        "en": "OCR engine (text recognition for scanned documents)",
+        "vi": "Bộ nhận dạng OCR (nhận dạng chữ trong tài liệu quét)"
+      },
+      "source": "jsDelivr · tesseract.js@7.0.0, tesseract.js-core@7.0.0 · GitHub · googlefonts/noto-fonts (Noto Sans, OFL-1.1)",
+      "kind": "files",
+      "files": [
+        {
+          "path": "worker.min.js",
+          "url": "https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/worker.min.js",
+          "sha256": "576b7df7e3393e137e51849357c9adb53fe7ac1bb69bfa06cf3d61520f182c6d",
+          "size": 111307
+        },
+        {
+          "path": "tesseract-core-relaxedsimd-lstm.wasm.js",
+          "url": "https://cdn.jsdelivr.net/npm/tesseract.js-core@7.0.0/tesseract-core-relaxedsimd-lstm.wasm.js",
+          "sha256": "861a536cf9ef8e63cb644d57bab39c388f37f7d6b6f60024b741c5f6b39a59b3",
+          "size": 3905767
+        },
+        {
+          "path": "tesseract-core-simd-lstm.wasm.js",
+          "url": "https://cdn.jsdelivr.net/npm/tesseract.js-core@7.0.0/tesseract-core-simd-lstm.wasm.js",
+          "sha256": "c58b46a4c796c0b8afccf77591d5b875b6896b45d402bbce8caa6f5362447b38",
+          "size": 3899472
+        },
+        {
+          "path": "NotoSans-Regular.ttf",
+          "url": "https://raw.githubusercontent.com/googlefonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
+          "sha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
+          "size": 569208
+        }
+      ],
+      "size": 8485754
+    },
+    "ocr-vie": {
+      "version": "1.0.0",
+      "mount": "/modules/ocr-lang/",
+      "probe": "vie.traineddata.gz",
+      "label": {
+        "en": "OCR language pack: Vietnamese",
+        "vi": "Gói ngôn ngữ OCR: tiếng Việt"
+      },
+      "source": "jsDelivr · @tesseract.js-data/vie@1.0.0 (4.0.0_best_int)",
+      "kind": "files",
+      "files": [
+        {
+          "path": "vie.traineddata.gz",
+          "url": "https://cdn.jsdelivr.net/npm/@tesseract.js-data/vie@1.0.0/4.0.0_best_int/vie.traineddata.gz",
+          "sha256": "2284f610f262a1b19ec8df9f196b9ff6ce38ddb4a66329e998941df4b8961c8d",
+          "size": 1423003
+        }
+      ],
+      "size": 1423003
+    },
+    "ocr-eng": {
+      "version": "1.0.0",
+      "mount": "/modules/ocr-lang/",
+      "probe": "eng.traineddata.gz",
+      "label": {
+        "en": "OCR language pack: English",
+        "vi": "Gói ngôn ngữ OCR: tiếng Anh"
+      },
+      "source": "jsDelivr · @tesseract.js-data/eng@1.0.0 (4.0.0_best_int)",
+      "kind": "files",
+      "files": [
+        {
+          "path": "eng.traineddata.gz",
+          "url": "https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int/eng.traineddata.gz",
+          "sha256": "45b4cb346724ac1774f1c36f42f182b887bcdb28ebe63e6fff90ac41f3fcff91",
+          "size": 2952873
+        }
+      ],
+      "size": 2952873
     }
   }
 }

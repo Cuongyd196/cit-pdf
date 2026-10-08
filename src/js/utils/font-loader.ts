@@ -40,6 +40,25 @@ export function resolveFontUrl(
   return getFontUrlForFamily(fontFamily);
 }
 
+// Desktop: the OCR module ships this font so the text layer can be written
+// without a network connection. Other families still come from the CDN.
+const DESKTOP_OCR_FONT_FAMILY = 'Noto Sans';
+
+async function fetchInstalledDesktopFont(
+  fontFamily: string
+): Promise<Response | null> {
+  if (typeof __DESKTOP__ === 'undefined' || !__DESKTOP__) return null;
+  if (fontFamily !== DESKTOP_OCR_FONT_FAMILY) return null;
+  try {
+    const response = await fetch(
+      `/modules/ocr/${getFontAssetFileName(fontFamily)}`
+    );
+    return response.ok ? response : null;
+  } catch {
+    return null;
+  }
+}
+
 async function openFontDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -109,7 +128,8 @@ export async function getFontForLanguage(lang: string): Promise<ArrayBuffer> {
   try {
     const fontUrl = resolveFontUrl(fontFamily);
 
-    const fontResponse = await fetch(fontUrl);
+    const fontResponse =
+      (await fetchInstalledDesktopFont(fontFamily)) ?? (await fetch(fontUrl));
 
     if (!fontResponse.ok) {
       throw new Error(`Failed to fetch font file: ${fontResponse.statusText}`);

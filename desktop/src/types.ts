@@ -2,7 +2,10 @@ export type DesktopModuleName =
   | 'pymupdf'
   | 'ghostscript'
   | 'libreoffice'
-  | 'cpdf';
+  | 'cpdf'
+  | 'ocr'
+  | 'ocr-vie'
+  | 'ocr-eng';
 
 export interface ModuleManifestFileItem {
   path: string;

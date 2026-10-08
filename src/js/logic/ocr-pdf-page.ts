@@ -146,7 +146,13 @@ async function runOCR() {
     return;
   }
 
-  const langString = selectedLangs.join('+');
+  // Tesseract favours the first language. With English first, accented
+  // text in other Latin-script languages (Vietnamese capitals, for example)
+  // loses its diacritics, so English always goes last.
+  const langString = [
+    ...selectedLangs.filter((code) => code !== 'eng'),
+    ...selectedLangs.filter((code) => code === 'eng'),
+  ].join('+');
 
   const toolOptions = document.getElementById('tool-options');
   const ocrProgress = document.getElementById('ocr-progress');

@@ -14,7 +14,10 @@ export type DesktopModuleName =
   | 'pymupdf'
   | 'ghostscript'
   | 'libreoffice'
-  | 'cpdf';
+  | 'cpdf'
+  | 'ocr'
+  | 'ocr-vie'
+  | 'ocr-eng';
 
 interface ModuleProgress {
   name: string;
