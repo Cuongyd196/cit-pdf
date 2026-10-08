@@ -1,7 +1,7 @@
 <p align="center"><img src="public/images/cit-pdf-logo.svg" width="96" alt="CIT-PDF"></p>
 <h1 align="center">CIT-PDF</h1>
 
-**CIT-PDF** là bộ công cụ PDF dành cho máy tính (Windows, macOS, Linux). Mọi thao tác xử lý đều chạy ngay trên máy của bạn; tệp không được gửi lên máy chủ nào.
+**CIT-PDF** là bộ công cụ PDF dành cho máy tính Windows. Mọi thao tác xử lý đều chạy ngay trên máy của bạn; tệp không được gửi lên máy chủ nào.
 
 CIT-PDF là bản sửa đổi (fork) của [BentoPDF](https://github.com/alam00000/bentopdf), do Cường IT đóng gói lại thành ứng dụng desktop và phát hành theo giấy phép **AGPL-3.0**. Đây không phải sản phẩm chính thức của BentoPDF.
 
@@ -16,11 +16,12 @@ CIT-PDF là bản sửa đổi (fork) của [BentoPDF](https://github.com/alam00
 
 Tải bản cài tại trang [Releases](https://github.com/Cuongyd196/cit-pdf/releases).
 
-| Hệ điều hành | Tệp                             | Ghi chú                                            |
-| ------------ | ------------------------------- | -------------------------------------------------- |
-| Windows      | Bộ cài `.exe` hoặc bản Portable | Cài theo người dùng, không cần quyền Administrator |
-| macOS        | `.dmg`                          | Hỗ trợ Intel và Apple Silicon                      |
-| Linux        | `.AppImage` hoặc `.deb`         | `.deb` dành cho Ubuntu/Debian                      |
+Dành cho Windows 10 và 11 (64-bit).
+
+| Tệp                                            | Ghi chú                                |
+| ---------------------------------------------- | -------------------------------------- |
+| `CIT-PDF-<phiên bản>-Windows-x64-Setup.exe`    | Bản cài, không cần quyền Administrator |
+| `CIT-PDF-<phiên bản>-Windows-x64-Portable.exe` | Bản Portable, chạy thẳng không cần cài |
 
 ### Module tải khi dùng lần đầu
 
@@ -45,7 +46,6 @@ npm install
 npm run desktop            # build và chạy ứng dụng
 npm run desktop:build      # chỉ build
 npm run desktop:dist       # đóng gói bộ cài Windows vào release/
-npm run desktop:dist:all   # đóng gói cho Windows, macOS, Linux
 ```
 
 Lưu ý: trong terminal của VS Code, biến `ELECTRON_RUN_AS_NODE=1` được đặt sẵn và làm Electron chạy như Node thường. Hãy bỏ biến này trước khi chạy `npm run desktop`.
