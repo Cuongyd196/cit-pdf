@@ -25,6 +25,12 @@ const __dirname = path.dirname(__filename);
 // 1. Must register privileged scheme before app is ready
 registerAppScheme();
 
+// Conversions run in the renderer and its workers. Chromium deprioritises
+// the renderer of a minimised or covered window, which slows a LibreOffice
+// conversion to a crawl until the user returns. Keep it at full priority.
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+
 // 2. Single instance lock
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -120,6 +126,10 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      // Tools render PDF pages on canvases. With throttling on, that work
+      // pauses whenever the window is minimised or covered, so a long
+      // conversion would stall until the user comes back.
+      backgroundThrottling: false,
       sandbox: false,
       webSecurity: true,
     },

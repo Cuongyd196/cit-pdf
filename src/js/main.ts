@@ -32,6 +32,11 @@ import {
 declare const __BRAND_NAME__: string;
 
 const init = async () => {
+  if (__DESKTOP__) {
+    const { keepRenderingWhenHidden } =
+      await import('./desktop/keep-rendering.js');
+    keepRenderingWhenHidden();
+  }
   await initI18n();
   await loadRuntimeConfig();
   injectLanguageSwitcher();
