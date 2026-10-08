@@ -190,6 +190,24 @@ function watch(): void {
 }
 
 /**
+ * A few tools still use the browser's own alert/confirm/prompt, which are
+ * not part of the page and so never pass through the observer. Translate
+ * the message on its way in; the dialogs keep their blocking behaviour.
+ */
+function translateNativeDialogs(): void {
+  const translated = (message?: unknown): string => {
+    const text = message === undefined ? '' : String(message);
+    return translatePhrase(text) ?? text;
+  };
+  const { alert, confirm, prompt } = window;
+  window.alert = (message?: unknown) => alert.call(window, translated(message));
+  window.confirm = (message?: unknown) =>
+    confirm.call(window, translated(message));
+  window.prompt = (message?: unknown, value?: string) =>
+    prompt.call(window, translated(message), value);
+}
+
+/**
  * Load the phrase dictionary for a language, if it ships one, and start
  * translating. English is the source language and needs none.
  */
@@ -205,6 +223,7 @@ export async function initPhrases(lang: string): Promise<void> {
     return;
   }
 
+  translateNativeDialogs();
   if (document.body) watch();
   else document.addEventListener('DOMContentLoaded', watch, { once: true });
 }
