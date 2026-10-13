@@ -204,8 +204,9 @@ async function handleFiles(files: FileList) {
         .getPlugin('document-manager')
         .provides() as unknown as DocManagerPlugin;
 
-      docManagerPlugin.onDocumentClosed((data: { id?: string }) => {
-        const docId = data?.id || '';
+      // The viewer reports a closed document by its id alone.
+      docManagerPlugin.onDocumentClosed((data) => {
+        const docId = typeof data === 'string' ? data : data?.id || '';
         removeFileEntry(docId);
       });
 
