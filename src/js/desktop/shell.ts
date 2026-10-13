@@ -180,7 +180,9 @@ export function initDesktopShell(options: ShellOptions): void {
     );
     star.type = 'button';
     star.title = ds(isFavorite ? 'removeFavorite' : 'addFavorite');
-    star.append(el('i', isFavorite ? 'ph-fill ph-star' : 'ph ph-star'));
+    // Only the regular icon weight is bundled; a favorite is told apart by
+    // its colour and by staying visible (.is-favorite).
+    star.append(el('i', 'ph ph-star'));
     star.addEventListener('click', (e) => {
       e.preventDefault();
       toggleFavorite(tool.slug);

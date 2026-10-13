@@ -145,6 +145,22 @@ dialog {
   gap: 2px;
 }
 
+/* The file name is the one flexible item on the bar: when the window gets
+   tight it gives up its width, so the buttons never spill past the edge.
+   The selectors repeat PDF.js's own to outweigh its "flex: none". */
+#toolbarContainer #toolbarViewer > #toolbarViewerLeft {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+#toolbarContainer #toolbarViewer > #toolbarViewerLeft > * {
+  flex-shrink: 0;
+}
+
+#toolbarContainer #toolbarViewer > #toolbarViewerLeft > .cit-file-name {
+  flex: 0 1 auto;
+}
+
 .cit-file-name {
   min-width: 0;
   max-width: 28vw;
