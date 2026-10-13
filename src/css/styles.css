@@ -623,6 +623,43 @@ body:has(#desktop-sidebar) #drop-zone i.ph {
   color: var(--color-indigo-400);
 }
 
+/* The web layout gives the drop zone a tall, poster-sized box. In the app
+   window it is one compact row: icon on the left, text beside it. */
+body:has(#desktop-sidebar) #drop-zone {
+  height: auto;
+  align-items: stretch;
+  border-width: 1px;
+  border-radius: 0.5rem;
+}
+
+body:has(#desktop-sidebar) #drop-zone > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.875rem;
+  row-gap: 0.125rem;
+  align-items: center;
+  justify-items: start;
+  padding: 0.875rem 1.125rem;
+  text-align: left;
+}
+
+body:has(#desktop-sidebar) #drop-zone > div > :is(i, svg) {
+  grid-row: 1 / span 4;
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+body:has(#desktop-sidebar) #drop-zone > div > p {
+  grid-column: 2;
+  margin: 0;
+}
+
+/* Everything in the app stays on this computer; no need to repeat it on
+   every tool. */
+body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
+  display: none;
+}
+
 .desktop-theme-option {
   @apply flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white;
 }

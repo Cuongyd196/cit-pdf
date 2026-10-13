@@ -6,6 +6,8 @@ import { makeUniqueFileKey } from '../utils/deduplicate-filename.js';
 import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
 import { getEditorDisabledCategories } from '../utils/disabled-tools.js';
 import { editorFontFallback } from '../config/editor-fonts.js';
+import { editorLocale, localizeEditorLabels } from '../config/editor-locale.js';
+import { getLanguageFromUrl } from '../i18n/i18n.js';
 import { needsFontEmbedding } from '../utils/freetext-script.js';
 
 const embedPdfWasmUrl = new URL(
@@ -185,6 +187,8 @@ async function handleFiles(files: FileList) {
         worker: true,
         wasmUrl: embedPdfWasmUrl,
         fontFallback: editorFontFallback,
+        // The viewer has its own translations; make it follow the app.
+        i18n: editorLocale(getLanguageFromUrl()),
         export: {
           defaultFileName: firstFile.name,
         },
@@ -193,6 +197,7 @@ async function handleFiles(files: FileList) {
         },
         tabBar: 'always',
       });
+      localizeEditorLabels(pdfContainer, getLanguageFromUrl());
 
       const registry = await viewerInstance.registry;
       docManagerPlugin = registry
