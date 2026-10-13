@@ -46,6 +46,13 @@ export type UpdateCheckResult =
   | { ok: true; current: string; latest: string; newer: boolean; url: string }
   | { ok: false; current: string; error: 'network' | 'no-release' };
 
+export interface SavedDownload {
+  path: string;
+  name: string;
+  isPdf: boolean;
+  canOpen: boolean;
+}
+
 export interface OpenedFile {
   path: string;
   name: string;
@@ -90,6 +97,9 @@ interface DesktopBridge {
   registerPickedFile(file: File): Promise<OpenedFile | null>;
   openInNewWindow(path: string): Promise<boolean>;
   checkForUpdate(): Promise<UpdateCheckResult>;
+  onDownloadSaved(cb: (saved: SavedDownload) => void): () => void;
+  showSavedInFolder(path: string): Promise<boolean>;
+  openSavedFile(path: string): Promise<boolean>;
 }
 
 declare global {

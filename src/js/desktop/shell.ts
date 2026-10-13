@@ -6,19 +6,16 @@
 import { categories } from '../config/tools.js';
 import { t, rewriteLinks } from '../i18n/i18n.js';
 import { getStoredItem, setStoredItem } from '../utils/safe-storage.js';
-import { getBridge, type OpenedFile } from './bridge.js';
+import { getBridge, type OpenedFile, type SavedDownload } from './bridge.js';
 import { VIEWER_SLUG, openFileAction } from './open-file.js';
-import { applyDesktopStrings, ds } from './strings.js';
+import { applyDesktopStrings, ds, type DesktopStringKey } from './strings.js';
 import { THEME_EVENT, currentTheme, setTheme } from './theme.js';
 import { initUpdateBanner } from './update-check.js';
-import { showAlert } from '../ui.js';
 import {
   VIEWER_SELECT_EVENT,
   VIEWER_TABS_EVENT,
-  VIEWER_TOOLS_EVENT,
   type ViewerSelectDetail,
   type ViewerTabsDetail,
-  type ViewerToolsDetail,
 } from '../logic/view-pdf-events.js';
 
 interface ShellOptions {
@@ -43,6 +40,23 @@ const FAVORITES_KEY = 'cit:favorites';
 const RECENT_KEY = 'cit:recent';
 const PENDING_FILE_KEY = 'cit:pending-file';
 const VIEWER_TABS_KEY = 'cit:viewer-tabs';
+const READING_SIDEBAR_KEY = 'cit:reading-sidebar';
+const SAVED_TOAST_MS = 15000;
+
+// One-click actions above the document in the viewer, most common first,
+// with the short label each one gets there.
+const QUICK_ACTIONS: Array<[string, DesktopStringKey]> = [
+  ['compress-pdf', 'quickCompress'],
+  ['split-pdf', 'quickSplit'],
+  ['rotate-pdf', 'quickRotate'],
+  ['organize-pdf', 'quickOrganize'],
+  ['edit-pdf', 'quickEdit'],
+  ['edit-pdf-text', 'quickEditText'],
+  ['pdf-to-word', 'quickToWord'],
+  ['ocr-pdf', 'quickOcr'],
+  ['sign-pdf', 'quickSign'],
+  ['protect-pdf', 'quickProtect'],
+];
 const MAX_RECENT = 5;
 
 // Tools offered when a PDF is opened from the OS, most common first.
@@ -303,6 +317,7 @@ export function initDesktopShell(options: ShellOptions): void {
     toolsBySlug.get(VIEWER_SLUG),
     (slug) => toolsBySlug.has(slug)
   );
+  initViewerActions(toolsBySlug, pick(OPEN_FILE_TOOLS));
 }
 
 /** Home page only: a row of recently used tools above the full grid. */
@@ -586,6 +601,7 @@ function initOpenedFiles(
         files.map((file) => fileOrigins.get(file) ?? null)
       );
       pageFile = viewerTabs[active] ?? null;
+      setReading(files.length > 0);
       if (restoringTabs) return;
       saveViewerTabs({
         files: viewerTabs.filter((tab): tab is OpenedFile => tab !== null),
@@ -621,18 +637,30 @@ function initOpenedFiles(
     true
   );
 
-  // The viewer's own button offers a short list of tools for the open file.
-  // A file that came from the OS already has a path; one picked in the page
-  // gets its path from the bridge.
-  document.addEventListener(VIEWER_TOOLS_EVENT, (event) => {
-    const { file } = (event as CustomEvent<ViewerToolsDetail>).detail;
-    void (async () => {
-      const opened =
-        (await fileOrigins.get(file)) ??
-        (await bridge.registerPickedFile(file));
-      if (opened) showOpenFilePicker(opened, tools, undefined);
-      else showAlert(ds('openFileFailed'), ds('viewerNoPath'));
-    })();
+  // Goes to the viewer with a file, through a link so rewriteLinks applies
+  // the language prefix.
+  const goToViewer = (file: OpenedFile) => {
+    if (!viewerTool) return;
+    // The link click below hands on the page's file: make it this one.
+    pageFile = file;
+    rememberPendingFile(file);
+    const link = el('a', 'hidden');
+    link.href = viewerTool.href;
+    document.body.append(link);
+    rewriteLinks();
+    link.click();
+  };
+
+  // A tool saved its result: say where, and offer to look at it.
+  bridge.onDownloadSaved((saved) => {
+    showSavedToast(saved, {
+      canView: saved.isPdf && Boolean(viewerTool),
+      view: () => {
+        const file = { path: saved.path, name: saved.name };
+        if (onViewer) void openInViewer(file);
+        else goToViewer(file);
+      },
+    });
   });
 
   // What the previous page left behind: a file handed over to this tool
@@ -678,20 +706,142 @@ function initOpenedFiles(
       case 'load':
         await openInViewer(file);
         break;
-      case 'navigate': {
-        rememberPendingFile(file);
-        // Go through a link so rewriteLinks applies the language prefix.
-        const link = el('a', 'hidden');
-        link.href = viewerTool!.href;
-        document.body.append(link);
-        rewriteLinks();
-        link.click();
+      case 'navigate':
+        goToViewer(file);
         break;
-      }
       default:
         showOpenFilePicker(file, tools, currentTool);
     }
   };
   bridge.onFileOpened(() => void check());
   void check();
+}
+
+// While a document is open in the viewer the sidebar shrinks to a rail of
+// icons, leaving the width to the page. The user can bring it back, and
+// that choice is remembered.
+let reading = false;
+
+function applyReading(): void {
+  const keepOpen = getStoredItem(READING_SIDEBAR_KEY) === 'open';
+  document.body.classList.toggle('desktop-reading', reading && !keepOpen);
+}
+
+function setReading(value: boolean): void {
+  reading = value;
+  applyReading();
+}
+
+/**
+ * Viewer page: the row of quick actions above the document. Each one is a
+ * link to its tool; the page's file follows the click like any other.
+ */
+function initViewerActions(
+  toolsBySlug: Map<string, ShellTool>,
+  moreTools: ShellTool[]
+): void {
+  const row = document.getElementById('viewer-actions');
+  if (!row || !getBridge()) return;
+
+  const toggle = el('button', 'pdf-view-action pdf-view-action-icon');
+  toggle.type = 'button';
+  toggle.title = ds('sidebarToggle');
+  toggle.setAttribute('aria-label', toggle.title);
+  toggle.append(el('i', 'ph ph-sidebar-simple'));
+  toggle.addEventListener('click', () => {
+    const collapsed = document.body.classList.contains('desktop-reading');
+    setStoredItem(READING_SIDEBAR_KEY, collapsed ? 'open' : 'rail');
+    applyReading();
+  });
+  row.append(toggle, el('span', 'pdf-view-actions-divider'));
+
+  for (const [slug, labelKey] of QUICK_ACTIONS) {
+    const tool = toolsBySlug.get(slug);
+    if (!tool) continue;
+    const link = el('a', 'pdf-view-action');
+    link.href = tool.href;
+    link.title = tool.name;
+    link.append(iconEl(tool.icon), el('span', '', ds(labelKey)));
+    row.append(link);
+  }
+
+  const more = el('button', 'pdf-view-action');
+  more.type = 'button';
+  more.title = ds('openFileTitle');
+  more.append(
+    el('i', 'ph ph-dots-three-outline'),
+    el('span', '', ds('quickMore'))
+  );
+  more.addEventListener('click', () => {
+    if (pageFile) showOpenFilePicker(pageFile, moreTools, undefined);
+  });
+  row.append(more);
+
+  row.classList.remove('hidden');
+  rewriteLinks();
+}
+
+/** A short notice that a result was saved, with ways to get to it. */
+function showSavedToast(
+  saved: SavedDownload,
+  options: { canView: boolean; view: () => void }
+): void {
+  const bridge = getBridge();
+  if (!bridge) return;
+  document.getElementById('desktop-saved-toast')?.remove();
+
+  const toast = el('div', 'desktop-saved-toast');
+  toast.id = 'desktop-saved-toast';
+  toast.setAttribute('role', 'status');
+  toast.dataset.noTranslate = '';
+  const close = () => toast.remove();
+
+  const text = el('div', 'min-w-0 flex-1');
+  text.append(
+    el('p', 'text-sm font-semibold text-white', ds('savedTitle')),
+    el('p', 'truncate text-xs text-gray-400', saved.name)
+  );
+  text.title = saved.path;
+
+  const actions = el('div', 'flex flex-shrink-0 items-center gap-2');
+  const action = (label: string, primary: boolean, run: () => void) => {
+    const button = el(
+      'button',
+      'desktop-saved-toast-action' + (primary ? ' primary' : ''),
+      label
+    );
+    button.type = 'button';
+    button.addEventListener('click', () => {
+      close();
+      run();
+    });
+    actions.append(button);
+  };
+  if (options.canView) action(ds('savedView'), true, options.view);
+  else if (saved.canOpen) {
+    action(ds('savedOpen'), true, () => void bridge.openSavedFile(saved.path));
+  }
+  action(
+    ds('savedFolder'),
+    false,
+    () => void bridge.showSavedInFolder(saved.path)
+  );
+
+  const dismiss = el('button', 'desktop-saved-toast-close');
+  dismiss.type = 'button';
+  dismiss.title = ds('cancel');
+  dismiss.setAttribute('aria-label', dismiss.title);
+  dismiss.append(el('i', 'ph ph-x'));
+  dismiss.addEventListener('click', close);
+
+  toast.append(
+    el('i', 'ph ph-check-circle flex-shrink-0 text-2xl text-indigo-400'),
+    text,
+    actions,
+    dismiss
+  );
+  document.body.append(toast);
+  window.setTimeout(() => {
+    if (toast.isConnected && !toast.matches(':hover')) close();
+  }, SAVED_TOAST_MS);
 }

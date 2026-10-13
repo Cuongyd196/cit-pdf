@@ -13,10 +13,8 @@ import {
 import {
   VIEWER_SELECT_EVENT,
   VIEWER_TABS_EVENT,
-  VIEWER_TOOLS_EVENT,
   type ViewerSelectDetail,
   type ViewerTabsDetail,
-  type ViewerToolsDetail,
 } from './view-pdf-events.js';
 
 interface ViewerOptions {
@@ -196,18 +194,6 @@ function openFile(file: File) {
       closeLabel: t('tools:viewPdf.close'),
       twoPagesLabel: t('tools:viewPdf.twoPages'),
       onClose: () => closeTab(tab),
-      tools: __DESKTOP__
-        ? {
-            label: t('tools:viewPdf.tools'),
-            onClick: () => {
-              document.dispatchEvent(
-                new CustomEvent<ViewerToolsDetail>(VIEWER_TOOLS_EVENT, {
-                  detail: { file },
-                })
-              );
-            },
-          }
-        : undefined,
     });
   });
 

@@ -9,6 +9,7 @@ import {
   type PrinterInfo,
   type PrintRequest,
   type PrintResult,
+  type SavedDownload,
   type UpdateCheckResult,
 } from './types.js';
 
@@ -89,6 +90,24 @@ const bridge = {
   // Opens a file the user already handed to the app in a window of its own.
   openInNewWindow: (filePath: string): Promise<boolean> => {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_IN_NEW_WINDOW, filePath);
+  },
+
+  // A result the user just saved: lets the page offer to show it.
+  onDownloadSaved: (cb: (saved: SavedDownload) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, saved: SavedDownload) =>
+      cb(saved);
+    ipcRenderer.on(IPC_CHANNELS.DOWNLOAD_SAVED, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.DOWNLOAD_SAVED, handler);
+    };
+  },
+
+  showSavedInFolder: (filePath: string): Promise<boolean> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.SHOW_SAVED_IN_FOLDER, filePath);
+  },
+
+  openSavedFile: (filePath: string): Promise<boolean> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.OPEN_SAVED_FILE, filePath);
   },
 
   // Asks GitHub whether a newer release exists. Runs only on request.

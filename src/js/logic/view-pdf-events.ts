@@ -1,12 +1,7 @@
 /**
- * The viewer page asks the desktop shell to hand the open file to another
- * tool through this event; the shell owns the tool list and the picker.
+ * Events between the viewer page and the desktop shell. The shell owns the
+ * tool list and the row of quick actions above the document.
  */
-export const VIEWER_TOOLS_EVENT = 'cit:viewer-tools';
-
-export interface ViewerToolsDetail {
-  file: File;
-}
 
 /** The viewer page reports its tabs whenever they change. */
 export const VIEWER_TABS_EVENT = 'cit:viewer-tabs';
