@@ -6,6 +6,12 @@
 
 const vi = {
   menuFile: 'Tệp',
+  newWindow: 'Cửa sổ mới',
+  leaveTitle: 'Thay đổi chưa lưu',
+  leaveMessage: 'Tài liệu có thay đổi chưa lưu.',
+  leaveDetail: 'Nếu thoát bây giờ, các thay đổi này sẽ mất.',
+  leaveDiscard: 'Thoát, bỏ thay đổi',
+  leaveStay: 'Ở lại',
   openPdf: 'Mở tệp PDF…',
   closeWindow: 'Đóng cửa sổ',
   quit: 'Thoát',
@@ -49,6 +55,12 @@ export type UiStrings = typeof vi;
 
 const en: UiStrings = {
   menuFile: 'File',
+  newWindow: 'New Window',
+  leaveTitle: 'Unsaved changes',
+  leaveMessage: 'This document has unsaved changes.',
+  leaveDetail: 'If you leave now, these changes will be lost.',
+  leaveDiscard: 'Leave and discard',
+  leaveStay: 'Stay',
   openPdf: 'Open PDF…',
   closeWindow: 'Close Window',
   quit: 'Exit',

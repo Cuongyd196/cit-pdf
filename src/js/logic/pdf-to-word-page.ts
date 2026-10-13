@@ -11,6 +11,78 @@ import { createIcons, icons } from 'lucide';
 import { loadPyMuPDF } from '../utils/pymupdf-loader.js';
 import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
 import { deduplicateFileName } from '../utils/deduplicate-filename.js';
+import { performOcr } from '../utils/ocr.js';
+import { resolveConfiguredTesseractAvailableLanguages } from '../utils/tesseract-language-availability.js';
+
+// A scan has no text for the converter to find. Fewer characters than this
+// over the sampled pages counts as "no text".
+const MIN_TEXT_CHARS = 20;
+const TEXT_SAMPLE_PAGES = 5;
+// Render scale for recognition: about 200 DPI.
+const OCR_SCALE = 2.8;
+
+async function hasText(file: File): Promise<boolean> {
+  const data = await readFileAsArrayBuffer(file);
+  const pdf = await getPDFDocument({ data }).promise;
+  try {
+    let chars = 0;
+    const pages = Math.min(pdf.numPages, TEXT_SAMPLE_PAGES);
+    for (let i = 1; i <= pages && chars < MIN_TEXT_CHARS; i++) {
+      const content = await (await pdf.getPage(i)).getTextContent();
+      for (const item of content.items) {
+        if ('str' in item) chars += item.str.replace(/\s/g, '').length;
+      }
+    }
+    return chars >= MIN_TEXT_CHARS;
+  } finally {
+    await pdf.destroy();
+  }
+}
+
+// Vietnamese and English, limited to what this build offers. English goes
+// last: put first, it costs Vietnamese capitals their diacritics.
+function ocrLanguages(): string {
+  const available = resolveConfiguredTesseractAvailableLanguages();
+  const wanted = ['vie', 'eng'].filter(
+    (code) => !available || available.includes(code)
+  );
+  return wanted.join('+') || 'eng';
+}
+
+/**
+ * A scanned PDF is replaced by pages holding its recognized text, so the
+ * Word file gets editable text instead of one picture per page.
+ */
+async function recognizeIfScanned(
+  file: File
+): Promise<{ file: File; recognized: boolean }> {
+  if (await hasText(file)) return { file, recognized: false };
+
+  showLoader('Scanned document: recognizing text (OCR)...');
+  const bytes = (await readFileAsArrayBuffer(file)) as ArrayBuffer;
+  const result = await performOcr(new Uint8Array(bytes), {
+    language: ocrLanguages(),
+    resolution: OCR_SCALE,
+    binarize: false,
+    whitelist: '',
+    textOnly: true,
+    onProgress: (status) => {
+      // Page counts are worth showing; the engine's own states are noise.
+      if (status.startsWith('Processing page')) {
+        showLoader(`Recognizing text (OCR): ${status}`);
+      }
+    },
+  });
+  return {
+    file: new File([result.pdfBytes as BlobPart], file.name, {
+      type: 'application/pdf',
+    }),
+    recognized: true,
+  };
+}
+
+const OCR_NOTE =
+  ' The PDF was a scan, so its text was recognized with OCR: please check it against the original.';
 
 document.addEventListener('DOMContentLoaded', () => {
   const fileInput = document.getElementById('file-input') as HTMLInputElement;
@@ -112,7 +184,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = state.files[0];
         showLoader(`Converting ${file.name}...`);
 
-        const docxBlob = await pymupdf.pdfToDocx(file);
+        const source = await recognizeIfScanned(file);
+        showLoader(`Converting ${file.name}...`);
+        const docxBlob = await pymupdf.pdfToDocx(source.file);
         const outName = file.name.replace(/\.pdf$/i, '') + '.docx';
 
         downloadFile(docxBlob, outName);
@@ -120,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showAlert(
           'Conversion Complete',
-          `Successfully converted ${file.name} to DOCX.`,
+          `Successfully converted ${file.name} to DOCX.${source.recognized ? OCR_NOTE : ''}`,
           'success',
           () => resetState()
         );
@@ -128,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const JSZip = (await import('jszip')).default;
         const zip = new JSZip();
         const usedNames = new Set<string>();
+        let recognized = false;
 
         for (let i = 0; i < state.files.length; i++) {
           const file = state.files[i];
@@ -135,7 +210,12 @@ document.addEventListener('DOMContentLoaded', () => {
             `Converting ${i + 1}/${state.files.length}: ${file.name}...`
           );
 
-          const docxBlob = await pymupdf.pdfToDocx(file);
+          const source = await recognizeIfScanned(file);
+          recognized ||= source.recognized;
+          showLoader(
+            `Converting ${i + 1}/${state.files.length}: ${file.name}...`
+          );
+          const docxBlob = await pymupdf.pdfToDocx(source.file);
           const baseName = file.name.replace(/\.pdf$/i, '');
           const arrayBuffer = await docxBlob.arrayBuffer();
           const zipEntryName = deduplicateFileName(
@@ -153,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showAlert(
           'Conversion Complete',
-          `Successfully converted ${state.files.length} PDF(s) to DOCX.`,
+          `Successfully converted ${state.files.length} PDF(s) to DOCX.${recognized ? OCR_NOTE : ''}`,
           'success',
           () => resetState()
         );

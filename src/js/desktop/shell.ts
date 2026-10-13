@@ -10,9 +10,14 @@ import { getBridge, type OpenedFile } from './bridge.js';
 import { VIEWER_SLUG, openFileAction } from './open-file.js';
 import { applyDesktopStrings, ds } from './strings.js';
 import { THEME_EVENT, currentTheme, setTheme } from './theme.js';
+import { initUpdateBanner } from './update-check.js';
 import { showAlert } from '../ui.js';
 import {
+  VIEWER_SELECT_EVENT,
+  VIEWER_TABS_EVENT,
   VIEWER_TOOLS_EVENT,
+  type ViewerSelectDetail,
+  type ViewerTabsDetail,
   type ViewerToolsDetail,
 } from '../logic/view-pdf-events.js';
 
@@ -37,6 +42,7 @@ interface ShellCategory {
 const FAVORITES_KEY = 'cit:favorites';
 const RECENT_KEY = 'cit:recent';
 const PENDING_FILE_KEY = 'cit:pending-file';
+const VIEWER_TABS_KEY = 'cit:viewer-tabs';
 const MAX_RECENT = 5;
 
 // Tools offered when a PDF is opened from the OS, most common first.
@@ -285,13 +291,15 @@ export function initDesktopShell(options: ShellOptions): void {
   // Recent tools as of arriving on this page; the home page is not a tool,
   // so nothing was just added.
   renderHomeRecent(pick(recent));
+  void initUpdateBanner();
 
   initThemeToggle();
   void updateModulesStatus();
   initOpenedFiles(
     pick(OPEN_FILE_TOOLS),
     currentTool,
-    toolsBySlug.get(VIEWER_SLUG)
+    toolsBySlug.get(VIEWER_SLUG),
+    (slug) => toolsBySlug.has(slug)
   );
 }
 
@@ -368,10 +376,52 @@ function getFileInput(): HTMLInputElement | null {
 // the user picking a file themselves.
 let injecting = false;
 
-async function injectFile(file: OpenedFile): Promise<boolean> {
+// The PDF this page is working on, when the app knows where it is on disk:
+// in the viewer, the tab on screen. It follows the user to the next tool.
+let pageFile: OpenedFile | null = null;
+
+// Where the File objects of this page live on disk, for those that do.
+const fileOrigins = new WeakMap<File, Promise<OpenedFile | null>>();
+
+interface SavedViewerTabs {
+  files: OpenedFile[];
+  /** Path of the tab that was on screen. */
+  active: string | null;
+}
+
+// The viewer's tabs survive a trip to another tool and back. The list is
+// per window and ends with it.
+function readViewerTabs(): SavedViewerTabs {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(VIEWER_TABS_KEY) || '{}');
+    if (Array.isArray(saved.files)) return saved as SavedViewerTabs;
+  } catch (e) {
+    console.warn('[Desktop] Could not read the viewer tabs:', e);
+  }
+  return { files: [], active: null };
+}
+
+function saveViewerTabs(tabs: SavedViewerTabs): void {
+  try {
+    sessionStorage.setItem(VIEWER_TABS_KEY, JSON.stringify(tabs));
+  } catch (e) {
+    console.warn('[Desktop] Could not remember the viewer tabs:', e);
+  }
+}
+
+function isPdfName(name: string): boolean {
+  return name.toLowerCase().endsWith('.pdf');
+}
+
+function acceptsPdf(input: HTMLInputElement): boolean {
+  const accept = input.accept.toLowerCase();
+  return !accept || accept.includes('pdf');
+}
+
+async function injectFile(file: OpenedFile, quiet = false): Promise<boolean> {
   const bridge = getBridge();
   const input = getFileInput();
-  if (!bridge || !input) return false;
+  if (!bridge || !input || !acceptsPdf(input)) return false;
   try {
     const bytes = await bridge.readOpenedFile(file.path);
     const transfer = new DataTransfer();
@@ -379,16 +429,21 @@ async function injectFile(file: OpenedFile): Promise<boolean> {
       new File([bytes as BlobPart], file.name, { type: 'application/pdf' })
     );
     input.files = transfer.files;
+    // The page reads the file back from the input, so that is the object
+    // to remember the path for.
+    if (input.files?.[0])
+      fileOrigins.set(input.files[0], Promise.resolve(file));
     injecting = true;
     try {
       input.dispatchEvent(new Event('change', { bubbles: true }));
     } finally {
       injecting = false;
     }
+    pageFile = file;
     return true;
   } catch (e) {
     console.error('[Desktop] Could not load opened file:', e);
-    window.alert(`${ds('openFileFailed')}: ${file.name}`);
+    if (!quiet) window.alert(`${ds('openFileFailed')}: ${file.name}`);
     return false;
   }
 }
@@ -478,57 +533,148 @@ function showOpenFilePicker(
 function initOpenedFiles(
   tools: ShellTool[],
   currentTool: ShellTool | undefined,
-  viewerTool: ShellTool | undefined
+  viewerTool: ShellTool | undefined,
+  isTool: (slug: string) => boolean
 ): void {
   const bridge = getBridge();
   if (!bridge) return;
 
   const onViewer = currentTool?.slug === VIEWER_SLUG;
 
-  // On the viewer page, the open file can be handed on to another tool. A
-  // file that came from the OS already has a path; one picked in the page
-  // gets its path from the bridge.
-  let viewerFile: OpenedFile | null = null;
-  const setViewerFile = (file: OpenedFile | null) => {
-    viewerFile = file;
-  };
-  if (onViewer) {
-    document.addEventListener(VIEWER_TOOLS_EVENT, (event) => {
-      const { file } = (event as CustomEvent<ViewerToolsDetail>).detail;
-      void (async () => {
-        const opened = viewerFile ?? (await bridge.registerPickedFile(file));
-        if (opened) showOpenFilePicker(opened, tools, undefined);
-        else showAlert(ds('openFileFailed'), ds('viewerNoPath'));
-      })();
+  // A PDF the user picks or drops in the page becomes the page's file. The
+  // listeners capture, so they see the files before the page clears them.
+  const trackPicked = (files: FileList | null | undefined) => {
+    const pdfs = Array.from(files ?? []).filter((file) => isPdfName(file.name));
+    pdfs.forEach((pdf, index) => {
+      const origin = bridge.registerPickedFile(pdf);
+      fileOrigins.set(pdf, origin);
+      // In the viewer the tab on screen decides, see below.
+      if (index === 0 && !onViewer) {
+        void origin.then((opened) => {
+          if (opened) pageFile = opened;
+        });
+      }
     });
-
-    getFileInput()?.addEventListener('change', () => {
-      if (!injecting) setViewerFile(null);
-    });
-  }
-
-  const load = async (file: OpenedFile) => {
-    const loaded = await injectFile(file);
-    if (loaded && onViewer) setViewerFile(file);
   };
+  document.addEventListener(
+    'change',
+    (event) => {
+      const input = getFileInput();
+      if (!injecting && input && event.target === input) {
+        trackPicked(input.files);
+      }
+    },
+    true
+  );
+  document.addEventListener(
+    'drop',
+    (event) => trackPicked(event.dataTransfer?.files),
+    true
+  );
 
-  // A file handed over from the previous page: load it into this tool.
-  try {
-    const pending = sessionStorage.getItem(PENDING_FILE_KEY);
-    if (pending) {
-      sessionStorage.removeItem(PENDING_FILE_KEY);
-      void load(JSON.parse(pending) as OpenedFile);
+  // The viewer keeps one tab per document. Follow them: the tab on screen
+  // is the page's file, and the list is saved for the next visit.
+  let viewerTabs: Array<OpenedFile | null> = [];
+  let tabsSettled: Promise<void> = Promise.resolve();
+  let restoringTabs = false;
+  document.addEventListener(VIEWER_TABS_EVENT, (event) => {
+    const { files, active } = (event as CustomEvent<ViewerTabsDetail>).detail;
+    tabsSettled = tabsSettled.then(async () => {
+      viewerTabs = await Promise.all(
+        files.map((file) => fileOrigins.get(file) ?? null)
+      );
+      pageFile = viewerTabs[active] ?? null;
+      if (restoringTabs) return;
+      saveViewerTabs({
+        files: viewerTabs.filter((tab): tab is OpenedFile => tab !== null),
+        active: pageFile?.path ?? null,
+      });
+    });
+  });
+
+  // Shows a file in the viewer: its tab if it has one, else a new tab.
+  const openInViewer = async (file: OpenedFile, quiet = false) => {
+    await tabsSettled;
+    const index = viewerTabs.findIndex((tab) => tab?.path === file.path);
+    if (index >= 0) {
+      document.dispatchEvent(
+        new CustomEvent<ViewerSelectDetail>(VIEWER_SELECT_EVENT, {
+          detail: { index },
+        })
+      );
+    } else {
+      await injectFile(file, quiet);
     }
-  } catch (e) {
-    console.warn('[Desktop] Could not restore opened file:', e);
-  }
+    await tabsSettled;
+  };
+
+  // Moving to another tool takes the page's file along.
+  document.addEventListener(
+    'click',
+    (event) => {
+      if (!pageFile || !(event.target instanceof Element)) return;
+      const link = event.target.closest<HTMLAnchorElement>('a[href]');
+      if (link && isTool(slugOf(link.pathname))) rememberPendingFile(pageFile);
+    },
+    true
+  );
+
+  // The viewer's own button offers a short list of tools for the open file.
+  // A file that came from the OS already has a path; one picked in the page
+  // gets its path from the bridge.
+  document.addEventListener(VIEWER_TOOLS_EVENT, (event) => {
+    const { file } = (event as CustomEvent<ViewerToolsDetail>).detail;
+    void (async () => {
+      const opened =
+        (await fileOrigins.get(file)) ??
+        (await bridge.registerPickedFile(file));
+      if (opened) showOpenFilePicker(opened, tools, undefined);
+      else showAlert(ds('openFileFailed'), ds('viewerNoPath'));
+    })();
+  });
+
+  // What the previous page left behind: a file handed over to this tool
+  // and, for the viewer, the tabs it had open.
+  const restore = async () => {
+    let pending: OpenedFile | null = null;
+    try {
+      const stored = sessionStorage.getItem(PENDING_FILE_KEY);
+      if (stored) {
+        sessionStorage.removeItem(PENDING_FILE_KEY);
+        pending = JSON.parse(stored) as OpenedFile;
+      }
+    } catch (e) {
+      console.warn('[Desktop] Could not restore opened file:', e);
+    }
+
+    if (!onViewer) {
+      if (pending) await injectFile(pending);
+      return;
+    }
+    const saved = readViewerTabs();
+    restoringTabs = true;
+    // A saved file may be gone by now: skip it without a message.
+    for (const file of saved.files) await openInViewer(file, true);
+    restoringTabs = false;
+    const front =
+      pending ?? saved.files.find((file) => file.path === saved.active);
+    if (front) await openInViewer(front);
+  };
+  const restored = restore();
 
   const check = async () => {
     const file = await bridge.takeOpenedFile();
     if (!file) return;
+    await restored;
+    // A tool that is working on a document keeps it: the new file opens in
+    // a window of its own. The viewer opens it in another tab instead.
+    if (!onViewer && pageFile) {
+      if (pageFile.path !== file.path) await bridge.openInNewWindow(file.path);
+      return;
+    }
     switch (openFileAction(currentTool?.slug ?? '', Boolean(viewerTool))) {
       case 'load':
-        await load(file);
+        await openInViewer(file);
         break;
       case 'navigate': {
         rememberPendingFile(file);

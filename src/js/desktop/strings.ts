@@ -71,6 +71,20 @@ const STRINGS = {
     version: 'Phiên bản',
     source: 'Nguồn',
     allInstalled: 'Tất cả bộ xử lý đã sẵn sàng dùng offline.',
+    updateCheck: 'Kiểm tra cập nhật',
+    updateChecking: 'Đang kiểm tra...',
+    updateLatest: 'Bạn đang dùng phiên bản mới nhất ({current}).',
+    updateAvailable: 'Đã có phiên bản {latest}. Bạn đang dùng {current}.',
+    updateDownload: 'Tải bản mới',
+    updateNoRelease: 'Chưa có bản phát hành nào.',
+    updateFailed: 'Không kiểm tra được. Hãy xem lại kết nối mạng rồi thử lại.',
+    updateHint: 'Bật hoặc tắt việc tự động kiểm tra trong Cài đặt.',
+    updateDismiss: 'Bỏ qua',
+    updateDismissHint:
+      'Không nhắc lại bản này nữa. Khi có bản mới hơn sẽ báo lại.',
+    autoUpdate: 'Tự động kiểm tra cập nhật',
+    autoUpdateDescription:
+      'Mỗi ngày một lần, hỏi GitHub xem có bản mới không và báo ở trang chủ. Không tự tải về hay cài đặt.',
   },
   en: {
     searchPlaceholder: 'Search tools…',
@@ -140,6 +154,21 @@ const STRINGS = {
     version: 'Version',
     source: 'Source',
     allInstalled: 'All engines are ready for offline use.',
+    updateCheck: 'Check for updates',
+    updateChecking: 'Checking...',
+    updateLatest: 'You are on the latest version ({current}).',
+    updateAvailable: 'Version {latest} is available. You have {current}.',
+    updateDownload: 'Download the new version',
+    updateNoRelease: 'No release has been published yet.',
+    updateFailed:
+      'Could not check. Please check your internet connection and try again.',
+    updateHint: 'Turn automatic checking on or off in Settings.',
+    updateDismiss: 'Skip',
+    updateDismissHint:
+      'Stop reminding me about this version. A later one will show again.',
+    autoUpdate: 'Check for updates automatically',
+    autoUpdateDescription:
+      'Once a day, asks GitHub whether a new version is out and shows it on the home page. Nothing is downloaded or installed.',
   },
 } as const;
 

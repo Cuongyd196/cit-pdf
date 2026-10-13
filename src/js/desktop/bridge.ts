@@ -42,6 +42,10 @@ export interface ModuleStatus {
   bundled: boolean;
 }
 
+export type UpdateCheckResult =
+  | { ok: true; current: string; latest: string; newer: boolean; url: string }
+  | { ok: false; current: string; error: 'network' | 'no-release' };
+
 export interface OpenedFile {
   path: string;
   name: string;
@@ -84,6 +88,8 @@ interface DesktopBridge {
   print(request: PrintRequest): Promise<PrintResult>;
   setLanguage(lang: string): void;
   registerPickedFile(file: File): Promise<OpenedFile | null>;
+  openInNewWindow(path: string): Promise<boolean>;
+  checkForUpdate(): Promise<UpdateCheckResult>;
 }
 
 declare global {

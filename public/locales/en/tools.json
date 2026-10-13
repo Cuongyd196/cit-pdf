@@ -726,6 +726,7 @@
     "close": "Close",
     "tools": "Open with tool",
     "twoPages": "Two-page view",
+    "openAnother": "Open another PDF",
     "invalidFile": "Please choose a valid PDF file."
   },
   "viewMetadata": {

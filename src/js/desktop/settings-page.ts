@@ -6,6 +6,7 @@ import {
 } from './bridge.js';
 import { applyDesktopStrings, desktopLang, ds } from './strings.js';
 import { THEME_EVENT, currentTheme, setTheme } from './theme.js';
+import { autoUpdateEnabled, setAutoUpdate } from './update-check.js';
 import {
   changeLanguage,
   getLanguageFromUrl,
@@ -191,7 +192,17 @@ function initLanguageSelect(): void {
   });
 }
 
+function initAutoUpdateToggle(): void {
+  const toggle = document.getElementById(
+    'auto-update-toggle'
+  ) as HTMLInputElement | null;
+  if (!toggle) return;
+  toggle.checked = autoUpdateEnabled();
+  toggle.addEventListener('change', () => setAutoUpdate(toggle.checked));
+}
+
 applyDesktopStrings();
 initThemeOptions();
 initLanguageSelect();
+initAutoUpdateToggle();
 void render();

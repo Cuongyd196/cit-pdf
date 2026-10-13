@@ -22,6 +22,12 @@ export interface OcrOptions {
   embedFullFonts?: boolean;
   psm?: Tesseract.PSM;
   perPageTimeoutMs?: number;
+  /**
+   * Build pages that hold only the recognized text, drawn visibly line by
+   * line, instead of the scan with a hidden text layer. Meant as input for
+   * a text-based conversion such as PDF to Word.
+   */
+  textOnly?: boolean;
   onProgress?: (status: string, progress: number) => void;
 }
 
@@ -146,6 +152,54 @@ function drawOcrTextLayer(
   return { droppedWords, droppedSpaces };
 }
 
+// Share of a line's height that lies below the baseline (descenders).
+const DESCENT_RATIO = 0.22;
+const MIN_TEXT_SIZE = 4;
+
+/**
+ * Draws each recognized line as one visible run of text where the scan had
+ * it. One font size per line, in half-point steps, so the lines of a
+ * paragraph come out alike instead of every word getting its own size.
+ */
+function drawOcrTextLines(
+  page: ReturnType<typeof PDFDocument.prototype.addPage>,
+  ocrPage: OcrPage,
+  pageHeight: number,
+  primaryFont: PDFFont,
+  latinFont: PDFFont
+): number {
+  let droppedLines = 0;
+  for (const line of ocrPage.lines) {
+    const text = line.words
+      .map((word) => word.text.replace(/[\p{Cc}\p{Cf}]/gu, '').trim())
+      .filter(Boolean)
+      .join(' ');
+    if (!text) continue;
+
+    const font = /[^\p{ASCII}]/u.test(text) ? primaryFont : latinFont;
+    const width = line.bbox.x1 - line.bbox.x0;
+    const height = line.bbox.y1 - line.bbox.y0;
+    try {
+      const widthAtOne = font.widthOfTextAtSize(text, 1);
+      const fitted = widthAtOne > 0 ? width / widthAtOne : height;
+      const size = Math.max(
+        MIN_TEXT_SIZE,
+        Math.round(Math.min(fitted, height) * 2) / 2
+      );
+      page.drawText(text, {
+        x: line.bbox.x0,
+        y: pageHeight - line.bbox.y1 + height * DESCENT_RATIO,
+        font,
+        size,
+        color: rgb(0, 0, 0),
+      });
+    } catch {
+      droppedLines++;
+    }
+  }
+  return droppedLines;
+}
+
 const DEFAULT_PER_PAGE_TIMEOUT_MS = 5 * 60 * 1000;
 const PDF_CLEANUP_INTERVAL_PAGES = 25;
 
@@ -183,6 +237,7 @@ export async function performOcr(
     embedFullFonts,
     psm,
     perPageTimeoutMs,
+    textOnly,
     onProgress,
   } = options;
   const progress = onProgress || (() => {});
@@ -327,6 +382,32 @@ export async function performOcr(
 
         canvas.width = 0;
         canvas.height = 0;
+
+        if (textOnly) {
+          // The rendered page, rotation included, is what was recognized.
+          const size = pdfJsPage.getViewport({ scale: 1 });
+          const textPage = newPdfDoc.addPage([size.width, size.height]);
+          if (pageHocr) {
+            const ocrPage = parseHocrDocument(pageHocr);
+            scaleOcrPageToPdfPoints(ocrPage, size.width, size.height);
+            const droppedLines = drawOcrTextLines(
+              textPage,
+              ocrPage,
+              size.height,
+              primaryFont,
+              latinFont
+            );
+            if (droppedLines > 0) {
+              warnings.push({
+                page: i,
+                kind: 'draw-error',
+                message: `${droppedLines} line(s) could not be written`,
+              });
+            }
+          }
+          fullText += pageText + '\n\n';
+          continue;
+        }
 
         const [copiedPage] = await newPdfDoc.copyPages(sourcePdfDoc, [i - 1]);
         newPdfDoc.addPage(copiedPage);

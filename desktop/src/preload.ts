@@ -9,6 +9,7 @@ import {
   type PrinterInfo,
   type PrintRequest,
   type PrintResult,
+  type UpdateCheckResult,
 } from './types.js';
 
 const bridge = {
@@ -83,6 +84,16 @@ const bridge = {
     const filePath = webUtils.getPathForFile(file);
     if (!filePath) return Promise.resolve(null);
     return ipcRenderer.invoke(IPC_CHANNELS.REGISTER_PICKED_FILE, filePath);
+  },
+
+  // Opens a file the user already handed to the app in a window of its own.
+  openInNewWindow: (filePath: string): Promise<boolean> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.OPEN_IN_NEW_WINDOW, filePath);
+  },
+
+  // Asks GitHub whether a newer release exists. Runs only on request.
+  checkForUpdate: (): Promise<UpdateCheckResult> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.CHECK_UPDATE);
   },
 
   // Keeps the menu bar and native dialogs in the language of the pages.

@@ -223,6 +223,40 @@
             </select>
           </div>
 
+          <div>
+            <label
+              for="target-size"
+              class="block mb-2 text-sm font-medium text-gray-300"
+              >Maximum File Size</label
+            >
+            <div class="flex gap-2">
+              <select
+                id="target-size"
+                class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="" selected>No limit</option>
+                <option value="1">Under 1 MB</option>
+                <option value="2">Under 2 MB</option>
+                <option value="5">Under 5 MB</option>
+                <option value="10">Under 10 MB</option>
+                <option value="custom">Custom size</option>
+              </select>
+              <input
+                type="number"
+                id="target-size-custom"
+                min="0.1"
+                step="0.1"
+                placeholder="MB"
+                class="hidden w-28 bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            <p class="mt-2 text-xs text-gray-400">
+              Keeps trying stronger compression until the file fits. To reach a
+              small size, pages may be turned into images: text then stops being
+              selectable.
+            </p>
+          </div>
+
           <!-- Grayscale toggle - always visible -->
           <div
             class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700"

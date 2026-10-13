@@ -13,7 +13,7 @@ Tài liệu này dành cho người phát triển và người đóng gói bản
 - **Windows:** bộ cài NSIS theo từng người dùng (`.exe`), không cần quyền Administrator, cho chọn thư mục cài. Có kèm bản **Portable** chạy không cần cài.
 - **macOS** (`.dmg`) và **Linux** (`.AppImage`, `.deb`) đã có cấu hình trong [electron-builder.json](electron-builder.json) nhưng chưa được build và thử trong fork này.
 - Tệp `.pdf` được đăng ký "Mở bằng CIT-PDF".
-- Ứng dụng chỉ chạy một cửa sổ: mở thêm tệp khi app đang chạy sẽ đưa tệp vào cửa sổ hiện có.
+- Mở thêm tệp khi app đang chạy: tệp vào trình xem thành một tab mới cạnh các tệp đang mở. Riêng khi cửa sổ đang ở một công cụ có sẵn tài liệu thì giữ nguyên, tệp mới mở ở cửa sổ riêng. **Tệp → Cửa sổ mới** (`Ctrl+Shift+N`) mở thêm cửa sổ trống.
 
 ### Giao diện
 
@@ -21,14 +21,16 @@ Tài liệu này dành cho người phát triển và người đóng gói bản
 - **Thanh dưới:** nút đổi nhanh giao diện sáng/tối.
 - **Màu chủ đạo:** xanh teal; phông chữ Inter (hỗ trợ đủ dấu tiếng Việt).
 - **Trang Cài đặt** (`cit-settings.html`), gồm ba phần theo thứ tự:
-  1. Giao diện: sáng/tối, ngôn ngữ, toàn chiều rộng, chế độ gọn.
+  1. Giao diện: sáng/tối, ngôn ngữ, toàn chiều rộng, chế độ gọn, tự động kiểm tra cập nhật (mặc định bật: mỗi ngày một lần, có bản mới thì báo ở trang chủ).
   2. Bộ xử lý: xem trạng thái, tải về hoặc xoá từng bộ xử lý nặng.
   3. Phím tắt: tìm, gán, nhập, xuất, đặt lại.
-- **Trang Giới thiệu** (`cit-about.html`): phiên bản, giấy phép, thông báo sửa đổi và đường dẫn tới mã nguồn.
+- **Trang Giới thiệu** (`cit-about.html`): phiên bản, giấy phép, thông báo sửa đổi và đường dẫn tới mã nguồn. Nút **Kiểm tra cập nhật** so phiên bản đang chạy với bản phát hành mới nhất trên GitHub và dẫn tới trang tải; chỉ chạy khi người dùng bấm, không tự tải hay tự cài.
 
 ### Mở và xem PDF
 
-Mở một tệp PDF từ hệ điều hành, từ menu **Tệp → Mở tệp PDF…** (`Ctrl+O`) hoặc từ công cụ "Xem PDF" sẽ vào thẳng trình xem. Từ trình xem có nút chuyển tệp đang mở sang một công cụ khác.
+Mở một tệp PDF từ hệ điều hành, từ menu **Tệp → Mở tệp PDF…** (`Ctrl+O`) hoặc từ công cụ "Xem PDF" sẽ vào thẳng trình xem. Trình xem mở nhiều tệp cùng lúc, mỗi tệp một tab; nút **+** trên thanh tab mở thêm tệp, và các tab được giữ lại khi sang công cụ khác rồi quay về (trong cùng cửa sổ). Từ trình xem có nút chuyển tệp đang mở sang một công cụ khác.
+
+Tệp đang dùng ở một công cụ cũng đi theo khi chọn công cụ khác ở thanh bên, không phải chọn lại. Công cụ không nhận PDF (ví dụ JPG sang PDF) thì bỏ qua.
 
 ### In
 
@@ -133,4 +135,4 @@ CIT-PDF là bản sửa đổi của BentoPDF và phát hành theo **GNU AGPL-3.
 2. Chạy `npx tsc --noEmit` và `npm run test:run`.
 3. Chạy `npm run desktop:dist`; bộ cài nằm trong `release/`.
 4. Cài thử trên một máy chưa từng cài CIT-PDF: mở tệp PDF từ Explorer, chạy một công cụ cần tải bộ xử lý, in thử một trang.
-5. Gắn thẻ phiên bản, đẩy mã nguồn lên GitHub và tạo Release kèm các tệp trong `release/`.
+5. Gắn thẻ phiên bản, đẩy mã nguồn lên GitHub và tạo Release kèm các tệp trong `release/`. Thẻ của Release phải là số phiên bản (`1.1.0` hoặc `v1.1.0`) và Release phải được đánh dấu là bản mới nhất: nút Kiểm tra cập nhật đọc đúng thẻ đó.

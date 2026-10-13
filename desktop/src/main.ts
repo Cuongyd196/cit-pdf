@@ -2,10 +2,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
-import { app, BrowserWindow, ipcMain, shell, dialog, Menu } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  shell,
+  dialog,
+  Menu,
+  net,
+} from 'electron';
 import { registerAppScheme, setupAppProtocol } from './protocol.js';
 import { ModulesManager } from './modules-manager.js';
 import { fill, setUiLanguage, ui } from './ui-strings.js';
+import { isNewerVersion } from './version.js';
 import {
   IPC_CHANNELS,
   PRINT_DUPLEX_MODES,
@@ -17,6 +26,7 @@ import {
   type PrinterInfo,
   type PrintRequest,
   type PrintResult,
+  type UpdateCheckResult,
 } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -39,14 +49,23 @@ if (!gotTheLock) {
 
 const APP_NAME = 'CIT-PDF';
 const APP_ORIGIN = 'app://bentopdf';
+const RELEASES_PAGE = 'https://github.com/Cuongyd196/cit-pdf/releases';
+const LATEST_RELEASE_API =
+  'https://api.github.com/repos/Cuongyd196/cit-pdf/releases/latest';
+const UPDATE_CHECK_TIMEOUT_MS = 10_000;
 
-let mainWindow: BrowserWindow | null = null;
+// The window that last had focus: where menu actions and files from the OS go.
+let activeWindow: BrowserWindow | null = null;
 let modulesManager: ModulesManager | null = null;
+let iconPath = '';
 
 // Files the user explicitly handed to the app (OS "Open with", File > Open).
 // The renderer may only read paths that are in this set.
 const allowedOpenPaths = new Set<string>();
-let pendingOpenFile: string | null = null;
+// One file waiting to be picked up, per window (keyed by webContents id).
+const pendingOpenFiles = new Map<number, string>();
+// A file macOS hands over before the app is ready to open a window.
+let startupFile: string | null = null;
 
 function findPdfArg(argv: string[], cwd = process.cwd()): string | null {
   for (const arg of argv.slice(1)) {
@@ -57,15 +76,22 @@ function findPdfArg(argv: string[], cwd = process.cwd()): string | null {
   return null;
 }
 
+// Hands a file to the active window. Its page decides what happens next: a
+// window that already shows a document asks for a new window instead.
 function queueOpenFile(filePath: string) {
   allowedOpenPaths.add(filePath);
-  pendingOpenFile = filePath;
-  mainWindow?.webContents.send(IPC_CHANNELS.FILE_OPENED);
+  if (!activeWindow) {
+    if (app.isReady()) createWindow(filePath);
+    else startupFile = filePath;
+    return;
+  }
+  pendingOpenFiles.set(activeWindow.webContents.id, filePath);
+  activeWindow.webContents.send(IPC_CHANNELS.FILE_OPENED);
 }
 
 async function showOpenFileDialog() {
-  if (!mainWindow) return;
-  const result = await dialog.showOpenDialog(mainWindow, {
+  if (!activeWindow) return;
+  const result = await dialog.showOpenDialog(activeWindow, {
     properties: ['openFile'],
     filters: [{ name: 'PDF', extensions: ['pdf'] }],
   });
@@ -108,15 +134,28 @@ function resolveAppPaths() {
   return { distDir, manifestPath, iconPath };
 }
 
-function createWindow() {
-  const { distDir, manifestPath, iconPath } = resolveAppPaths();
+function setupApp() {
+  const paths = resolveAppPaths();
+  iconPath = paths.iconPath;
+  modulesManager = new ModulesManager(paths.manifestPath);
+  setupAppProtocol(paths.distDir, modulesManager);
+}
 
-  modulesManager = new ModulesManager(manifestPath);
-  setupAppProtocol(distDir, modulesManager);
+const WINDOW_CASCADE_OFFSET = 28;
 
-  mainWindow = new BrowserWindow({
+function createWindow(filePath?: string): BrowserWindow {
+  // A further window opens slightly offset so it does not hide the first.
+  const [x, y] =
+    activeWindow && !activeWindow.isMaximized()
+      ? activeWindow.getPosition()
+      : [];
+
+  const win = new BrowserWindow({
     width: 1280,
     height: 860,
+    ...(x !== undefined && y !== undefined
+      ? { x: x + WINDOW_CASCADE_OFFSET, y: y + WINDOW_CASCADE_OFFSET }
+      : {}),
     minWidth: 960,
     minHeight: 640,
     title: APP_NAME,
@@ -135,15 +174,22 @@ function createWindow() {
     },
   });
 
+  const contentsId = win.webContents.id;
+  if (filePath) pendingOpenFiles.set(contentsId, filePath);
+  activeWindow = win;
+  win.on('focus', () => {
+    activeWindow = win;
+  });
+
   // Handle external links safely
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+  win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http:') || url.startsWith('https:')) {
       shell.openExternal(url);
     }
     return { action: 'deny' };
   });
 
-  mainWindow.webContents.on('will-navigate', (event, url) => {
+  win.webContents.on('will-navigate', (event, url) => {
     if (!url.startsWith('app://')) {
       event.preventDefault();
       if (url.startsWith('http:') || url.startsWith('https:')) {
@@ -152,33 +198,59 @@ function createWindow() {
     }
   });
 
+  // An editor with unsaved changes objects to being left. Electron then
+  // cancels the navigation or close without a word, so ask the user here.
+  win.webContents.on('will-prevent-unload', (event) => {
+    const text = ui();
+    const choice = dialog.showMessageBoxSync(win, {
+      type: 'warning',
+      buttons: [text.leaveDiscard, text.leaveStay],
+      defaultId: 1,
+      cancelId: 1,
+      title: text.leaveTitle,
+      message: text.leaveMessage,
+      detail: text.leaveDetail,
+    });
+    if (choice === 0) event.preventDefault();
+  });
+
   // Tool pages carry the upstream brand in their <title>; show ours instead.
-  mainWindow.webContents.on('page-title-updated', (event, title) => {
+  win.webContents.on('page-title-updated', (event, title) => {
     event.preventDefault();
-    mainWindow?.setTitle(title.replace(/Bento ?PDF/gi, APP_NAME));
+    win.setTitle(title.replace(/Bento ?PDF/gi, APP_NAME));
   });
 
   // Load the application
-  mainWindow.loadURL(`${APP_ORIGIN}/index.html`);
+  win.loadURL(`${APP_ORIGIN}/index.html`);
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  win.on('closed', () => {
+    pendingOpenFiles.delete(contentsId);
+    if (activeWindow === win) {
+      activeWindow = BrowserWindow.getAllWindows()[0] ?? null;
+    }
   });
+  return win;
+}
+
+function windowOf(event: Electron.IpcMainInvokeEvent): BrowserWindow | null {
+  return BrowserWindow.fromWebContents(event.sender);
 }
 
 // IPC Handlers
 ipcMain.handle(
   IPC_CHANNELS.ENSURE_MODULES,
-  async (_event, names: DesktopModuleName[]): Promise<EnsureResult> => {
+  async (event, names: DesktopModuleName[]): Promise<EnsureResult> => {
     if (!modulesManager) {
       return { ok: false, error: 'Modules manager not initialized' };
     }
     return modulesManager.ensureModules(
       names,
       (progress) => {
-        mainWindow?.webContents.send(IPC_CHANNELS.MODULE_PROGRESS, progress);
+        if (!event.sender.isDestroyed()) {
+          event.sender.send(IPC_CHANNELS.MODULE_PROGRESS, progress);
+        }
       },
-      mainWindow
+      windowOf(event)
     );
   }
 );
@@ -189,10 +261,11 @@ ipcMain.handle(IPC_CHANNELS.GET_MODULES_STATUS, (): ModuleStatus[] => {
 
 ipcMain.handle(
   IPC_CHANNELS.REMOVE_MODULE,
-  async (_event, name: DesktopModuleName): Promise<boolean> => {
-    if (!modulesManager || !mainWindow) return false;
+  async (event, name: DesktopModuleName): Promise<boolean> => {
+    const win = windowOf(event);
+    if (!modulesManager || !win) return false;
     const text = ui();
-    const choice = await dialog.showMessageBox(mainWindow, {
+    const choice = await dialog.showMessageBox(win, {
       type: 'warning',
       buttons: [text.remove, text.cancel],
       defaultId: 1,
@@ -206,12 +279,25 @@ ipcMain.handle(
   }
 );
 
-ipcMain.handle(IPC_CHANNELS.TAKE_OPENED_FILE, (): OpenedFile | null => {
-  if (!pendingOpenFile) return null;
-  const filePath = pendingOpenFile;
-  pendingOpenFile = null;
+ipcMain.handle(IPC_CHANNELS.TAKE_OPENED_FILE, (event): OpenedFile | null => {
+  const filePath = pendingOpenFiles.get(event.sender.id);
+  if (!filePath) return null;
+  pendingOpenFiles.delete(event.sender.id);
   return { path: filePath, name: path.basename(filePath) };
 });
+
+// A window that already shows a document passes a newly opened file on, so
+// both stay open side by side.
+ipcMain.handle(
+  IPC_CHANNELS.OPEN_IN_NEW_WINDOW,
+  (_event, filePath: unknown): boolean => {
+    if (typeof filePath !== 'string' || !allowedOpenPaths.has(filePath)) {
+      return false;
+    }
+    createWindow(filePath);
+    return true;
+  }
+);
 
 ipcMain.handle(
   IPC_CHANNELS.READ_OPENED_FILE,
@@ -249,9 +335,67 @@ ipcMain.handle(
   }
 );
 
-ipcMain.handle(IPC_CHANNELS.SHOW_SAVE_DIALOG, async (_event, options) => {
-  if (!mainWindow) return { canceled: true };
-  return dialog.showSaveDialog(mainWindow, options);
+// Run from source, Electron reports the version of the root package (the
+// upstream web app), not of the desktop app.
+function appVersion(): string {
+  if (app.isPackaged) return app.getVersion();
+  try {
+    const manifest = path.resolve(__dirname, '..', 'package.json');
+    return JSON.parse(fs.readFileSync(manifest, 'utf8')).version;
+  } catch {
+    return app.getVersion();
+  }
+}
+
+// Update check, on the user's request only: compares this version with the
+// latest published GitHub release. Nothing is downloaded or installed.
+ipcMain.handle(
+  IPC_CHANNELS.CHECK_UPDATE,
+  async (): Promise<UpdateCheckResult> => {
+    const current = appVersion();
+    try {
+      const response = await net.fetch(LATEST_RELEASE_API, {
+        headers: { Accept: 'application/vnd.github+json' },
+        signal: AbortSignal.timeout(UPDATE_CHECK_TIMEOUT_MS),
+      });
+      // GitHub answers 404 while the repository has no published release.
+      if (response.status === 404) {
+        return { ok: false, current, error: 'no-release' };
+      }
+      if (!response.ok) return { ok: false, current, error: 'network' };
+
+      const release = (await response.json()) as {
+        tag_name?: unknown;
+        html_url?: unknown;
+      };
+      if (typeof release.tag_name !== 'string') {
+        return { ok: false, current, error: 'network' };
+      }
+      // The link is opened in the browser: only accept our releases page.
+      const url =
+        typeof release.html_url === 'string' &&
+        release.html_url.startsWith(`${RELEASES_PAGE}/`)
+          ? release.html_url
+          : RELEASES_PAGE;
+      const latest = release.tag_name.replace(/^v/i, '');
+      return {
+        ok: true,
+        current,
+        latest,
+        newer: isNewerVersion(latest, current),
+        url,
+      };
+    } catch (e) {
+      console.warn('[Main] Update check failed:', e);
+      return { ok: false, current, error: 'network' };
+    }
+  }
+);
+
+ipcMain.handle(IPC_CHANNELS.SHOW_SAVE_DIALOG, async (event, options) => {
+  const win = windowOf(event);
+  if (!win) return { canceled: true };
+  return dialog.showSaveDialog(win, options);
 });
 
 // Electron's printer list does not say which one is the default, so ask the
@@ -283,24 +427,25 @@ function getDefaultPrinterName(): Promise<string | null> {
   });
 }
 
-ipcMain.handle(IPC_CHANNELS.LIST_PRINTERS, async (): Promise<PrinterInfo[]> => {
-  if (!mainWindow) return [];
-  const [printers, defaultName] = await Promise.all([
-    mainWindow.webContents.getPrintersAsync(),
-    getDefaultPrinterName(),
-  ]);
-  return printers.map((printer) => ({
-    name: printer.name,
-    displayName: printer.displayName || printer.name,
-    isDefault: printer.name === defaultName,
-  }));
-});
+ipcMain.handle(
+  IPC_CHANNELS.LIST_PRINTERS,
+  async (event): Promise<PrinterInfo[]> => {
+    const [printers, defaultName] = await Promise.all([
+      event.sender.getPrintersAsync(),
+      getDefaultPrinterName(),
+    ]);
+    return printers.map((printer) => ({
+      name: printer.name,
+      displayName: printer.displayName || printer.name,
+      isDefault: printer.name === defaultName,
+    }));
+  }
+);
 
 ipcMain.handle(
   IPC_CHANNELS.PRINT,
-  async (_event, request: PrintRequest): Promise<PrintResult> => {
-    if (!mainWindow) return { success: false, error: 'No window' };
-    const contents = mainWindow.webContents;
+  async (event, request: PrintRequest): Promise<PrintResult> => {
+    const contents = event.sender;
 
     // The request comes from the renderer: only pass on known values.
     const paperSize = PRINT_PAPER_SIZES.includes(request.paperSize)
@@ -379,6 +524,13 @@ function buildMenu(): void {
       label: text.menuFile,
       submenu: [
         {
+          label: text.newWindow,
+          accelerator: 'CmdOrCtrl+Shift+N',
+          click: () => {
+            createWindow();
+          },
+        },
+        {
           label: text.openPdf,
           accelerator: 'CmdOrCtrl+O',
           click: () => {
@@ -444,7 +596,7 @@ function buildMenu(): void {
         {
           label: fill(text.about, { app: APP_NAME }),
           click: () => {
-            mainWindow?.loadURL(`${APP_ORIGIN}/cit-about.html`);
+            activeWindow?.loadURL(`${APP_ORIGIN}/cit-about.html`);
           },
         },
         {
@@ -476,9 +628,9 @@ ipcMain.on(IPC_CHANNELS.SET_LANGUAGE, (_event, lang: unknown) => {
 });
 
 app.on('second-instance', (_event, argv, workingDirectory) => {
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.focus();
+  if (activeWindow) {
+    if (activeWindow.isMinimized()) activeWindow.restore();
+    activeWindow.focus();
   }
   const filePath = findPdfArg(argv, workingDirectory);
   if (filePath) queueOpenFile(filePath);
@@ -491,10 +643,10 @@ app.on('open-file', (event, filePath) => {
 });
 
 app.whenReady().then(() => {
-  const startupFile = findPdfArg(process.argv);
-  if (startupFile) queueOpenFile(startupFile);
-
-  createWindow();
+  setupApp();
+  const firstFile = findPdfArg(process.argv) ?? startupFile;
+  if (firstFile) allowedOpenPaths.add(firstFile);
+  createWindow(firstFile ?? undefined);
 
   setUiLanguage(readSavedLanguage());
   buildMenu();

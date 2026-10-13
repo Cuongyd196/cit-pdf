@@ -724,6 +724,7 @@
     "close": "Đóng",
     "tools": "Mở bằng công cụ",
     "twoPages": "Xem 2 trang",
+    "openAnother": "Mở thêm tệp PDF",
     "invalidFile": "Vui lòng chọn một tệp PDF hợp lệ."
   },
   "viewMetadata": {

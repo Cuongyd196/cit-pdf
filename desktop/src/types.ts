@@ -89,6 +89,11 @@ export interface PrintResult {
   error?: string;
 }
 
+/** Result of asking GitHub for the latest release. */
+export type UpdateCheckResult =
+  | { ok: true; current: string; latest: string; newer: boolean; url: string }
+  | { ok: false; current: string; error: 'network' | 'no-release' };
+
 export const IPC_CHANNELS = {
   GET_MODULES_STATUS: 'bento:get-modules-status',
   REMOVE_MODULE: 'bento:remove-module',
@@ -104,4 +109,6 @@ export const IPC_CHANNELS = {
   PRINT: 'bento:print',
   SET_LANGUAGE: 'bento:set-language',
   REGISTER_PICKED_FILE: 'bento:register-picked-file',
+  OPEN_IN_NEW_WINDOW: 'bento:open-in-new-window',
+  CHECK_UPDATE: 'bento:check-update',
 } as const;

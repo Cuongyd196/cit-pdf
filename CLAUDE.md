@@ -52,13 +52,13 @@ Adding a tool touches several places that are not linked by the type system:
 
 `vite.config.ts` injects globals declared in `src/types/globals.d.ts`:
 
-| Global | Source env | Effect |
-| --- | --- | --- |
-| `__SIMPLE_MODE__` | `SIMPLE_MODE=true` (forced on for desktop) | Uses `simple-index.html` as the index, hides marketing/branding |
-| `__DESKTOP__` | `VITE_DESKTOP=true` | Electron build: no service worker, no gzip/brotli copies, blog and web-only pages dropped from inputs (`WEB_ONLY_ENTRIES`) |
-| `__DISABLED_TOOLS__` | `DISABLE_TOOLS=a,b` | Tools hidden/blocked (also overridable at runtime via `public/config.json`, see `utils/disabled-tools.ts`) |
-| `__DISABLE_GITHUB_STARS__`, `__BRAND_NAME__` | `DISABLE_GITHUB_STARS`, `VITE_BRAND_*`, `VITE_FOOTER_TEXT` | Branding |
-| `__ENGINE_VERSION__` | hash of `node_modules/bentopdf-pdfium` | Cache-busting for the edit engine |
+| Global                                       | Source env                                                 | Effect                                                                                                                     |
+| -------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `__SIMPLE_MODE__`                            | `SIMPLE_MODE=true` (forced on for desktop)                 | Uses `simple-index.html` as the index, hides marketing/branding                                                            |
+| `__DESKTOP__`                                | `VITE_DESKTOP=true`                                        | Electron build: no service worker, no gzip/brotli copies, blog and web-only pages dropped from inputs (`WEB_ONLY_ENTRIES`) |
+| `__DISABLED_TOOLS__`                         | `DISABLE_TOOLS=a,b`                                        | Tools hidden/blocked (also overridable at runtime via `public/config.json`, see `utils/disabled-tools.ts`)                 |
+| `__DISABLE_GITHUB_STARS__`, `__BRAND_NAME__` | `DISABLE_GITHUB_STARS`, `VITE_BRAND_*`, `VITE_FOOTER_TEXT` | Branding                                                                                                                   |
+| `__ENGINE_VERSION__`                         | hash of `node_modules/bentopdf-pdfium`                     | Cache-busting for the edit engine                                                                                          |
 
 `VITE_USE_CDN`, `VITE_WASM_*_URL`, `VITE_CORS_PROXY_URL`, `VITE_TESSERACT_*` configure where heavy assets load from; see `.env.example`.
 
@@ -74,7 +74,7 @@ SharedArrayBuffer-based engines need cross-origin isolation, so dev/preview serv
 
 ### Desktop (Electron)
 
-- `desktop/src/main.ts` — single-instance window loading `app://bentopdf/index.html`; external links go to the OS browser.
+- `desktop/src/main.ts` — single-instance app, one or more windows loading `app://bentopdf/index.html`; external links go to the OS browser. A file from the OS goes to the last focused window, whose page (`shell.ts`) shows it in the viewer, as one more tab, or, when a tool page already holds a document, asks for a new window.
 - `desktop/src/protocol.ts` — custom privileged `app://` scheme serving `desktop/dist-web`, replicating clean-URL and `/<lang>/…` fallbacks and the COOP/COEP headers. It first asks `ModulesManager.resolveMountedFile`, so `/modules/<name>/…` and `/libreoffice-wasm/…` are served from installed modules.
 - `desktop/src/modules-manager.ts` + `desktop/app/modules-manifest.json` — heavy engines are **not in the installer**. On first use they are downloaded from the npm registry / upstream repo, hash-verified (SHA-512 integrity or per-file SHA-256), and cached in `userData/modules`. cpdf is pre-bundled in `desktop/bundled-modules/` (the build copies the script there; its `LICENSE.md` is tracked and shipped).
 - `desktop/src/preload.ts` exposes `window.bentoDesktop`; `src/js/desktop/bridge.ts` wraps it. The web-side contract is: **each WASM loader calls `await ensureDesktopModules([...])` before fetching engine files** (a no-op on the web). In desktop builds `wasm-provider.ts` points defaults at `/modules/<name>/` instead of the CDN. A new heavy engine needs a manifest entry, a mount, and that call in its loader.

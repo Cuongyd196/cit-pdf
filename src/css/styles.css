@@ -431,6 +431,62 @@ body:has(#desktop-statusbar) .pdf-view-panel {
   display: none;
 }
 
+/* Home page notice: a newer release is out. */
+.desktop-update-banner {
+  @apply flex items-center gap-3 mb-6 px-4 py-3 rounded-lg border border-indigo-500 bg-indigo-600/15 text-sm text-white;
+}
+
+.desktop-update-banner-action {
+  @apply flex-shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white no-underline hover:bg-indigo-700;
+}
+
+.desktop-update-banner-dismiss {
+  @apply flex-shrink-0 rounded-md border border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-200 hover:bg-gray-700 hover:text-white;
+}
+
+/* One tab per open document, above the viewer frames. */
+.pdf-view-tabs {
+  @apply flex items-end gap-1 px-2 pt-1.5 bg-gray-800 border-b border-gray-700 overflow-x-auto;
+  flex: none;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+/* The name takes the room, so the close button sits at the tab's edge. */
+.pdf-view-tab > span {
+  flex: 1;
+}
+
+.pdf-view-tab {
+  @apply flex items-center gap-1.5 min-w-0 pl-3 pr-1.5 py-1.5 rounded-t-md border border-b-0 border-transparent text-sm text-gray-400 cursor-pointer select-none transition-colors hover:bg-gray-700 hover:text-white;
+  flex: 0 1 14rem;
+  margin-bottom: -1px;
+}
+
+.pdf-view-tab.active {
+  @apply bg-gray-900 border-gray-700 text-white;
+}
+
+.pdf-view-tab-close,
+.pdf-view-tab-add {
+  @apply flex items-center justify-center w-6 h-6 rounded text-gray-400 hover:bg-gray-600 hover:text-white;
+  flex: none;
+}
+
+.pdf-view-tab-add {
+  @apply mb-1 text-base;
+}
+
+/* Frames stack; the ones behind keep their size so PDF.js lays out right. */
+.pdf-view-frame {
+  @apply absolute inset-0 w-full h-full border-0;
+}
+
+.pdf-view-frame-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* Pages without the status bar (full-screen editors) use the full height. */
 body:has(#desktop-sidebar):not(:has(#desktop-statusbar)) {
   padding-bottom: 0;
