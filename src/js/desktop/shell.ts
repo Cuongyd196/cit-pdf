@@ -40,6 +40,8 @@ const FAVORITES_KEY = 'cit:favorites';
 const RECENT_KEY = 'cit:recent';
 const PENDING_FILE_KEY = 'cit:pending-file';
 const VIEWER_TABS_KEY = 'cit:viewer-tabs';
+// Buttons that leave a tool's editor for its upload screen.
+const BACK_TO_DOCUMENT = '#exitEditor';
 const READING_SIDEBAR_KEY = 'cit:reading-sidebar';
 const SAVED_TOAST_MS = 15000;
 
@@ -651,6 +653,30 @@ function initOpenedFiles(
     link.click();
   };
 
+  // A document that came from the viewer goes back there: the editor's
+  // "back" button returns to its tab instead of the tool's upload screen.
+  const viewerHas = (file: OpenedFile) =>
+    readViewerTabs().files.some((tab) => tab.path === file.path);
+  const markBackButton = () => {
+    const back = document.querySelector<HTMLElement>(BACK_TO_DOCUMENT);
+    if (!back || onViewer || !pageFile || !viewerHas(pageFile)) return;
+    back.removeAttribute('data-i18n-title');
+    back.title = ds('backToDocument');
+  };
+  document.addEventListener(
+    'click',
+    (event) => {
+      if (onViewer || !pageFile || !(event.target instanceof Element)) return;
+      if (!event.target.closest(BACK_TO_DOCUMENT) || !viewerHas(pageFile)) {
+        return;
+      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      goToViewer(pageFile);
+    },
+    true
+  );
+
   // A tool saved its result: say where, and offer to look at it.
   bridge.onDownloadSaved((saved) => {
     showSavedToast(saved, {
@@ -678,7 +704,7 @@ function initOpenedFiles(
     }
 
     if (!onViewer) {
-      if (pending) await injectFile(pending);
+      if (pending && (await injectFile(pending))) markBackButton();
       return;
     }
     const saved = readViewerTabs();
