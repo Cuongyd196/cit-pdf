@@ -94,6 +94,16 @@ export type UpdateCheckResult =
   | { ok: true; current: string; latest: string; newer: boolean; url: string }
   | { ok: false; current: string; error: 'network' | 'no-release' };
 
+/** A file the app just finished saving through a download. */
+export interface SavedDownload {
+  path: string;
+  name: string;
+  /** A PDF, which the viewer can show. */
+  isPdf: boolean;
+  /** A document type that is safe to hand to its default program. */
+  canOpen: boolean;
+}
+
 export const IPC_CHANNELS = {
   GET_MODULES_STATUS: 'bento:get-modules-status',
   REMOVE_MODULE: 'bento:remove-module',
@@ -111,4 +121,10 @@ export const IPC_CHANNELS = {
   REGISTER_PICKED_FILE: 'bento:register-picked-file',
   OPEN_IN_NEW_WINDOW: 'bento:open-in-new-window',
   CHECK_UPDATE: 'bento:check-update',
+  DOWNLOAD_SAVED: 'bento:download-saved',
+  SHOW_SAVED_IN_FOLDER: 'bento:show-saved-in-folder',
+  OPEN_SAVED_FILE: 'bento:open-saved-file',
+  NOTE_RECENT_FILE: 'bento:note-recent-file',
+  LIST_RECENT_FILES: 'bento:list-recent-files',
+  CLEAR_RECENT_FILES: 'bento:clear-recent-files',
 } as const;

@@ -10,6 +10,7 @@ import {
   dialog,
   Menu,
   net,
+  session,
 } from 'electron';
 import { registerAppScheme, setupAppProtocol } from './protocol.js';
 import { ModulesManager } from './modules-manager.js';
@@ -26,6 +27,7 @@ import {
   type PrinterInfo,
   type PrintRequest,
   type PrintResult,
+  type SavedDownload,
   type UpdateCheckResult,
 } from './types.js';
 
@@ -139,7 +141,81 @@ function setupApp() {
   iconPath = paths.iconPath;
   modulesManager = new ModulesManager(paths.manifestPath);
   setupAppProtocol(paths.distDir, modulesManager);
+  watchDownloads();
 }
+
+// Results the user saved in this session. The page may ask to reveal or
+// open only these, never a path of its own choosing.
+const savedDownloads = new Set<string>();
+
+// Document types that are safe to hand to their default program. Anything
+// that could run code (exe, bat, html, svg...) is left out on purpose.
+const OPENABLE_EXTENSIONS = new Set([
+  '.pdf',
+  '.docx',
+  '.xlsx',
+  '.pptx',
+  '.csv',
+  '.txt',
+  '.md',
+  '.json',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.webp',
+  '.bmp',
+  '.tiff',
+  '.zip',
+  '.epub',
+]);
+
+// A tool hands over its result as a download, which Electron saves through
+// its own "Save as" dialog. Tell the page where the file went, so it can
+// offer to show the result instead of leaving the user to go and find it.
+function watchDownloads() {
+  session.defaultSession.on('will-download', (_event, item, contents) => {
+    item.once('done', (_done, state) => {
+      const filePath = item.getSavePath();
+      if (state !== 'completed' || !filePath) return;
+      const extension = path.extname(filePath).toLowerCase();
+      const isPdf = extension === '.pdf';
+      savedDownloads.add(filePath);
+      if (isPdf) allowedOpenPaths.add(filePath);
+      if (contents.isDestroyed()) return;
+      const saved: SavedDownload = {
+        path: filePath,
+        name: path.basename(filePath),
+        isPdf,
+        canOpen: OPENABLE_EXTENSIONS.has(extension),
+      };
+      contents.send(IPC_CHANNELS.DOWNLOAD_SAVED, saved);
+    });
+  });
+}
+
+ipcMain.handle(
+  IPC_CHANNELS.SHOW_SAVED_IN_FOLDER,
+  (_event, filePath: unknown): boolean => {
+    if (typeof filePath !== 'string' || !savedDownloads.has(filePath)) {
+      return false;
+    }
+    shell.showItemInFolder(filePath);
+    return true;
+  }
+);
+
+ipcMain.handle(
+  IPC_CHANNELS.OPEN_SAVED_FILE,
+  async (_event, filePath: unknown): Promise<boolean> => {
+    if (typeof filePath !== 'string' || !savedDownloads.has(filePath)) {
+      return false;
+    }
+    if (!OPENABLE_EXTENSIONS.has(path.extname(filePath).toLowerCase())) {
+      return false;
+    }
+    return (await shell.openPath(filePath)) === '';
+  }
+);
 
 const WINDOW_CASCADE_OFFSET = 28;
 
@@ -334,6 +410,73 @@ ipcMain.handle(
     return { path: filePath, name: path.basename(filePath) };
   }
 );
+
+// Documents read in the viewer lately, newest first, kept across launches.
+const MAX_RECENT_FILES = 10;
+
+function recentFilesFile(): string {
+  return path.join(app.getPath('userData'), 'recent-files.json');
+}
+
+function readRecentFiles(): string[] {
+  try {
+    const list: unknown = JSON.parse(
+      fs.readFileSync(recentFilesFile(), 'utf8')
+    );
+    if (!Array.isArray(list)) return [];
+    return list.filter(
+      (item): item is string =>
+        typeof item === 'string' &&
+        path.isAbsolute(item) &&
+        path.extname(item).toLowerCase() === '.pdf'
+    );
+  } catch {
+    return [];
+  }
+}
+
+function writeRecentFiles(list: string[]): void {
+  try {
+    fs.writeFileSync(recentFilesFile(), JSON.stringify(list), 'utf8');
+  } catch (e) {
+    console.warn('[Main] Could not save the recent files:', e);
+  }
+}
+
+ipcMain.handle(
+  IPC_CHANNELS.NOTE_RECENT_FILE,
+  (_event, filePath: unknown): boolean => {
+    if (typeof filePath !== 'string' || !allowedOpenPaths.has(filePath)) {
+      return false;
+    }
+    const list = readRecentFiles().filter((item) => item !== filePath);
+    writeRecentFiles([filePath, ...list].slice(0, MAX_RECENT_FILES));
+    return true;
+  }
+);
+
+// Every file on the list was opened by the user before, so listing it lets
+// the page read it again. Files that are gone are left out.
+ipcMain.handle(
+  IPC_CHANNELS.LIST_RECENT_FILES,
+  async (): Promise<OpenedFile[]> => {
+    const files: OpenedFile[] = [];
+    for (const filePath of readRecentFiles()) {
+      try {
+        if (!(await fs.promises.stat(filePath)).isFile()) continue;
+      } catch {
+        continue;
+      }
+      allowedOpenPaths.add(filePath);
+      files.push({ path: filePath, name: path.basename(filePath) });
+    }
+    return files;
+  }
+);
+
+ipcMain.handle(IPC_CHANNELS.CLEAR_RECENT_FILES, (): void => {
+  writeRecentFiles([]);
+});
 
 // Run from source, Electron reports the version of the root package (the
 // upstream web app), not of the desktop app.

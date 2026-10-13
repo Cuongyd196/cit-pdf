@@ -28,7 +28,9 @@ Tài liệu này dành cho người phát triển và người đóng gói bản
 
 ### Mở và xem PDF
 
-Mở một tệp PDF từ hệ điều hành, từ menu **Tệp → Mở tệp PDF…** (`Ctrl+O`) hoặc từ công cụ "Xem PDF" sẽ vào thẳng trình xem. Trình xem mở nhiều tệp cùng lúc, mỗi tệp một tab; nút **+** trên thanh tab mở thêm tệp, và các tab được giữ lại khi sang công cụ khác rồi quay về (trong cùng cửa sổ). Từ trình xem có nút chuyển tệp đang mở sang một công cụ khác.
+Mở một tệp PDF từ hệ điều hành, từ menu **Tệp → Mở tệp PDF…** (`Ctrl+O`) hoặc từ công cụ "Xem PDF" sẽ vào thẳng trình xem. Trình xem mở nhiều tệp cùng lúc, mỗi tệp một tab; nút **+** trên thanh tab mở thêm tệp, và các tab được giữ lại khi sang công cụ khác rồi quay về (trong cùng cửa sổ). Phía trên tài liệu có một dải thao tác nhanh (Nén, Tách, Xoay, Sắp xếp trang, Ghi chú, Sửa chữ, Sang Word, OCR, Ký, Đặt mật khẩu, Khác): bấm là sang công cụ đó với tệp đang xem đã nạp sẵn. Khi đang có tài liệu mở, thanh bên thu lại thành một cột biểu tượng để nhường chỗ cho trang; nút đầu dải thao tác bật lại thanh bên, và lựa chọn này được ghi nhớ.
+
+Khi một công cụ lưu xong kết quả, góc dưới bên phải hiện thông báo "Đã lưu" kèm nút **Xem kết quả** (mở tệp PDF vừa lưu thành một tab trong trình xem, cạnh tệp gốc) hoặc **Mở tệp** (với kết quả không phải PDF), và **Mở thư mục**.
 
 Tệp đang dùng ở một công cụ cũng đi theo khi chọn công cụ khác ở thanh bên, không phải chọn lại. Công cụ không nhận PDF (ví dụ JPG sang PDF) thì bỏ qua.
 

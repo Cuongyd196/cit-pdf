@@ -477,6 +477,104 @@ body:has(#desktop-statusbar) .pdf-view-panel {
   @apply mb-1 text-base;
 }
 
+/* Quick actions for the document on screen, under the tabs. */
+.pdf-view-actions {
+  @apply flex items-center gap-0.5 px-2 py-0.5 bg-gray-900 border-b border-gray-700 overflow-x-auto;
+  flex: none;
+  scrollbar-width: none;
+}
+
+.pdf-view-actions.hidden {
+  display: none;
+}
+
+.pdf-view-action {
+  @apply flex flex-shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm text-gray-300 no-underline cursor-pointer whitespace-nowrap transition-colors hover:bg-gray-700 hover:text-white;
+}
+
+.pdf-view-action > i {
+  @apply text-base text-indigo-400;
+}
+
+.pdf-view-action-icon {
+  @apply px-1.5;
+}
+
+.pdf-view-action-icon > i {
+  @apply text-lg text-gray-400;
+}
+
+.pdf-view-actions-divider {
+  @apply mx-1 h-5 w-px flex-shrink-0 bg-gray-700;
+}
+
+/* A tight window keeps the icons and drops the labels. */
+@media (max-width: 1150px) {
+  .pdf-view-action > span {
+    display: none;
+  }
+}
+
+/* Reading: the sidebar becomes a rail of icons and the page gets the room.
+   The selector repeats :has(#desktop-sidebar) to outweigh the default. */
+body.desktop-reading:has(#desktop-sidebar) {
+  padding-left: 3.5rem;
+}
+
+.desktop-reading .desktop-sidebar {
+  @apply w-14;
+}
+
+.desktop-reading .desktop-sidebar > a:first-child {
+  @apply justify-center px-0;
+}
+
+.desktop-reading
+  .desktop-sidebar
+  :is(
+    #nav-brand,
+    .desktop-nav-heading,
+    .desktop-nav-group,
+    .desktop-star,
+    .desktop-nav-item span,
+    div:has(> #desktop-search)
+  ) {
+  display: none;
+}
+
+.desktop-reading .desktop-sidebar .desktop-nav-item,
+.desktop-reading .desktop-sidebar .desktop-nav-item > a {
+  @apply justify-center;
+}
+
+.desktop-reading .desktop-sidebar .desktop-nav-item {
+  @apply mx-2 px-0 py-2;
+}
+
+.desktop-reading .desktop-sidebar .desktop-nav-item i {
+  @apply text-lg;
+}
+
+/* A result was saved: bottom right, above the status bar. It sits over
+   the tool's own "done" dialog, whose backdrop covers the whole window. */
+.desktop-saved-toast {
+  z-index: 70;
+  @apply fixed right-4 bottom-12 flex items-center gap-3 rounded-lg border border-gray-600 bg-gray-800 px-4 py-3 shadow-2xl;
+  width: min(34rem, calc(100vw - 2rem));
+}
+
+.desktop-saved-toast-action {
+  @apply flex-shrink-0 rounded-md border border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-200 hover:bg-gray-700 hover:text-white;
+}
+
+.desktop-saved-toast-action.primary {
+  @apply border-transparent bg-indigo-600 font-semibold text-white hover:bg-indigo-700;
+}
+
+.desktop-saved-toast-close {
+  @apply flex h-7 w-7 flex-shrink-0 items-center justify-center rounded text-gray-400 hover:bg-gray-700 hover:text-white;
+}
+
 /* Frames stack; the ones behind keep their size so PDF.js lays out right. */
 .pdf-view-frame {
   @apply absolute inset-0 w-full h-full border-0;
@@ -614,6 +712,52 @@ body:has(#desktop-sidebar) .category-header {
   @apply mb-2 py-2 text-base font-bold text-white;
 }
 
+/* Documents read lately: home page and the viewer's empty screen. */
+.desktop-recent-files {
+  @apply mt-4 mb-2;
+}
+
+.desktop-recent-files-clear {
+  @apply text-xs text-gray-400 hover:text-white;
+}
+
+.desktop-recent-files-list {
+  @apply grid gap-1;
+}
+
+.desktop-recent-file {
+  @apply grid w-full items-center gap-x-3 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-left;
+  grid-template-columns: auto minmax(0, 2fr) minmax(0, 3fr);
+}
+
+.desktop-recent-file:hover {
+  border-color: var(--color-indigo-500);
+}
+
+.desktop-recent-file > i {
+  @apply text-xl text-indigo-400;
+}
+
+.desktop-recent-file-name {
+  @apply truncate text-sm font-semibold text-white;
+}
+
+.desktop-recent-file-folder {
+  @apply truncate text-xs text-gray-400;
+}
+
+/* A tool page in the app is the tool alone. The web layout gives it a full
+   screen of height and follows it with reading matter for search engines
+   (how it works, related tools, landing-page links), which here shows up as
+   a blank gap and a stray block below it. */
+body:has(#desktop-sidebar) #uploader {
+  min-height: 0;
+}
+
+body:has(#desktop-sidebar):has(#uploader) > section {
+  display: none;
+}
+
 /* File drop zones pick up the accent on hover. */
 body:has(#desktop-sidebar) #drop-zone:hover {
   border-color: var(--color-indigo-500);
@@ -621,6 +765,43 @@ body:has(#desktop-sidebar) #drop-zone:hover {
 
 body:has(#desktop-sidebar) #drop-zone i.ph {
   color: var(--color-indigo-400);
+}
+
+/* The web layout gives the drop zone a tall, poster-sized box. In the app
+   window it is one compact row: icon on the left, text beside it. */
+body:has(#desktop-sidebar) #drop-zone {
+  height: auto;
+  align-items: stretch;
+  border-width: 1px;
+  border-radius: 0.5rem;
+}
+
+body:has(#desktop-sidebar) #drop-zone > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.875rem;
+  row-gap: 0.125rem;
+  align-items: center;
+  justify-items: start;
+  padding: 0.875rem 1.125rem;
+  text-align: left;
+}
+
+body:has(#desktop-sidebar) #drop-zone > div > :is(i, svg) {
+  grid-row: 1 / span 4;
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+body:has(#desktop-sidebar) #drop-zone > div > p {
+  grid-column: 2;
+  margin: 0;
+}
+
+/* Everything in the app stays on this computer; no need to repeat it on
+   every tool. */
+body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
+  display: none;
 }
 
 .desktop-theme-option {
