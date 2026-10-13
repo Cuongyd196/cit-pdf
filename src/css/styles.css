@@ -746,6 +746,18 @@ body:has(#desktop-sidebar) .category-header {
   @apply truncate text-xs text-gray-400;
 }
 
+/* A tool page in the app is the tool alone. The web layout gives it a full
+   screen of height and follows it with reading matter for search engines
+   (how it works, related tools, landing-page links), which here shows up as
+   a blank gap and a stray block below it. */
+body:has(#desktop-sidebar) #uploader {
+  min-height: 0;
+}
+
+body:has(#desktop-sidebar):has(#uploader) > section {
+  display: none;
+}
+
 /* File drop zones pick up the accent on hover. */
 body:has(#desktop-sidebar) #drop-zone:hover {
   border-color: var(--color-indigo-500);
