@@ -100,6 +100,9 @@ interface DesktopBridge {
   onDownloadSaved(cb: (saved: SavedDownload) => void): () => void;
   showSavedInFolder(path: string): Promise<boolean>;
   openSavedFile(path: string): Promise<boolean>;
+  noteRecentFile(path: string): Promise<boolean>;
+  listRecentFiles(): Promise<OpenedFile[]>;
+  clearRecentFiles(): Promise<void>;
 }
 
 declare global {

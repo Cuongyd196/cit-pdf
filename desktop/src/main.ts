@@ -411,6 +411,73 @@ ipcMain.handle(
   }
 );
 
+// Documents read in the viewer lately, newest first, kept across launches.
+const MAX_RECENT_FILES = 10;
+
+function recentFilesFile(): string {
+  return path.join(app.getPath('userData'), 'recent-files.json');
+}
+
+function readRecentFiles(): string[] {
+  try {
+    const list: unknown = JSON.parse(
+      fs.readFileSync(recentFilesFile(), 'utf8')
+    );
+    if (!Array.isArray(list)) return [];
+    return list.filter(
+      (item): item is string =>
+        typeof item === 'string' &&
+        path.isAbsolute(item) &&
+        path.extname(item).toLowerCase() === '.pdf'
+    );
+  } catch {
+    return [];
+  }
+}
+
+function writeRecentFiles(list: string[]): void {
+  try {
+    fs.writeFileSync(recentFilesFile(), JSON.stringify(list), 'utf8');
+  } catch (e) {
+    console.warn('[Main] Could not save the recent files:', e);
+  }
+}
+
+ipcMain.handle(
+  IPC_CHANNELS.NOTE_RECENT_FILE,
+  (_event, filePath: unknown): boolean => {
+    if (typeof filePath !== 'string' || !allowedOpenPaths.has(filePath)) {
+      return false;
+    }
+    const list = readRecentFiles().filter((item) => item !== filePath);
+    writeRecentFiles([filePath, ...list].slice(0, MAX_RECENT_FILES));
+    return true;
+  }
+);
+
+// Every file on the list was opened by the user before, so listing it lets
+// the page read it again. Files that are gone are left out.
+ipcMain.handle(
+  IPC_CHANNELS.LIST_RECENT_FILES,
+  async (): Promise<OpenedFile[]> => {
+    const files: OpenedFile[] = [];
+    for (const filePath of readRecentFiles()) {
+      try {
+        if (!(await fs.promises.stat(filePath)).isFile()) continue;
+      } catch {
+        continue;
+      }
+      allowedOpenPaths.add(filePath);
+      files.push({ path: filePath, name: path.basename(filePath) });
+    }
+    return files;
+  }
+);
+
+ipcMain.handle(IPC_CHANNELS.CLEAR_RECENT_FILES, (): void => {
+  writeRecentFiles([]);
+});
+
 // Run from source, Electron reports the version of the root package (the
 // upstream web app), not of the desktop app.
 function appVersion(): string {

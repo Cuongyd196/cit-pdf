@@ -5,15 +5,30 @@
  * moves its existing controls and adds a few of ours around them.
  */
 import themeCss from '../../css/pdfjs-theme.css?raw';
+import {
+  getStoredItem,
+  removeStoredItem,
+  setStoredItem,
+} from '../utils/safe-storage.js';
+
+interface ViewerEvent {
+  mode?: number;
+  view?: number;
+  outlineCount?: number;
+}
 
 interface ViewerEventBus {
-  on(name: string, listener: (event: { mode?: number }) => void): void;
+  on(name: string, listener: (event: ViewerEvent) => void): void;
 }
 
 interface ViewerApp {
   initializedPromise?: Promise<void>;
   eventBus?: ViewerEventBus;
   pdfViewer?: { currentScaleValue: string };
+  pdfSidebar?: {
+    isOpen: boolean;
+    switchView(view: number, forceOpen?: boolean): void;
+  };
 }
 
 type ViewerWindow = Window & { PDFViewerApplication?: ViewerApp };
@@ -151,6 +166,55 @@ function keepPageFitted(doc: Document, app: ViewerApp): void {
   }).observe(container);
 }
 
+// SidebarView in PDF.js.
+const SIDEBAR_NONE = 0;
+const SIDEBAR_OUTLINE = 2;
+const OUTLINE_KEY = 'cit:viewer-outline';
+// Below this the outline would take too much of the page's room.
+const OUTLINE_MIN_WIDTH = 900;
+
+/**
+ * A document with a table of contents opens with it showing, which is how
+ * long documents are read. PDF.js decides the panel per file from the last
+ * visit; this only steps in when it left the panel closed. Closing the panel
+ * by hand turns the habit off, opening it turns it back on.
+ */
+function showOutlineByDefault(doc: Document, app: ViewerApp): void {
+  const sidebar = app.pdfSidebar;
+  const bus = app.eventBus;
+  if (!sidebar || !bus) return;
+
+  let hasOutline = false;
+  let viewRestored = false;
+  let decided = false;
+  const decide = () => {
+    if (decided || !hasOutline || !viewRestored) return;
+    const wanted = getStoredItem(OUTLINE_KEY) !== 'off';
+    const roomy = doc.documentElement.clientWidth >= OUTLINE_MIN_WIDTH;
+    if (wanted && roomy && !sidebar.isOpen) {
+      sidebar.switchView(SIDEBAR_OUTLINE, true);
+    }
+    decided = true;
+  };
+
+  bus.on('outlineloaded', (event) => {
+    hasOutline = (event.outlineCount ?? 0) > 0;
+    decide();
+  });
+  // PDF.js announces the panel once it has restored the last visit; every
+  // change after our decision is the user's.
+  bus.on('sidebarviewchanged', (event) => {
+    if (!decided) {
+      viewRestored = true;
+      decide();
+      return;
+    }
+    if (!hasOutline) return;
+    if (event.view === SIDEBAR_NONE) setStoredItem(OUTLINE_KEY, 'off');
+    else removeStoredItem(OUTLINE_KEY);
+  });
+}
+
 /** Apply the CIT-PDF look and toolbar to a loaded viewer frame. */
 export async function applyViewerChrome(
   iframe: HTMLIFrameElement,
@@ -168,7 +232,10 @@ export async function applyViewerChrome(
   const app = win.PDFViewerApplication;
   await app?.initializedPromise;
 
-  if (app) keepPageFitted(doc, app);
+  if (app) {
+    keepPageFitted(doc, app);
+    showOutlineByDefault(doc, app);
+  }
 
   const left = doc.getElementById('toolbarViewerLeft');
   const right = doc.getElementById('toolbarViewerRight');

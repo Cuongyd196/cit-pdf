@@ -24,9 +24,15 @@ interface ViewerOptions {
 interface ViewerWindow extends Window {
   PDFViewerApplicationOptions?: ViewerOptions;
   PDFViewerApplication?: {
-    pdfDocument?: PrintSource['pdfDocument'] | null;
+    pdfDocument?:
+      | (PrintSource['pdfDocument'] & { fingerprints?: Array<string | null> })
+      | null;
     page?: number;
   };
+}
+
+interface ViewHistoryEntry {
+  fingerprint?: string;
 }
 
 interface ViewerTab {
@@ -170,6 +176,74 @@ function installDesktopPrint(iframe: HTMLIFrameElement) {
   };
 }
 
+/**
+ * Tab shortcuts, as in a browser: Ctrl+Tab and Ctrl+Shift+Tab step through
+ * the documents, Ctrl+W closes the one on screen. Listens on the page and on
+ * every viewer frame, since the frame usually has the focus.
+ */
+function onTabShortcut(e: KeyboardEvent) {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey || !activeTab) return;
+  if (e.key === 'Tab') {
+    if (tabs.length < 2) return;
+    e.preventDefault();
+    const step = e.shiftKey ? tabs.length - 1 : 1;
+    selectTab(tabs[(tabs.indexOf(activeTab) + step) % tabs.length]);
+  } else if (e.key.toLowerCase() === 'w' && !e.shiftKey) {
+    e.preventDefault();
+    closeTab(activeTab);
+  } else {
+    return;
+  }
+  // Keep the keyboard on the document now showing. Not in this same turn:
+  // the frame that had the focus may just have been removed, and focus
+  // moved right then is lost.
+  window.setTimeout(() => activeTab?.iframe.contentWindow?.focus());
+}
+
+const VIEW_HISTORY_KEY = 'pdfjs.history';
+const VIEW_HISTORY_MAX = 50;
+
+/**
+ * PDF.js remembers the page and zoom of each document, which is what brings
+ * a reader back to where they stopped. But every viewer frame holds its own
+ * copy of the whole list and writes all of it back, wiping what the other
+ * tabs saved in the meantime. Let a frame save only its own document's entry.
+ */
+function isolateViewHistory(viewer: ViewerWindow) {
+  const storage = viewer.localStorage;
+  const proto = Object.getPrototypeOf(storage) as Storage;
+  const setItem = proto.setItem;
+  proto.setItem = function (key: string, value: string) {
+    const merged =
+      this === storage && key === VIEW_HISTORY_KEY
+        ? mergeViewHistory(viewer, value)
+        : value;
+    setItem.call(this, key, merged);
+  };
+}
+
+function mergeViewHistory(viewer: ViewerWindow, value: string): string {
+  try {
+    const fingerprint =
+      viewer.PDFViewerApplication?.pdfDocument?.fingerprints?.[0];
+    const stored = JSON.parse(
+      viewer.localStorage.getItem(VIEW_HISTORY_KEY) || '{}'
+    ) as { files?: ViewHistoryEntry[] };
+    const files = Array.isArray(stored.files) ? stored.files : [];
+    const own = (
+      JSON.parse(value) as { files?: ViewHistoryEntry[] }
+    ).files?.find((file) => file.fingerprint === fingerprint);
+    if (!fingerprint || !own)
+      return files.length > 0 ? JSON.stringify(stored) : value;
+    const others = files.filter((file) => file.fingerprint !== fingerprint);
+    return JSON.stringify({
+      files: [...others, own].slice(-VIEW_HISTORY_MAX),
+    });
+  } catch {
+    return value;
+  }
+}
+
 /** Opens a file in a tab of its own and shows it. */
 function openFile(file: File) {
   if (!isPdf(file)) {
@@ -189,6 +263,7 @@ function openFile(file: File) {
 
   iframe.addEventListener('load', () => {
     if (__DESKTOP__) installDesktopPrint(iframe);
+    iframe.contentWindow?.addEventListener('keydown', onTabShortcut, true);
     void applyViewerChrome(iframe, {
       fileName: file.name,
       closeLabel: t('tools:viewPdf.close'),
@@ -211,6 +286,7 @@ document.addEventListener('webviewerloaded', (event) => {
     ?.source;
   const options = source?.PDFViewerApplicationOptions;
   if (!options) return;
+  isolateViewHistory(source);
   options.set('disablePreferences', true);
   options.set('annotationEditorMode', -1);
   // Without this PDF.js follows the OS language, not the app's.
@@ -258,6 +334,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.files = files;
     fileInput.dispatchEvent(new Event('change', { bubbles: true }));
   });
+
+  window.addEventListener('keydown', onTabShortcut);
 
   // Ctrl+P while focus is outside the viewer frame.
   window.addEventListener('keydown', (e) => {

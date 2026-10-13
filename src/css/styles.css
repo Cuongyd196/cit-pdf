@@ -712,6 +712,40 @@ body:has(#desktop-sidebar) .category-header {
   @apply mb-2 py-2 text-base font-bold text-white;
 }
 
+/* Documents read lately: home page and the viewer's empty screen. */
+.desktop-recent-files {
+  @apply mt-4 mb-2;
+}
+
+.desktop-recent-files-clear {
+  @apply text-xs text-gray-400 hover:text-white;
+}
+
+.desktop-recent-files-list {
+  @apply grid gap-1;
+}
+
+.desktop-recent-file {
+  @apply grid w-full items-center gap-x-3 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-left;
+  grid-template-columns: auto minmax(0, 2fr) minmax(0, 3fr);
+}
+
+.desktop-recent-file:hover {
+  border-color: var(--color-indigo-500);
+}
+
+.desktop-recent-file > i {
+  @apply text-xl text-indigo-400;
+}
+
+.desktop-recent-file-name {
+  @apply truncate text-sm font-semibold text-white;
+}
+
+.desktop-recent-file-folder {
+  @apply truncate text-xs text-gray-400;
+}
+
 /* File drop zones pick up the accent on hover. */
 body:has(#desktop-sidebar) #drop-zone:hover {
   border-color: var(--color-indigo-500);

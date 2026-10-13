@@ -609,6 +609,9 @@ function initOpenedFiles(
         files: viewerTabs.filter((tab): tab is OpenedFile => tab !== null),
         active: pageFile?.path ?? null,
       });
+      if (pageFile) await bridge.noteRecentFile(pageFile.path);
+      // The list shows again once the last tab is closed.
+      if (files.length === 0) void renderRecentFiles();
     });
   });
 
@@ -651,6 +654,59 @@ function initOpenedFiles(
     document.body.append(link);
     rewriteLinks();
     link.click();
+  };
+
+  // Documents read lately, to pick up where the user left off: on the home
+  // page and on the viewer's empty screen.
+  const renderRecentFiles = async () => {
+    const anchor =
+      (onViewer && document.getElementById('drop-zone')) ||
+      document.getElementById('desktop-recent') ||
+      document.getElementById('tool-grid');
+    if (!anchor) return;
+    const files = await bridge.listRecentFiles();
+    document.getElementById('desktop-recent-files')?.remove();
+    if (files.length === 0) return;
+
+    const section = el('section', 'desktop-recent-files');
+    section.id = 'desktop-recent-files';
+    const clear = el('button', 'desktop-recent-files-clear', ds('recentClear'));
+    clear.type = 'button';
+    clear.addEventListener('click', () => {
+      section.remove();
+      void bridge.clearRecentFiles();
+    });
+    const heading = el('div', 'flex items-center justify-between gap-3');
+    heading.append(
+      el('h2', 'desktop-recent-heading', ds('recentFiles')),
+      clear
+    );
+
+    const list = el('div', 'desktop-recent-files-list');
+    // The home page is about the tools: keep the list short there.
+    const shown = onViewer ? files : files.slice(0, MAX_RECENT);
+    shown.forEach((file) => {
+      const item = el('button', 'desktop-recent-file');
+      item.type = 'button';
+      item.title = file.path;
+      item.dataset.noTranslate = '';
+      const folder = file.path
+        .slice(0, -file.name.length)
+        .replace(/[\\/]$/, '');
+      item.append(
+        el('i', 'ph ph-file-pdf'),
+        el('span', 'desktop-recent-file-name', file.name),
+        el('span', 'desktop-recent-file-folder', folder)
+      );
+      item.addEventListener('click', () => {
+        if (onViewer) void openInViewer(file);
+        else goToViewer(file);
+      });
+      list.append(item);
+    });
+    section.append(heading, list);
+    if (onViewer) anchor.after(section);
+    else anchor.before(section);
   };
 
   // A document that came from the viewer goes back there: the editor's
@@ -717,6 +773,7 @@ function initOpenedFiles(
     if (front) await openInViewer(front);
   };
   const restored = restore();
+  void restored.then(renderRecentFiles);
 
   const check = async () => {
     const file = await bridge.takeOpenedFile();

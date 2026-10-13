@@ -124,4 +124,7 @@ export const IPC_CHANNELS = {
   DOWNLOAD_SAVED: 'bento:download-saved',
   SHOW_SAVED_IN_FOLDER: 'bento:show-saved-in-folder',
   OPEN_SAVED_FILE: 'bento:open-saved-file',
+  NOTE_RECENT_FILE: 'bento:note-recent-file',
+  LIST_RECENT_FILES: 'bento:list-recent-files',
+  CLEAR_RECENT_FILES: 'bento:clear-recent-files',
 } as const;

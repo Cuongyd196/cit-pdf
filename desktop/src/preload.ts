@@ -110,6 +110,20 @@ const bridge = {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_SAVED_FILE, filePath);
   },
 
+  // Documents read in the viewer lately, newest first. Listing them lets the
+  // page open them again; only files the user opened before can be on it.
+  noteRecentFile: (filePath: string): Promise<boolean> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.NOTE_RECENT_FILE, filePath);
+  },
+
+  listRecentFiles: (): Promise<OpenedFile[]> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.LIST_RECENT_FILES);
+  },
+
+  clearRecentFiles: (): Promise<void> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.CLEAR_RECENT_FILES);
+  },
+
   // Asks GitHub whether a newer release exists. Runs only on request.
   checkForUpdate: (): Promise<UpdateCheckResult> => {
     return ipcRenderer.invoke(IPC_CHANNELS.CHECK_UPDATE);
