@@ -127,5 +127,10 @@ export async function initUpdateBanner(): Promise<void> {
   const result = await latestResult();
   if (!result?.newer || getStoredItem(DISMISSED_KEY) === result.latest) return;
   // Above the recent tools when that row exists, else above the grid.
-  showBanner(result, document.getElementById('desktop-recent') ?? grid);
+  showBanner(
+    result,
+    document.getElementById('home-drop') ??
+      document.getElementById('desktop-recent') ??
+      grid
+  );
 }

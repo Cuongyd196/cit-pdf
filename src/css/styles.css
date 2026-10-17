@@ -712,6 +712,178 @@ body:has(#desktop-sidebar) .category-header {
   @apply mb-2 py-2 text-base font-bold text-white;
 }
 
+/* Home page start view: open a file or a recent one, tools in a column on
+   the right. At index.html#tools the page shows the full grid instead. */
+.desktop-home {
+  display: none;
+}
+
+body.desktop-home-start #app {
+  max-width: none;
+  /* Simple mode sets an inline padding-top on #app (main.ts). */
+  padding: 0 !important;
+  min-height: 0;
+}
+
+body.desktop-home-start :is(#tools-header, #grid-view, .desktop-home-back) {
+  display: none;
+}
+
+body.desktop-home-start .desktop-home {
+  display: flex;
+  min-height: calc(100vh - 2rem);
+}
+
+.desktop-home-main {
+  @apply flex min-w-0 flex-1 flex-col gap-7;
+  padding: 2.5rem 3rem;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.desktop-home-title {
+  @apply mb-1 text-3xl font-bold text-white;
+}
+
+.desktop-home-subtitle {
+  @apply text-gray-400;
+}
+
+.desktop-home-drop {
+  @apply flex items-center gap-5 rounded-2xl border-2 border-dashed border-gray-600 bg-gray-800 px-6 py-5 transition-colors;
+}
+
+.desktop-home-drop.is-dragging {
+  border-color: var(--color-indigo-500);
+  background-color: color-mix(
+    in srgb,
+    var(--color-indigo-500) 10%,
+    transparent
+  );
+}
+
+.desktop-home-drop-icon {
+  @apply flex h-13 w-13 flex-shrink-0 items-center justify-center rounded-xl text-2xl text-indigo-400;
+  background-color: color-mix(
+    in srgb,
+    var(--color-indigo-500) 14%,
+    transparent
+  );
+}
+
+.desktop-home-drop-title {
+  @apply text-base font-semibold text-white;
+}
+
+.desktop-home-drop-hint {
+  @apply mt-0.5 text-sm text-gray-400;
+}
+
+.desktop-home-open {
+  @apply h-11 flex-shrink-0 rounded-lg bg-indigo-600 px-5 font-semibold text-white hover:bg-indigo-700;
+}
+
+.desktop-home-recent {
+  @apply flex flex-col gap-2;
+}
+
+.desktop-home-empty {
+  @apply rounded-xl border border-gray-700 px-4 py-6 text-center text-sm text-gray-400;
+}
+
+.desktop-home-files {
+  @apply flex flex-col gap-1.5;
+}
+
+.desktop-home-file {
+  @apply grid w-full items-center gap-x-4 px-4 text-left;
+  grid-template-columns: 1.5rem minmax(0, 5fr) minmax(0, 4fr) 8.5rem;
+}
+
+button.desktop-home-file {
+  @apply rounded-lg border border-gray-700 bg-gray-800 py-2.5;
+}
+
+button.desktop-home-file:hover {
+  border-color: var(--color-indigo-500);
+}
+
+.desktop-home-file-head {
+  @apply text-xs text-gray-400;
+}
+
+.desktop-home-file > i {
+  @apply text-xl text-indigo-400;
+}
+
+.desktop-home-file-name {
+  @apply truncate text-sm font-semibold text-white;
+}
+
+.desktop-home-file-meta {
+  @apply truncate text-xs text-gray-400;
+}
+
+.desktop-home-tools {
+  @apply flex w-72 flex-shrink-0 flex-col gap-4 border-l border-gray-700 bg-gray-800 px-5 py-7;
+}
+
+.desktop-home-search {
+  @apply flex h-10 items-center gap-2 rounded-lg border border-gray-600 bg-gray-700 px-3 text-gray-400;
+}
+
+.desktop-home-search input {
+  @apply min-w-0 flex-1 border-0 bg-transparent text-sm text-white outline-none;
+}
+
+.desktop-home-tools-heading {
+  @apply mt-1 text-xs font-semibold tracking-wide text-gray-400 uppercase;
+}
+
+.desktop-home-tool-grid {
+  @apply grid grid-cols-2 gap-2;
+}
+
+.desktop-home-tool {
+  @apply flex min-h-11 flex-col gap-2 rounded-lg border border-gray-700 bg-gray-900 p-3 text-sm font-medium text-gray-200 no-underline;
+}
+
+.desktop-home-tool:hover {
+  border-color: var(--color-indigo-500);
+  @apply text-white;
+}
+
+.desktop-home-tool > i {
+  @apply text-xl text-indigo-400;
+}
+
+.desktop-home-tool > span {
+  @apply leading-snug;
+}
+
+.desktop-home-all {
+  @apply mt-auto flex items-center justify-between rounded-lg bg-gray-700 px-4 py-3 text-sm font-semibold text-white no-underline hover:bg-gray-600;
+}
+
+.desktop-home-back {
+  @apply mb-2 inline-flex items-center gap-2 text-sm font-semibold text-indigo-400 no-underline hover:text-indigo-300;
+}
+
+/* Narrow window: the tool column goes under the recent files. */
+@media (max-width: 960px) {
+  body.desktop-home-start .desktop-home {
+    flex-direction: column;
+  }
+
+  .desktop-home-main {
+    @apply px-6 py-8;
+  }
+
+  .desktop-home-tools {
+    @apply w-auto border-t border-l-0;
+  }
+}
+
 /* Documents read lately: home page and the viewer's empty screen. */
 .desktop-recent-files {
   @apply mt-4 mb-2;

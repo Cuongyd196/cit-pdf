@@ -17,6 +17,7 @@ Tài liệu này dành cho người phát triển và người đóng gói bản
 
 ### Giao diện
 
+- **Trang chủ:** ô kéo thả / nút Mở tệp (nhiều tệp, mỗi tệp một tab trong trình xem), bảng tệp gần đây (tên, thư mục, lần mở cuối; lưu ở `userData/recent-files.json`), cột phải gồm ô tìm công cụ, 8 công cụ hay dùng (yêu thích → dùng gần đây → mặc định) và nút "Tất cả công cụ". Lưới công cụ đầy đủ nằm ở `index.html#tools`. Ở trang chủ và khi đang đọc, thanh bên thu thành dải biểu tượng.
 - **Thanh bên trái:** ô tìm công cụ, mục yêu thích, công cụ dùng gần đây và các nhóm công cụ.
 - **Thanh dưới:** nút đổi nhanh giao diện sáng/tối.
 - **Màu chủ đạo:** xanh teal; phông chữ Inter (hỗ trợ đủ dấu tiếng Việt).
