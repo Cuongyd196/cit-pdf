@@ -6,10 +6,52 @@ import {
   downloadFile,
 } from '../utils/helpers.js';
 import { loadPdfWithPasswordPrompt } from '../utils/password-prompt.js';
-import { t } from '../i18n/i18n';
+import { getLanguageFromUrl, t } from '../i18n/i18n';
 import { loadPdfDocument } from '../utils/load-pdf-document.js';
 import { flattenAnnotations } from '../utils/flatten-annotations.js';
+import { pdfjsLocale } from './pdf-viewer-chrome.js';
+import {
+  drawSignImages,
+  prepareSignImage,
+  type PreparedSignImage,
+  type SignImagePlacement,
+} from './sign-images.js';
 import type { SignState, PDFViewerWindow } from '@/types';
+
+interface ViewerOptions {
+  set(name: string, value: unknown): void;
+}
+
+// The viewer announces itself on this document before it reads its options:
+// the moment to give it the app's language, or it follows the OS.
+document.addEventListener('webviewerloaded', (event) => {
+  const source = (
+    event as CustomEvent<{
+      source: Window & { PDFViewerApplicationOptions?: ViewerOptions };
+    }>
+  ).detail?.source;
+  source?.PDFViewerApplicationOptions?.set('localeProperties', {
+    lang: pdfjsLocale(getLanguageFromUrl()),
+  });
+});
+
+/** A colour signature or stamp placed on a page (see sign-images.ts). */
+interface PlacedImage extends Omit<SignImagePlacement, 'png'> {
+  image: PreparedSignImage;
+  element: HTMLElement | null;
+}
+
+const placedImages: PlacedImage[] = [];
+// A new image starts this wide, as a share of the page width.
+const NEW_IMAGE_WIDTH = 0.28;
+
+const OVERLAY_CSS = `
+.cit-sign-layer { position: absolute; inset: 0; z-index: 100; pointer-events: none; }
+.cit-sign-image { position: absolute; pointer-events: auto; cursor: move; touch-action: none; outline: 1px dashed rgba(13, 148, 136, 0.9); }
+.cit-sign-image img { display: block; width: 100%; height: 100%; pointer-events: none; user-select: none; }
+.cit-sign-image .cit-sign-resize { position: absolute; right: -7px; bottom: -7px; width: 14px; height: 14px; border-radius: 3px; background: #0d9488; border: 2px solid #fff; cursor: nwse-resize; }
+.cit-sign-image .cit-sign-delete { position: absolute; right: -11px; top: -11px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: #dc2626; color: #fff; font: 600 14px/22px sans-serif; text-align: center; padding: 0; cursor: pointer; }
+`;
 
 const signState: SignState = {
   file: null,
@@ -64,6 +106,18 @@ function initializePage() {
   if (processBtn) {
     processBtn.addEventListener('click', applyAndSaveSignatures);
   }
+
+  const imageInput = document.getElementById(
+    'sign-image-input'
+  ) as HTMLInputElement | null;
+  document.getElementById('sign-image-btn')?.addEventListener('click', () => {
+    imageInput?.click();
+  });
+  imageInput?.addEventListener('change', () => {
+    const file = imageInput.files?.[0];
+    imageInput.value = '';
+    if (file) void insertSignImage(file);
+  });
 
   document.getElementById('back-to-tools')?.addEventListener('click', () => {
     cleanup();
@@ -211,6 +265,13 @@ async function setupSignTool() {
         const app = viewerWindow.PDFViewerApplication;
         const doc = viewerWindow.document;
         const eventBus = app.eventBus;
+        const style = doc.createElement('style');
+        style.textContent = OVERLAY_CSS;
+        doc.head.append(style);
+        // PDF.js clears a page's own nodes when it redraws it.
+        eventBus?._on('pagerendered', () => {
+          for (const item of placedImages) showPlacedImage(item);
+        });
         eventBus?._on('annotationeditoruimanager', () => {
           const editorModeButtons = doc.getElementById('editorModeButtons');
           editorModeButtons?.classList.remove('hidden');
@@ -222,14 +283,9 @@ async function setupSignTool() {
           if (editorSignatureButton) {
             editorSignatureButton.disabled = false;
           }
-          const editorStamp = doc.getElementById('editorStamp');
-          editorStamp?.removeAttribute('hidden');
-          const editorStampButton = doc.getElementById(
-            'editorStampButton'
-          ) as HTMLButtonElement | null;
-          if (editorStampButton) {
-            editorStampButton.disabled = false;
-          }
+          // PDF.js's image editor fails when saving; images go through
+          // "Insert signature or stamp" above the viewer instead.
+          doc.getElementById('editorStamp')?.setAttribute('hidden', '');
           try {
             const highlightBtn = doc.getElementById(
               'editorHighlightButton'
@@ -276,13 +332,25 @@ async function applyAndSaveSignatures() {
     ) as HTMLInputElement | null;
     const shouldFlatten = flattenCheckbox?.checked;
 
-    if (shouldFlatten) {
-      showLoader('Flattening and saving PDF...');
+    showLoader(
+      shouldFlatten ? 'Flattening and saving PDF...' : 'Saving signed PDF...'
+    );
+    const rawPdfBytes = await app.pdfDocument.saveDocument(
+      app.pdfDocument.annotationStorage
+    );
+    const pdfBytes = await drawSignImages(
+      new Uint8Array(rawPdfBytes),
+      placedImages.map((item) => ({
+        pageIndex: item.pageIndex,
+        x: item.x,
+        y: item.y,
+        width: item.width,
+        height: item.height,
+        png: item.image.png,
+      }))
+    );
 
-      const rawPdfBytes = await app.pdfDocument.saveDocument(
-        app.pdfDocument.annotationStorage
-      );
-      const pdfBytes = new Uint8Array(rawPdfBytes);
+    if (shouldFlatten) {
       const pdfDoc = await loadPdfDocument(pdfBytes);
       try {
         pdfDoc.getForm().flatten();
@@ -310,7 +378,11 @@ async function applyAndSaveSignatures() {
         resetState();
       });
     } else {
-      app.eventBus?.dispatch('download', { source: app });
+      downloadFile(
+        new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' }),
+        signState.file?.name || 'document.pdf'
+      );
+      hideLoader();
       showAlert(
         'Success',
         'Signed PDF downloaded successfully!',
@@ -371,4 +443,144 @@ function cleanup() {
     URL.revokeObjectURL(signState.blobUrl);
     signState.blobUrl = null;
   }
+  for (const item of placedImages.splice(0)) {
+    item.element?.remove();
+    URL.revokeObjectURL(item.image.url);
+  }
+}
+
+function viewerParts() {
+  const win = signState.viewerIframe?.contentWindow as
+    | (PDFViewerWindow & {
+        PDFViewerApplication?: { page?: number };
+      })
+    | null;
+  const doc = signState.viewerIframe?.contentDocument;
+  return win && doc ? { win, doc } : null;
+}
+
+function pageElement(doc: Document, pageIndex: number): HTMLElement | null {
+  return doc.querySelector<HTMLElement>(
+    `.page[data-page-number="${pageIndex + 1}"]`
+  );
+}
+
+/** Puts an image on its page (again, after PDF.js redrew the page). */
+function showPlacedImage(item: PlacedImage): void {
+  const parts = viewerParts();
+  if (!parts) return;
+  const page = pageElement(parts.doc, item.pageIndex);
+  if (!page) return;
+  let layer = page.querySelector<HTMLElement>(':scope > .cit-sign-layer');
+  if (!layer) {
+    layer = parts.doc.createElement('div');
+    layer.className = 'cit-sign-layer';
+    page.append(layer);
+  }
+  if (!item.element) item.element = buildPlacedImage(parts.doc, item);
+  if (item.element.parentElement !== layer) layer.append(item.element);
+  Object.assign(item.element.style, {
+    left: `${item.x * 100}%`,
+    top: `${item.y * 100}%`,
+    width: `${item.width * 100}%`,
+    height: `${item.height * 100}%`,
+  });
+}
+
+function buildPlacedImage(doc: Document, item: PlacedImage): HTMLElement {
+  const box = doc.createElement('div');
+  box.className = 'cit-sign-image';
+  const img = doc.createElement('img');
+  img.src = item.image.url;
+  img.alt = '';
+  const resize = doc.createElement('span');
+  resize.className = 'cit-sign-resize';
+  const remove = doc.createElement('button');
+  remove.type = 'button';
+  remove.className = 'cit-sign-delete';
+  remove.textContent = '×';
+  remove.title = 'Remove';
+  remove.addEventListener('click', (event) => {
+    event.stopPropagation();
+    box.remove();
+    placedImages.splice(placedImages.indexOf(item), 1);
+    URL.revokeObjectURL(item.image.url);
+  });
+  box.append(img, resize, remove);
+
+  // Drag to move, drag the corner to resize (keeping the proportions).
+  box.addEventListener('pointerdown', (event) => {
+    if (event.target === remove) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const page = box.closest<HTMLElement>('.page');
+    if (!page) return;
+    const resizing = event.target === resize;
+    const start = { x: event.clientX, y: event.clientY };
+    const from = { ...item };
+    const pageWidth = page.clientWidth;
+    const pageHeight = page.clientHeight;
+    const ratio = item.image.width / item.image.height;
+    box.setPointerCapture(event.pointerId);
+    const move = (e: PointerEvent) => {
+      const dx = (e.clientX - start.x) / pageWidth;
+      const dy = (e.clientY - start.y) / pageHeight;
+      if (resizing) {
+        item.width = Math.min(1 - item.x, Math.max(0.03, from.width + dx));
+        item.height = (item.width * pageWidth) / ratio / pageHeight;
+      } else {
+        item.x = Math.min(1 - item.width, Math.max(0, from.x + dx));
+        item.y = Math.min(1 - item.height, Math.max(0, from.y + dy));
+      }
+      showPlacedImage(item);
+    };
+    const end = () => {
+      box.removeEventListener('pointermove', move);
+      box.removeEventListener('pointerup', end);
+      box.removeEventListener('pointercancel', end);
+    };
+    box.addEventListener('pointermove', move);
+    box.addEventListener('pointerup', end);
+    box.addEventListener('pointercancel', end);
+  });
+  return box;
+}
+
+/** "Insert signature or stamp": a picture, kept in colour. */
+async function insertSignImage(file: File): Promise<void> {
+  const parts = viewerParts();
+  if (!parts) return;
+  const removeWhite =
+    (
+      document.getElementById(
+        'sign-image-clear-white'
+      ) as HTMLInputElement | null
+    )?.checked ?? true;
+  let image: PreparedSignImage;
+  try {
+    image = await prepareSignImage(file, removeWhite);
+  } catch (e) {
+    console.error('Could not read the image:', e);
+    showAlert('Invalid File', 'Please choose a PNG or JPG image.');
+    return;
+  }
+  const pageIndex = Math.max(
+    0,
+    (parts.win.PDFViewerApplication?.page ?? 1) - 1
+  );
+  const page = pageElement(parts.doc, pageIndex);
+  const pageRatio = page ? page.clientWidth / page.clientHeight : 0.7;
+  const width = NEW_IMAGE_WIDTH;
+  const height = (width * pageRatio * image.height) / image.width;
+  const item: PlacedImage = {
+    pageIndex,
+    x: (1 - width) / 2,
+    y: Math.max(0, (1 - height) / 2),
+    width,
+    height: Math.min(height, 1),
+    image,
+    element: null,
+  };
+  placedImages.push(item);
+  showPlacedImage(item);
 }

@@ -2182,5 +2182,10 @@
   "Scanned document: recognizing text (OCR)...": "Tài liệu quét: đang nhận dạng chữ (OCR)...",
   "Recognizing text (OCR): Processing page {0} of {1}": "Đang nhận dạng chữ (OCR): trang {0}/{1}",
   "Successfully converted {0} to DOCX. The PDF was a scan, so its text was recognized with OCR: please check it against the original.": "Đã chuyển {0} sang DOCX. Đây là PDF quét nên chữ được nhận dạng bằng OCR: hãy đối chiếu lại với bản gốc.",
-  "Successfully converted {0} PDF(s) to DOCX. The PDF was a scan, so its text was recognized with OCR: please check it against the original.": "Đã chuyển {0} PDF sang DOCX. Có PDF quét nên chữ được nhận dạng bằng OCR: hãy đối chiếu lại với bản gốc."
+  "Successfully converted {0} PDF(s) to DOCX. The PDF was a scan, so its text was recognized with OCR: please check it against the original.": "Đã chuyển {0} PDF sang DOCX. Có PDF quét nên chữ được nhận dạng bằng OCR: hãy đối chiếu lại với bản gốc.",
+  "Insert signature or stamp image": "Chèn ảnh chữ ký / con dấu",
+  "Remove white background": "Xoá nền trắng",
+  "Keeps the colours of a scanned signature or a company seal. Drag to move it, drag the corner to resize. To draw or type a signature, use the signature button in the viewer.": "Giữ nguyên màu của chữ ký scan hoặc con dấu. Kéo để di chuyển, kéo góc để đổi cỡ. Muốn ký tay hoặc gõ tên, dùng nút chữ ký trong khung xem.",
+  "Saving signed PDF...": "Đang lưu PDF đã ký...",
+  "Please choose a PNG or JPG image.": "Hãy chọn ảnh PNG hoặc JPG."
 }
