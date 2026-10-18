@@ -1,6 +1,10 @@
+/* Interface type: Be Vietnam Pro, drawn for Vietnamese diacritics. Inter
+   stays only as a font offered inside the editors. */
+@import '@fontsource/be-vietnam-pro/400.css';
+@import '@fontsource/be-vietnam-pro/500.css';
+@import '@fontsource/be-vietnam-pro/600.css';
+@import '@fontsource/be-vietnam-pro/700.css';
 @import '@fontsource/inter/400.css';
-@import '@fontsource/inter/500.css';
-@import '@fontsource/inter/600.css';
 @import '@fontsource/inter/700.css';
 @import '@fontsource/dancing-script/400.css';
 @import '@fontsource/great-vibes/400.css';
@@ -18,17 +22,24 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
   --font-dancing: 'Dancing Script', cursive;
   --font-vibes: 'Great Vibes', cursive;
   --font-kalam: 'Kalam', cursive;
   --font-lato: 'Lato', sans-serif;
   --font-merriweather: 'Merriweather', serif;
   --font-cedarville: 'Cedarville Cursive', cursive;
-  --color-gray-900: rgb(34, 34, 34);
-  --color-gray-800: rgb(42, 42, 42);
-  --color-gray-700: rgb(56, 56, 56);
-  --color-gray-600: rgb(68, 68, 68);
+  /* Dark greys with a slight cool cast, one family with the light theme's
+     greys and the teal accent. */
+  --color-gray-900: #1f2328;
+  --color-gray-800: #272c32;
+  --color-gray-700: #353b42;
+  --color-gray-600: #424952;
+  /* Hint text: 4.5:1 or more on the page and card grounds. */
+  --color-gray-500: #a3aab4;
+  --color-gray-400: #b8bec7;
+  /* Red text (warnings, reset links) readable on the dark grounds. */
+  --color-red-500: #f26b6b;
   /* Accent: the indigo scale is remapped to teal, so every indigo-* utility
      follows the brand color without touching the pages. */
   --color-indigo-50: #f0fdfa;
@@ -50,7 +61,7 @@
 }
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui;
+  --font-sans: 'Be Vietnam Pro', ui-sans-serif, system-ui;
   --font-dancing: 'Dancing Script', cursive;
   --font-vibes: 'Great Vibes', cursive;
   --font-kalam: 'Kalam', cursive;
@@ -64,8 +75,8 @@ html {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: rgb(34, 34, 34);
+  font-family: var(--font-sans);
+  background-color: #1f2328;
   color: #d1d5db;
 }
 
@@ -73,8 +84,8 @@ body {
   transition:
     transform 0.2s ease-in-out,
     box-shadow 0.2s ease-in-out;
-  border: 1px solid #383838;
-  background-color: #2a2a2a;
+  border: 1px solid #353b42;
+  background-color: #272c32;
   padding: 1.5rem;
   border-radius: 0.5rem;
   display: flex;
@@ -282,7 +293,7 @@ footer a {
 }
 
 .pill {
-  background-color: #383838;
+  background-color: #353b42;
   /* bg-gray-700 */
   color: #d1d5db;
   /* text-gray-300 */
@@ -315,7 +326,7 @@ footer a {
 }
 
 .feature-card {
-  background-color: #2a2a2a;
+  background-color: #272c32;
   /* bg-gray-800 */
   padding: 24px;
   border-radius: 8px;
@@ -343,6 +354,47 @@ html[data-theme='light'] {
   --color-gray-200: #1f2937;
   --color-gray-100: #111827;
   --color-white: #111827;
+  /* Notices and labels are written dark-first in pale tints (blue-300,
+     yellow-200, ...). On light grounds they take the deep shade. */
+  --color-blue-200: #1e40af;
+  --color-blue-300: #1e40af;
+  --color-blue-400: #1d4ed8;
+  --color-sky-300: #075985;
+  --color-sky-400: #0369a1;
+  --color-cyan-300: #155e75;
+  --color-cyan-400: #0e7490;
+  --color-yellow-200: #713f12;
+  --color-yellow-300: #713f12;
+  --color-yellow-400: #713f12;
+  --color-amber-200: #78350f;
+  --color-amber-300: #78350f;
+  --color-amber-400: #78350f;
+  /* The deep tints that dark-first notices use as their ground become pale
+     ones, so the notice reads as a light panel. */
+  --color-blue-900: #dbeafe;
+  --color-yellow-900: #fef9c3;
+  --color-amber-900: #fef3c7;
+  --color-red-900: #fee2e2;
+  --color-green-900: #dcfce7;
+  --color-orange-300: #9a3412;
+  --color-orange-400: #9a3412;
+  --color-green-300: #166534;
+  --color-green-400: #15803d;
+  --color-emerald-300: #065f46;
+  --color-emerald-400: #047857;
+  --color-teal-300: #115e59;
+  --color-teal-400: #0f766e;
+  --color-red-300: #991b1b;
+  --color-red-400: #b91c1c;
+  --color-red-500: #c81e1e;
+  --color-rose-300: #9f1239;
+  --color-rose-400: #be123c;
+  --color-pink-300: #9d174d;
+  --color-pink-400: #be185d;
+  --color-purple-300: #6b21a8;
+  --color-purple-400: #7e22ce;
+  --color-violet-300: #5b21b6;
+  --color-violet-400: #6d28d9;
   --color-indigo-200: #115e59;
   --color-indigo-300: #115e59;
   --color-indigo-400: #0f766e;
@@ -850,7 +902,7 @@ button.desktop-home-file:hover {
 }
 
 .desktop-home-tools-heading {
-  @apply mt-1 text-xs font-semibold tracking-wide text-gray-400 uppercase;
+  @apply mt-1 text-sm font-semibold text-gray-400;
 }
 
 .desktop-home-tool-grid {
@@ -1010,7 +1062,7 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
 }
 
 .desktop-nav-heading {
-  @apply px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-500;
+  @apply px-4 pt-3 pb-1 text-[0.8125rem] font-semibold text-gray-500;
 }
 
 .desktop-nav-item {
@@ -1099,7 +1151,7 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
   outline: 2px solid transparent;
   outline-offset: 2px;
   box-shadow:
-    0 0 0 2px #222222,
+    0 0 0 2px #1f2328,
     0 0 0 4px #2dd4bf;
   /* focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-400 */
 }
@@ -1185,19 +1237,19 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
 
 /* Testimonial Card Styles */
 .testimonial-card {
-  background-color: #2a2a2a;
+  background-color: #272c32;
   /* bg-gray-800 */
   padding: 24px;
   border-radius: 0.75rem;
   /* rounded-xl */
-  border: 1px solid #383838;
+  border: 1px solid #353b42;
   /* border-gray-700 */
   display: flex;
   flex-direction: column;
 }
 
 .pill {
-  background-color: #383838;
+  background-color: #353b42;
   /* bg-gray-700 */
   color: #d1d5db;
   /* text-gray-300 */
@@ -1209,7 +1261,7 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
 }
 
 .pill {
-  background-color: #383838;
+  background-color: #353b42;
   /* bg-gray-700 */
   color: #d1d5db;
   /* text-gray-300 */
@@ -1513,7 +1565,7 @@ input[type='color'] {
   width: 2.5rem;
   height: 2.5rem;
   padding: 0;
-  border: 2px solid #444444;
+  border: 2px solid #424952;
   border-radius: 9999px;
   background: transparent;
   cursor: pointer;
@@ -2380,7 +2432,7 @@ details > summary .icon {
   padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  background: #2a2a2a;
+  background: #272c32;
   box-shadow: 0 18px 44px -12px rgba(0, 0, 0, 0.7);
   transform: translateX(-50%);
 }
@@ -2395,7 +2447,7 @@ details > summary .icon {
 }
 
 .nav-products-menu a:hover {
-  background: #383838;
+  background: #353b42;
 }
 
 .nav-product-text {
@@ -2425,7 +2477,7 @@ details > summary .icon {
 
 .faq-d {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: #2a2a2a;
+  background-color: #272c32;
 }
 
 .faq-d:last-child {
@@ -2469,7 +2521,7 @@ details > summary .icon {
 }
 
 .faq-d-q:hover {
-  background-color: #383838;
+  background-color: #353b42;
 }
 
 .faq-d[open] .faq-d-q {
@@ -2740,7 +2792,7 @@ body:has(#desktop-sidebar):not(.desktop-workspace)
   /* Above the fixed status bar (2rem). */
   bottom: 2.75rem;
   z-index: 20;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 10px 28px rgba(12, 22, 30, 0.32);
 }
 
 body:has(#desktop-sidebar):not(:has(#desktop-statusbar)):not(.desktop-workspace)
@@ -2751,4 +2803,113 @@ body:has(#desktop-sidebar):not(:has(#desktop-statusbar)):not(.desktop-workspace)
     div:has(> #preview-btn):has(> #download-btn)
   ):not(.hidden) {
   bottom: 0.75rem;
+}
+
+/* ---- Craft pass (desktop) ---- */
+
+/* Figures that sit in columns or change while you watch: sizes, page counts,
+   times, zoom, version. */
+:is(
+  .desktop-home-file-meta,
+  .desktop-workspace-file-meta,
+  .desktop-statusbar,
+  .desktop-recent-files,
+  #file-display-area,
+  .desktop-workspace-input
+) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* No lone word on a heading's last line; calmer rag in short paragraphs. */
+:is(h1, h2, h3) {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Large headings sit a little tighter. */
+:is(.desktop-home-title, #tool-uploader > h1) {
+  letter-spacing: -0.015em;
+}
+
+/* Press feedback on the app's own buttons and cards (not inside the PDF
+   editor, which handles its own). */
+body:has(#desktop-sidebar)
+  :is(
+    button,
+    .btn-gradient,
+    .tool-card,
+    .desktop-home-tool,
+    .desktop-home-all,
+    .desktop-nav-item > a
+  ):not(:disabled):not(#embed-pdf-container *) {
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease,
+    transform 120ms ease;
+}
+
+body:has(#desktop-sidebar)
+  :is(
+    button,
+    .btn-gradient,
+    .tool-card,
+    .desktop-home-tool,
+    .desktop-home-all,
+    .desktop-nav-item > a
+  ):not(:disabled):not(#embed-pdf-container *):active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:has(#desktop-sidebar) :is(button, .btn-gradient, .tool-card):active {
+    transform: none;
+  }
+}
+
+/* Solid red, green and blue buttons with white text: Tailwind's 500/600
+   shades are 3.2–3.6:1 under white. Darker red and blue; green becomes the
+   app's one accent. */
+:is(.bg-red-500, .bg-red-600).text-white {
+  background-color: #c81e1e;
+}
+
+:is(.bg-green-500, .bg-green-600).text-white {
+  background-color: #0f766e;
+}
+
+:is(.bg-blue-500, .bg-blue-600).text-white {
+  background-color: #1d4ed8;
+}
+
+:is(.bg-red-500, .bg-red-600).text-white:hover {
+  background-color: #a51818;
+}
+
+:is(.bg-green-500, .bg-green-600).text-white:hover {
+  background-color: #115e59;
+}
+
+:is(.bg-blue-500, .bg-blue-600).text-white:hover {
+  background-color: #1e40af;
+}
+
+/* Placeholders carry the hint (what to type), so they get readable grey
+   rather than the browser's faint default. */
+body:has(#desktop-sidebar) ::placeholder {
+  color: var(--color-gray-400);
+  opacity: 1;
+}
+
+html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
+  color: var(--color-gray-500);
+}
+
+/* Notice text at 80% opacity drops under 4.5:1; full strength instead. */
+.text-blue-400\/80 {
+  color: var(--color-blue-300);
 }

@@ -12,7 +12,7 @@
     "noLanguagesFound": "Không tìm thấy ngôn ngữ"
   },
   "donation": {
-    "message": "Bạn yêu thích BentoPDF? Hãy giúp chúng tôi giữ nó miễn phí và mã nguồn mở!",
+    "message": "Bạn yêu thích BentoPDF? Hãy giúp chúng tôi giữ nó miễn phí và mã nguồn mở.",
     "button": "Quyên góp"
   },
   "hero": {
@@ -154,7 +154,7 @@
       "resetTitle": "Đặt lại phím tắt",
       "resetMessage": "Bạn có chắc chắn muốn đặt lại tất cả phím tắt về mặc định?<br><br>Hành động này không thể hoàn tác.",
       "importSuccessTitle": "Nhập thành công",
-      "importSuccessMessage": "Đã nhập phím tắt thành công!",
+      "importSuccessMessage": "Đã nhập phím tắt thành công.",
       "importFailTitle": "Nhập thất bại",
       "importFailMessage": "Không thể nhập phím tắt. Định dạng tệp không hợp lệ."
     }
@@ -227,7 +227,7 @@
   },
   "support": {
     "title": "Thích công việc của tôi?",
-    "description": "BentoPDF là một dự án đam mê, được xây dựng để cung cấp bộ công cụ PDF miễn phí, riêng tư và mạnh mẽ cho mọi người. Nếu bạn thấy nó hữu ích, hãy cân nhắc hỗ trợ phát triển của nó. Mỗi ly cà phê đều giúp ích!",
+    "description": "BentoPDF là một dự án đam mê, được xây dựng để cung cấp bộ công cụ PDF miễn phí, riêng tư và mạnh mẽ cho mọi người. Nếu bạn thấy nó hữu ích, hãy cân nhắc hỗ trợ phát triển của nó. Mỗi ly cà phê đều giúp ích.",
     "buyMeCoffee": "Mua cho tôi một ly cà phê"
   },
   "footer": {

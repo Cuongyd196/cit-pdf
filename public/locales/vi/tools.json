@@ -277,7 +277,7 @@
     "invalidRangeMessage": "Quy tắc {{number}} có phạm vi trang không hợp lệ: {{range}}",
     "allPages": "tất cả các trang",
     "emptyOutputMessage": "CoherentPDF đã tạo ra một tệp rỗng.",
-    "successMessage": "Đã thêm nhãn trang thành công!",
+    "successMessage": "Đã thêm nhãn trang thành công.",
     "processErrorMessage": "Không thể thêm nhãn trang.",
     "styleOptions": {
       "DecimalArabic": "Số thập phân",
@@ -423,7 +423,7 @@
     "acceptedFormats": "Nhiều tệp JSON",
     "status": {
       "selectAtLeastOne": "Vui lòng chọn ít nhất 1 tệp JSON",
-      "selectedReady": "Đã chọn {{count}} tệp. Sẵn sàng chuyển đổi!",
+      "selectedReady": "Đã chọn {{count}} tệp. Sẵn sàng chuyển đổi.",
       "readingFiles": "Đang đọc tệp (Luồng chính)...",
       "converting": "Đang chuyển đổi tệp JSON sang PDF...",
       "readError": "Lỗi đọc tệp: {{message}}",
@@ -444,7 +444,7 @@
       "invalidFileExplanation": "Vui lòng tải lên tệp PDF.",
       "noFile": "Không có tệp",
       "noFileExplanation": "Vui lòng tải lên tệp PDF trước.",
-      "conversionSuccess": "Đã chuyển đổi PDF thành JPG thành công!",
+      "conversionSuccess": "Đã chuyển đổi PDF thành JPG thành công.",
       "conversionError": "Không thể chuyển đổi PDF sang JPG. Tệp có thể bị hỏng."
     },
     "loader": {
@@ -461,7 +461,7 @@
       "invalidFileExplanation": "Vui lòng tải lên tệp PDF.",
       "noFile": "Không có tệp",
       "noFileExplanation": "Vui lòng tải lên tệp PDF trước.",
-      "conversionSuccess": "Đã chuyển đổi PDF thành PNG thành công!",
+      "conversionSuccess": "Đã chuyển đổi PDF thành PNG thành công.",
       "conversionError": "Không thể chuyển đổi PDF sang PNG. Tệp có thể bị hỏng."
     },
     "loader": {
@@ -478,7 +478,7 @@
       "invalidFileExplanation": "Vui lòng tải lên tệp PDF.",
       "noFile": "Không có tệp",
       "noFileExplanation": "Vui lòng tải lên tệp PDF trước.",
-      "conversionSuccess": "Đã chuyển đổi PDF thành WebP thành công!",
+      "conversionSuccess": "Đã chuyển đổi PDF thành WebP thành công.",
       "conversionError": "Không thể chuyển đổi PDF sang WebP. Tệp có thể bị hỏng."
     },
     "loader": {
@@ -493,7 +493,7 @@
       "invalidFileExplanation": "Vui lòng tải lên tệp PDF.",
       "noFile": "Không có tệp",
       "noFileExplanation": "Vui lòng tải lên tệp PDF trước.",
-      "conversionSuccess": "Đã chuyển đổi PDF thành BMP thành công!",
+      "conversionSuccess": "Đã chuyển đổi PDF thành BMP thành công.",
       "conversionError": "Không thể chuyển đổi PDF sang BMP. Tệp có thể bị hỏng."
     },
     "loader": {
@@ -516,7 +516,7 @@
       "invalidFileExplanation": "Vui lòng tải lên tệp PDF.",
       "noFile": "Không có tệp",
       "noFileExplanation": "Vui lòng tải lên tệp PDF trước.",
-      "conversionSuccess": "Đã chuyển đổi PDF thành TIFF thành công!",
+      "conversionSuccess": "Đã chuyển đổi PDF thành TIFF thành công.",
       "conversionError": "Không thể chuyển đổi PDF sang TIFF. Tệp có thể bị hỏng."
     }
   },
@@ -546,7 +546,7 @@
       "invalidFileExplanation": "Vui lòng tải lên tệp PDF.",
       "noFile": "Không có tệp",
       "noFileExplanation": "Vui lòng tải lên tệp PDF trước.",
-      "conversionSuccess": "Chuyển đổi PDF sang CBZ thành công!",
+      "conversionSuccess": "Chuyển đổi PDF sang CBZ thành công.",
       "conversionError": "Không thể chuyển đổi PDF sang CBZ. Tệp có thể bị hỏng."
     }
   },
@@ -560,7 +560,7 @@
     "convertButton": "Chuyển đổi sang JSON",
     "status": {
       "selectAtLeastOne": "Vui lòng chọn ít nhất 1 tệp PDF",
-      "selectedReady": "Đã chọn {{count}} tệp. Sẵn sàng chuyển đổi!",
+      "selectedReady": "Đã chọn {{count}} tệp. Sẵn sàng chuyển đổi.",
       "checkingEncrypted": "Đang kiểm tra PDF mã hóa...",
       "readingFiles": "Đang đọc tệp (Luồng chính)...",
       "converting": "Đang chuyển đổi PDF sang JSON...",
@@ -1281,13 +1281,13 @@
     "saveConfiguration": "Lưu cấu hình",
     "savingConfiguration": "Đang lưu cấu hình...",
     "savedTitle": "Đã lưu",
-    "savedMessage": "Đã lưu cấu hình thành công!",
+    "savedMessage": "Đã lưu cấu hình thành công.",
     "errorTitle": "Lỗi",
     "failedSave": "Không thể lưu cấu hình: {{message}}",
     "emptyUrlTitle": "URL trống",
     "emptyUrlMessage": "Vui lòng nhập URL để kiểm tra.",
     "testSuccessTitle": "Thành công",
-    "connectionSuccess": "Kết nối đến {{package}} thành công!",
+    "connectionSuccess": "Kết nối đến {{package}} thành công.",
     "connectionFailedTitle": "Kết nối thất bại",
     "connectionFailedMessage": "Không thể kết nối đến URL.",
     "resetDefaults": "Đặt lại về mặc định",

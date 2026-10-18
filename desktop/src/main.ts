@@ -236,7 +236,7 @@ function createWindow(filePath?: string): BrowserWindow {
     minHeight: 640,
     title: APP_NAME,
     icon: iconPath,
-    backgroundColor: '#111827',
+    backgroundColor: '#1f2328',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
