@@ -2913,3 +2913,14 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
 .text-blue-400\/80 {
   color: var(--color-blue-300);
 }
+
+/* Phosphor icons swapped in for the tool pages' Lucide ones (icons.ts):
+   sized by font, laid out like the <svg> they replace. */
+.cit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+  vertical-align: middle;
+}

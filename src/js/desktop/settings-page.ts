@@ -5,7 +5,7 @@ import {
   type ModuleStatus,
 } from './bridge.js';
 import { applyDesktopStrings, desktopLang, ds } from './strings.js';
-import { THEME_EVENT, currentTheme, setTheme } from './theme.js';
+import { THEME_EVENT, setThemePreference, themePreference } from './theme.js';
 import { autoUpdateEnabled, setAutoUpdate } from './update-check.js';
 import {
   changeLanguage,
@@ -158,14 +158,17 @@ function initThemeOptions(): void {
     options.forEach((option) => {
       option.setAttribute(
         'aria-checked',
-        String(option.dataset.themeOption === currentTheme())
+        String(option.dataset.themeOption === themePreference())
       );
     });
   };
 
   options.forEach((option) => {
     option.addEventListener('click', () => {
-      setTheme(option.dataset.themeOption === 'light' ? 'light' : 'dark');
+      const value = option.dataset.themeOption;
+      setThemePreference(
+        value === 'light' || value === 'system' ? value : 'dark'
+      );
     });
   });
 

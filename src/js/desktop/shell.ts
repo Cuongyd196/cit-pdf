@@ -9,8 +9,15 @@ import { getStoredItem, setStoredItem } from '../utils/safe-storage.js';
 import { getBridge, type OpenedFile, type SavedDownload } from './bridge.js';
 import { VIEWER_SLUG, openFileAction } from './open-file.js';
 import { applyDesktopStrings, ds, type DesktopStringKey } from './strings.js';
-import { THEME_EVENT, currentTheme, setTheme } from './theme.js';
+import {
+  THEME_EVENT,
+  initTheme,
+  setThemePreference,
+  themePreference,
+  type ThemePreference,
+} from './theme.js';
 import { initUpdateBanner } from './update-check.js';
+import { initIconFamily } from './icons.js';
 import { initToolWorkspace } from './workspace.js';
 import {
   VIEWER_SELECT_EVENT,
@@ -135,6 +142,7 @@ export function initDesktopShell(options: ShellOptions): void {
   if (!nav) return;
 
   applyDesktopStrings();
+  initIconFamily();
 
   const shellCategories: ShellCategory[] = categories.map((category) => {
     const categoryKey = options.categoryTranslationKeys[category.name];
@@ -328,6 +336,7 @@ export function initDesktopShell(options: ShellOptions): void {
   renderHomeRecent(pick(recent));
   void initUpdateBanner();
 
+  initTheme();
   initThemeToggle();
   void updateModulesStatus();
   const opened = initOpenedFiles(
@@ -391,13 +400,25 @@ function initThemeToggle(): void {
   const icon = toggle.querySelector('i');
   const label = toggle.querySelector('span');
 
+  // Light, dark, then whatever Windows uses.
+  const next: Record<ThemePreference, ThemePreference> = {
+    light: 'dark',
+    dark: 'system',
+    system: 'light',
+  };
+  const look: Record<ThemePreference, [string, DesktopStringKey]> = {
+    light: ['ph-sun', 'themeLight'],
+    dark: ['ph-moon', 'themeDark'],
+    system: ['ph-desktop', 'themeSystem'],
+  };
   const sync = () => {
-    const light = currentTheme() === 'light';
-    if (icon) icon.className = `ph ${light ? 'ph-sun' : 'ph-moon'} text-sm`;
-    if (label) label.textContent = ds(light ? 'themeLight' : 'themeDark');
+    const [iconName, labelKey] = look[themePreference()];
+    if (icon) icon.className = `ph ${iconName} text-sm`;
+    if (label) label.textContent = ds(labelKey);
+    toggle.title = ds('themeToggleHint');
   };
   toggle.addEventListener('click', () => {
-    setTheme(currentTheme() === 'light' ? 'dark' : 'light');
+    setThemePreference(next[themePreference()]);
   });
   document.addEventListener(THEME_EVENT, sync);
   sync();
