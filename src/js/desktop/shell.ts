@@ -1271,8 +1271,10 @@ function dismissSuccessBox(): void {
   ) {
     return;
   }
-  // OK also runs what the tool does next (often: back to its start).
-  document.getElementById('alert-ok')?.click();
+  // Hidden, not OK'd: OK also runs what the tool does next, which is often
+  // going back to its start and dropping the file and settings. On the
+  // desktop the work stays on screen, ready for the next run.
+  modal.classList.add('hidden');
 }
 
 function dropSuccessBoxForSavedNotice(): void {

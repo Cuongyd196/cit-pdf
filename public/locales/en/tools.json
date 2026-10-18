@@ -57,6 +57,9 @@
     "removeDuplicateFonts": "Remove duplicate fonts"
   },
   "splitPdf": {
+    "nameOdd": "odd pages",
+    "nameEven": "even pages",
+    "nameCount": "{{count}} pages",
     "howTitle": "How to split",
     "modeRange": "By page range",
     "modeRangeDesc": "One file per range, e.g. 1-3, 4-8",

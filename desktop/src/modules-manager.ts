@@ -38,6 +38,27 @@ export class ModulesManager {
       : fs.existsSync(candidate2)
         ? candidate2
         : path.join(process.resourcesPath, 'modules');
+    this.dropDownloadedCopiesOfBundled();
+  }
+
+  /**
+   * A module downloaded before the installer started carrying it is a
+   * second copy (the user's copy wins lookups, so it would keep showing as
+   * downloaded). Remove that copy when the installer's one is there.
+   */
+  private dropDownloadedCopiesOfBundled(): void {
+    for (const [name, item] of Object.entries(this.manifest.modules)) {
+      if (!item.bundled) continue;
+      const shipped = path.join(this.bundledModulesDir, name, item.probe);
+      const userPath = path.join(this.userModulesDir, name);
+      if (!fs.existsSync(shipped) || !fs.existsSync(userPath)) continue;
+      try {
+        fs.rmSync(userPath, { recursive: true, force: true });
+        console.log(`[Modules] Removed downloaded copy of bundled ${name}`);
+      } catch (e) {
+        console.warn(`[Modules] Could not remove ${userPath}:`, e);
+      }
+    }
   }
 
   getManifestItem(name: DesktopModuleName): ModuleManifestItem | undefined {

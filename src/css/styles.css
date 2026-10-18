@@ -3708,3 +3708,12 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
 .split-plan li.more {
   @apply bg-transparent text-gray-400;
 }
+
+/* Settings: engines the installer carries, as one line under the list. */
+.desktop-modules-shipped {
+  @apply flex flex-wrap items-center gap-x-1.5 gap-y-1 px-4 py-3 text-sm text-gray-400;
+}
+
+.desktop-modules-shipped > i {
+  @apply text-base text-green-400;
+}

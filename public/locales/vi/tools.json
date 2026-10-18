@@ -56,6 +56,9 @@
     "retainPageLabelsHint": "Tắt (mặc định): PDF đã hợp nhất sử dụng đánh số trang tự nhiên 1–N. Bật: nhãn trang gốc của từng tệp được giữ lại (có thể tạo ra nhãn trùng lặp)."
   },
   "splitPdf": {
+    "nameOdd": "trang lẻ",
+    "nameEven": "trang chẵn",
+    "nameCount": "{{count}} trang",
     "howTitle": "Chia thế nào?",
     "modeRange": "Theo khoảng trang",
     "modeRangeDesc": "Mỗi khoảng một tệp, VD: 1-3, 4-8",

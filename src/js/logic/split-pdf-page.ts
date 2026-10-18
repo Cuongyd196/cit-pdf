@@ -84,11 +84,24 @@ document.addEventListener('DOMContentLoaded', () => {
       ) as HTMLInputElement | null
     )?.value === 'separate';
 
-  /** "Bao cao (trang 1-5).pdf" for the pages of a group (0-based). */
-  const groupName = (group: number[]) =>
-    `${baseName()} (${t('tools:splitPdf.namePages', {
-      pages: formatPageRanges(group.map((i) => i + 1)),
-    })}).pdf`;
+  /**
+   * "Bao cao (trang 1-5).pdf" for the pages of a group (0-based); odd or
+   * even pages and long lists get a short name instead of every number.
+   */
+  const groupName = (group: number[]) => {
+    const ranges = formatPageRanges(group.map((i) => i + 1));
+    let label = t('tools:splitPdf.namePages', { pages: ranges });
+    if (splitModeSelect.value === 'even-odd') {
+      label = t(
+        group[0] % 2 === 0
+          ? 'tools:splitPdf.nameOdd'
+          : 'tools:splitPdf.nameEven'
+      );
+    } else if (ranges.length > 30) {
+      label = t('tools:splitPdf.nameCount', { count: group.length });
+    }
+    return `${baseName()} (${label}).pdf`;
+  };
 
   /** The files the current choices would make. */
   const currentPlan = (): SplitPlan => {
