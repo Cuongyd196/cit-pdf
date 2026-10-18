@@ -62,3 +62,7 @@ bentopdf-airgap-bundle/
 release/
 desktop/dist-web/
 desktop/dist/
+# Bundled OCR files are fetched and hash-checked by the desktop build;
+# only their licences are tracked.
+desktop/bundled-modules/ocr*/*
+!desktop/bundled-modules/ocr*/LICENSE*

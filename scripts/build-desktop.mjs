@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   existsSync,
   mkdirSync,
@@ -7,6 +8,7 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  writeFileSync,
 } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -70,6 +72,32 @@ const cpdfSource = resolve(root, 'public', 'coherentpdf.browser.min.js');
 if (existsSync(cpdfSource)) {
   copyFileSync(cpdfSource, resolve(cpdfDistDir, 'coherentpdf.browser.min.js'));
   console.log('3. Bundled cpdf into desktop/bundled-modules.');
+}
+
+// Modules shipped in the installer that come as plain files (OCR): fetched
+// once from the manifest's URLs, checked against its SHA-256, kept between
+// builds. A mismatch stops the build.
+const manifest = JSON.parse(
+  readFileSync(resolve(root, 'desktop', 'app', 'modules-manifest.json'), 'utf8')
+);
+const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+for (const [name, item] of Object.entries(manifest.modules)) {
+  if (!item.bundled || item.kind !== 'files') continue;
+  const dir = resolve(root, 'desktop', 'bundled-modules', name);
+  mkdirSync(dir, { recursive: true });
+  for (const file of item.files) {
+    const target = resolve(dir, file.path);
+    if (existsSync(target) && sha256(readFileSync(target)) === file.sha256)
+      continue;
+    console.log(`   Fetching ${name}/${file.path}...`);
+    const res = await fetch(file.url);
+    if (!res.ok) throw new Error(`${file.url}: HTTP ${res.status}`);
+    const bytes = Buffer.from(await res.arrayBuffer());
+    if (sha256(bytes) !== file.sha256)
+      throw new Error(`${name}/${file.path}: SHA-256 does not match`);
+    writeFileSync(target, bytes);
+  }
+  console.log(`3. Bundled ${name} into desktop/bundled-modules.`);
 }
 
 // 4. Sync web bundle to desktop/dist-web (filtering heavy/unneeded files)

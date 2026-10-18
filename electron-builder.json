@@ -17,6 +17,15 @@
     {
       "from": "desktop/bundled-modules/cpdf/LICENSE.md",
       "to": "licenses/coherentpdf-LICENSE.md"
+    },
+    {
+      "from": "desktop/bundled-modules/ocr",
+      "to": "licenses/ocr",
+      "filter": ["LICENSE*"]
+    },
+    {
+      "from": "desktop/bundled-modules/ocr-vie/LICENSE-tessdata_best.txt",
+      "to": "licenses/ocr/LICENSE-tessdata_best.txt"
     }
   ],
   "npmRebuild": false,

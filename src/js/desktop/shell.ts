@@ -612,12 +612,17 @@ function showViewerToolPicker(
   search.type = 'search';
   search.placeholder = ds('pickSearch');
   const body = el('div', 'desktop-picker-body');
-  dialog.append(
+  const closeButton = el('button', 'desktop-picker-close');
+  closeButton.type = 'button';
+  closeButton.title = ds('cancel');
+  closeButton.setAttribute('aria-label', ds('cancel'));
+  closeButton.append(el('i', 'ph ph-x'));
+  const head = el('div', 'desktop-picker-head');
+  head.append(
     el('h2', 'desktop-picker-title', ds('openFileTitle')),
-    el('p', 'desktop-picker-file', file.name),
-    search,
-    body
+    closeButton
   );
+  dialog.append(head, el('p', 'desktop-picker-file', file.name), search, body);
 
   const close = () => {
     overlay.remove();
@@ -685,6 +690,7 @@ function showViewerToolPicker(
       body.querySelector<HTMLAnchorElement>('.desktop-picker-tool')?.click();
     }
   });
+  closeButton.addEventListener('click', () => close());
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) close();
   });

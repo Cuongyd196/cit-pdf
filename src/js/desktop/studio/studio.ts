@@ -8,6 +8,7 @@ import { downloadFile } from '../../utils/helpers.js';
 import { getStoredItem, setStoredItem } from '../../utils/safe-storage.js';
 import {
   VIEWER_KEYDOWN_EVENT,
+  VIEWER_PAGES_EVENT,
   setCloseGuard,
   whenViewerDocuments,
   type ViewerDocuments,
@@ -69,6 +70,19 @@ function make<K extends keyof HTMLElementTagNameMap>(
 
 function icon(name: string): HTMLElement {
   return make('i', `ph ph-${name}`);
+}
+
+/** "2,3 MB", in the app's language. */
+function fileSize(bytes: number): string {
+  const lang = document.documentElement.lang || 'vi';
+  const [value, unit] =
+    bytes >= 1024 * 1024
+      ? [bytes / (1024 * 1024), 'MB']
+      : [Math.max(1, Math.round(bytes / 1024)), 'KB'];
+  const shown = new Intl.NumberFormat(lang, {
+    maximumFractionDigits: unit === 'MB' ? 1 : 0,
+  }).format(value);
+  return `${shown} ${unit}`;
 }
 
 function iconButton(
@@ -239,6 +253,11 @@ export async function initStudio(options: StudioOptions): Promise<void> {
 
   // ---- Undo, Redo, Save on the same row, once there are changes
   const cluster = make('div', 'studio-cluster hidden');
+  const info = make('span', 'studio-info');
+  const folder = iconButton('folder-open', ds('studioFolder'));
+  const print = iconButton('printer', ds('studioPrint'));
+  folder.classList.add('studio-folder');
+  print.classList.add('studio-print');
   const undo = iconButton('arrow-counter-clockwise', ds('studioUndo'));
   const redo = iconButton('arrow-clockwise', ds('studioRedo'));
   const unsaved = make('span', 'studio-unsaved', ds('studioUnsaved'));
@@ -250,8 +269,14 @@ export async function initStudio(options: StudioOptions): Promise<void> {
   save.type = 'button';
   save.title = ds('studioSaveHint');
   save.append(icon('floppy-disk'), make('span', '', ds('studioSave')));
-  cluster.append(undo, redo, unsaved, saveAs, save);
+  cluster.append(info, undo, redo, unsaved, folder, print, saveAs, save);
   options.row.append(cluster);
+  folder.addEventListener('click', () => {
+    const onDisk = options.currentFile();
+    if (onDisk?.path) void bridge.showSavedInFolder(onDisk.path);
+  });
+  print.addEventListener('click', () => docs.print());
+  document.addEventListener(VIEWER_PAGES_EVENT, () => render());
   undo.addEventListener('click', () => void step('undo'));
   redo.addEventListener('click', () => void step('redo'));
   saveAs.addEventListener('click', () => void saveActive(true));
@@ -661,8 +686,10 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     if (editing) await finishEditing(true);
     if (editing) return true;
     const file = docs.active();
-    const history = file ? histories.get(file) : undefined;
-    if (!file || !history || busy) return false;
+    if (!file || busy) return false;
+    // Save as works before any change too: a copy of the file as opened.
+    const history = asCopy ? await historyFor(file) : histories.get(file);
+    if (!history) return false;
     if (!asCopy && !history.dirty) return true;
     const opened = options.currentFile();
     const onDisk = opened && opened.name === file.name ? opened : null;
@@ -727,7 +754,21 @@ export async function initStudio(options: StudioOptions): Promise<void> {
   function render(): void {
     const file = docs.active();
     const history = activeHistory();
-    cluster.classList.toggle('hidden', !history);
+    // Always there for a document, so the row does not jump on a first change.
+    cluster.classList.toggle('hidden', !file);
+    const pages = file ? docs.pageCount(file) : null;
+    const size = history?.current.length ?? file?.size ?? 0;
+    // The size is the first thing to go on a narrow window.
+    info.replaceChildren(
+      ...(pages === null
+        ? []
+        : [
+            make('span', '', ds('studioInfoPages', { pages: String(pages) })),
+            make('span', 'studio-info-size', ` · ${fileSize(size)}`),
+          ])
+    );
+    folder.disabled = busy || !options.currentFile()?.path;
+    print.disabled = busy || Boolean(editing) || pages === null;
     // While the editor is open, its own undo applies.
     undo.disabled = busy || Boolean(editing) || !history?.canUndo;
     redo.disabled = busy || Boolean(editing) || !history?.canRedo;

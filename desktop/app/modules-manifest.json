@@ -72,6 +72,7 @@
     },
     "ocr": {
       "version": "7.0.0",
+      "bundled": true,
       "mount": "/modules/ocr/",
       "probe": "worker.min.js",
       "label": {
@@ -110,6 +111,7 @@
     },
     "ocr-vie": {
       "version": "1.0.0",
+      "bundled": true,
       "mount": "/modules/ocr-lang/",
       "probe": "vie.traineddata.gz",
       "label": {
@@ -130,6 +132,7 @@
     },
     "ocr-eng": {
       "version": "1.0.0",
+      "bundled": true,
       "mount": "/modules/ocr-lang/",
       "probe": "eng.traineddata.gz",
       "label": {

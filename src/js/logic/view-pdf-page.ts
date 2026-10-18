@@ -20,6 +20,7 @@ import {
   VIEWER_KEYDOWN_EVENT,
   mayClose,
   provideViewerDocuments,
+  VIEWER_PAGES_EVENT,
 } from './viewer-document.js';
 
 interface ViewerOptions {
@@ -43,6 +44,7 @@ interface ViewerWindow extends Window {
       ): void;
     };
     pdfViewer?: { currentScaleValue: string };
+    initializedPromise?: Promise<void>;
   };
 }
 
@@ -292,6 +294,13 @@ provideViewerDocuments({
   active: () => activeTab?.file ?? null,
   show: showBytes,
   setDirty,
+  pageCount: (file) => {
+    const tab = tabs.find((t) => t.file === file);
+    const app = (tab?.iframe.contentWindow as ViewerWindow | null)
+      ?.PDFViewerApplication;
+    return app?.pdfDocument ? (app.pagesCount ?? null) : null;
+  },
+  print: () => activeTab?.iframe.contentWindow?.print(),
 });
 
 const VIEW_HISTORY_KEY = 'pdfjs.history';
@@ -357,6 +366,13 @@ function openFile(file: File) {
 
   iframe.addEventListener('load', () => {
     if (__DESKTOP__) installDesktopPrint(iframe);
+    const app = (iframe.contentWindow as ViewerWindow | null)
+      ?.PDFViewerApplication;
+    void app?.initializedPromise?.then(() =>
+      app.eventBus?.on('pagesinit', () =>
+        document.dispatchEvent(new CustomEvent(VIEWER_PAGES_EVENT))
+      )
+    );
     iframe.contentWindow?.addEventListener('keydown', onTabShortcut, true);
     iframe.contentWindow?.addEventListener('keydown', passKeyOn, true);
     void applyViewerChrome(iframe, {

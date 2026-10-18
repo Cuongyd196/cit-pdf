@@ -12,7 +12,14 @@ export interface ViewerDocuments {
   show(file: File, bytes: Uint8Array): Promise<void>;
   /** Marks the file's tab as having unsaved changes, or not. */
   setDirty(file: File, dirty: boolean): void;
+  /** Pages in the file's tab as shown, or null before it has loaded. */
+  pageCount(file: File): number | null;
+  /** Prints the tab on screen, as the viewer's own print button does. */
+  print(): void;
 }
+
+/** A tab finished laying out its pages (opened, or shown new bytes). */
+export const VIEWER_PAGES_EVENT = 'cit:viewer-pages';
 
 /** Answers whether a tab may close; may ask the user first. */
 export type CloseGuard = (file: File) => Promise<boolean>;

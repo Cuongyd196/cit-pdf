@@ -1156,8 +1156,10 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
   /* focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-400 */
 }
 
+/* Solid, not see-through: the button sticks to the bottom over the page. */
 .btn-gradient:disabled {
-  opacity: 0.5;
+  @apply bg-gray-700 text-gray-400;
+  background-image: none;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
@@ -2950,6 +2952,26 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
   @apply cursor-default opacity-40 hover:bg-transparent;
 }
 
+.studio-info {
+  @apply mr-2 whitespace-nowrap text-xs text-gray-400 tabular-nums;
+}
+
+/* A narrower window: tighter buttons, then the size goes. */
+@media (max-width: 1600px) {
+  .pdf-view-actions .pdf-view-action {
+    @apply px-2;
+  }
+  .pdf-view-actions .pdf-view-action-icon {
+    @apply px-1;
+  }
+}
+
+@media (max-width: 1440px) {
+  .studio-info-size {
+    display: none;
+  }
+}
+
 .studio-unsaved {
   @apply mx-1.5 whitespace-nowrap text-xs font-medium text-amber-300;
 }
@@ -3211,16 +3233,24 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
   @apply flex max-h-[80vh] w-full max-w-2xl flex-col rounded-xl border border-gray-700 bg-gray-800 p-5 shadow-2xl;
 }
 
+.desktop-picker-head {
+  @apply flex flex-none items-start justify-between gap-3;
+}
+
 .desktop-picker-title {
   @apply text-lg font-bold text-white;
 }
 
+.desktop-picker-close {
+  @apply -mt-1 -mr-1 flex h-8 w-8 flex-none items-center justify-center rounded-md text-lg text-gray-400 hover:bg-gray-700 hover:text-white;
+}
+
 .desktop-picker-file {
-  @apply mt-0.5 mb-3 truncate text-sm text-gray-400;
+  @apply mt-0.5 mb-3 flex-none truncate text-sm text-gray-400;
 }
 
 .desktop-picker-search {
-  @apply mb-3 w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none;
+  @apply mb-3 w-full flex-none rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none;
 }
 
 .desktop-picker-body {
@@ -3296,4 +3326,385 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
 
 .studio-file-name.chosen {
   @apply text-white;
+}
+
+/* OCR page (ocr-pdf.html): languages as buttons, quality as a segmented
+   choice, the rest folded under "Advanced options". */
+.ocr-options {
+  @apply space-y-5;
+}
+
+.ocr-section {
+  @apply space-y-2;
+}
+
+.ocr-section-title {
+  @apply text-sm font-semibold text-white;
+}
+
+.ocr-section-hint {
+  @apply text-xs text-gray-400;
+}
+
+.ocr-note {
+  @apply text-xs text-amber-300;
+}
+
+.ocr-input {
+  @apply w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none disabled:opacity-60;
+}
+
+.ocr-lang-list {
+  @apply max-h-48 overflow-y-auto rounded-lg border border-gray-600 bg-gray-900 p-2;
+}
+
+.ocr-lang-list.chips {
+  @apply flex max-h-none flex-wrap gap-2 overflow-visible border-0 bg-transparent p-0;
+}
+
+.ocr-lang-chip {
+  @apply inline-flex cursor-pointer items-center gap-2 rounded-full border border-gray-600 bg-gray-800 px-4 py-1.5 text-sm text-gray-200 select-none hover:border-indigo-500;
+}
+
+.ocr-lang-chip > input {
+  @apply sr-only;
+}
+
+.ocr-lang-chip::before {
+  content: '';
+  @apply h-4 w-4 flex-none rounded-full border border-gray-500;
+}
+
+.ocr-lang-chip:has(input:checked) {
+  @apply border-indigo-500 bg-indigo-500/15 font-medium text-white;
+}
+
+.ocr-lang-chip:has(input:checked)::before {
+  @apply border-indigo-500 bg-indigo-500;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.ocr-lang-chip:has(input:focus-visible) {
+  @apply ring-2 ring-indigo-500;
+}
+
+.ocr-segment {
+  @apply grid grid-cols-3 gap-1 rounded-lg border border-gray-600 bg-gray-900 p-1;
+}
+
+.ocr-segment > label {
+  @apply flex cursor-pointer flex-col items-center rounded-md px-3 py-2 text-sm text-gray-300 select-none hover:bg-gray-800;
+}
+
+.ocr-segment > label > input {
+  @apply sr-only;
+}
+
+.ocr-segment > label > small {
+  @apply text-xs text-gray-500;
+}
+
+.ocr-segment > label:has(input:checked) {
+  @apply bg-indigo-600 font-semibold;
+  color: #ffffff;
+}
+
+.ocr-segment > label:has(input:checked) > small {
+  color: rgb(255 255 255 / 0.75);
+}
+
+.ocr-segment > label:has(input:focus-visible) {
+  @apply ring-2 ring-indigo-500;
+}
+
+.tool-advanced {
+  @apply rounded-lg border border-gray-700 bg-gray-800;
+}
+
+.tool-advanced > summary {
+  @apply flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium text-gray-200 select-none;
+}
+
+.tool-advanced > summary::-webkit-details-marker {
+  display: none;
+}
+
+.tool-caret {
+  @apply text-gray-400 transition-transform;
+}
+
+.tool-advanced[open] .tool-caret {
+  @apply rotate-180;
+}
+
+.tool-advanced-body {
+  @apply space-y-4 border-t border-gray-700 px-4 py-4;
+}
+
+.tool-toggle {
+  @apply flex cursor-pointer items-start gap-3;
+}
+
+.tool-toggle > input {
+  @apply mt-0.5 h-4 w-4 flex-none rounded accent-indigo-600;
+}
+
+.tool-toggle-title {
+  @apply block text-sm text-gray-200;
+}
+
+.tool-toggle-hint {
+  @apply block text-xs text-gray-400;
+}
+
+.ocr-field {
+  @apply space-y-2;
+}
+
+/* Merge page (merge-pdf.html): a compact, numbered list of files. */
+.merge-toolbar {
+  @apply mt-4 flex flex-wrap items-center gap-2;
+}
+
+.merge-tool-btn {
+  @apply flex items-center gap-1.5 rounded-lg bg-gray-700 px-3 py-2 text-sm font-medium text-gray-200 hover:bg-gray-600;
+}
+
+.merge-tool-btn.primary {
+  @apply bg-indigo-600 hover:bg-indigo-700;
+  color: #ffffff;
+}
+
+.merge-sort {
+  @apply flex items-center gap-1.5 rounded-lg bg-gray-700 pl-3 text-sm text-gray-200;
+}
+
+.merge-sort > select {
+  @apply cursor-pointer border-0 bg-transparent py-2 pr-8 pl-0 text-sm text-gray-200 focus:ring-0;
+}
+
+.merge-summary {
+  @apply ml-auto text-sm text-gray-400 tabular-nums;
+}
+
+.merge-modes {
+  @apply mb-2 grid grid-cols-2 gap-1 rounded-lg border border-gray-700 bg-gray-900 p-1;
+}
+
+.merge-modes > button {
+  @apply rounded-md py-2 text-sm font-semibold;
+}
+
+.merge-hint {
+  @apply mb-2 text-xs text-gray-400;
+}
+
+.merge-list {
+  @apply space-y-1.5;
+}
+
+.merge-row {
+  @apply flex items-center gap-3 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 transition-colors hover:border-indigo-500;
+}
+
+.merge-row-number {
+  @apply w-5 flex-none text-center text-sm font-semibold text-gray-400 tabular-nums;
+}
+
+.merge-row-thumb {
+  @apply h-12 w-auto flex-none rounded-sm border border-gray-700 bg-white;
+  max-width: 3rem;
+}
+
+.merge-row-info {
+  @apply flex min-w-0 flex-1 flex-col;
+}
+
+.merge-row-name {
+  @apply truncate text-sm font-medium text-white;
+}
+
+.merge-row-meta {
+  @apply text-xs text-gray-400 tabular-nums;
+}
+
+.merge-row-range {
+  @apply w-32 flex-none rounded-md border border-gray-600 bg-gray-800 px-2 py-1.5 text-sm text-white placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none;
+}
+
+.merge-row-range.invalid {
+  @apply border-red-500;
+}
+
+.merge-row-error {
+  @apply text-xs text-red-400;
+}
+
+.merge-row-error[hidden] {
+  display: none;
+}
+
+.merge-help {
+  @apply mb-2 text-xs text-gray-400;
+}
+
+.merge-help > summary {
+  @apply inline-flex cursor-pointer list-none items-center gap-1 font-medium text-indigo-400 hover:text-indigo-300;
+}
+
+.merge-help > summary::-webkit-details-marker {
+  display: none;
+}
+
+.merge-help > table {
+  @apply mt-2 w-full max-w-md border-separate border-spacing-y-1;
+}
+
+.merge-help td:first-child {
+  @apply w-28 pr-3 align-top whitespace-nowrap text-gray-300;
+}
+
+.merge-help code {
+  @apply rounded bg-gray-700 px-1.5 py-0.5 font-mono text-gray-100;
+}
+
+.merge-help > p {
+  @apply mt-1;
+}
+
+.merge-row-btn {
+  @apply flex h-8 w-8 flex-none items-center justify-center rounded-md text-base text-gray-400 hover:bg-gray-700 hover:text-white disabled:pointer-events-none disabled:opacity-30;
+}
+
+.merge-row-btn.merge-remove:hover {
+  @apply text-red-400;
+}
+
+.merge-row-handle {
+  @apply flex h-8 w-6 flex-none cursor-grab items-center justify-center text-lg text-gray-500 hover:text-white;
+}
+
+/* Picking pages (extract-pages.html, split-pdf.html): count, quick picks,
+   and a grid of page thumbnails (utils/page-picker.ts). */
+.pick-head {
+  @apply flex items-baseline justify-between gap-3;
+}
+
+.pick-count {
+  @apply text-sm font-medium text-indigo-400 tabular-nums;
+}
+
+.pick-quick {
+  @apply flex flex-wrap gap-1.5;
+}
+
+.pick-quick > button {
+  @apply rounded-full border border-gray-600 bg-gray-800 px-3 py-1 text-xs font-medium text-gray-200 hover:border-indigo-500 hover:text-white;
+}
+
+.page-picker {
+  @apply grid max-h-[28rem] grid-cols-3 gap-3 overflow-y-auto rounded-lg border border-gray-700 bg-gray-900 p-3 sm:grid-cols-4 md:grid-cols-5;
+}
+
+.page-tile {
+  @apply flex flex-col items-center gap-1.5 rounded-lg p-1.5 text-xs text-gray-400 select-none hover:bg-gray-800;
+}
+
+.page-tile-frame {
+  @apply relative block w-full overflow-hidden rounded-md border-2 border-gray-700 bg-white;
+  aspect-ratio: 1 / 1.414;
+}
+
+.page-tile-frame > canvas {
+  @apply block h-full w-full object-contain;
+}
+
+.page-tile-check {
+  @apply absolute top-1.5 right-1.5 hidden h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-sm;
+  color: #ffffff;
+}
+
+.page-tile.picked .page-tile-frame {
+  @apply border-indigo-500;
+  box-shadow: 0 0 0 2px rgb(20 184 166 / 0.35);
+}
+
+.page-tile.picked .page-tile-check {
+  @apply flex;
+}
+
+.page-tile.picked .page-tile-label {
+  @apply font-semibold text-indigo-400;
+}
+
+#pages-to-extract.invalid,
+#page-range.invalid {
+  @apply border-red-500;
+}
+
+/* Split page (split-pdf.html): the ways to split as cards, and what the
+   split will make. */
+.split-modes {
+  @apply grid grid-cols-2 gap-2 sm:grid-cols-3;
+}
+
+.split-mode-card {
+  @apply relative flex cursor-pointer flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 p-3 select-none hover:border-indigo-500;
+}
+
+.split-mode-card > input {
+  @apply sr-only;
+}
+
+.split-mode-card > i {
+  @apply mb-1 text-xl text-indigo-400;
+}
+
+.split-mode-title {
+  @apply text-sm font-semibold text-white;
+}
+
+.split-mode-desc {
+  @apply text-xs text-gray-400;
+}
+
+.split-mode-card:has(input:checked) {
+  @apply border-indigo-500 bg-indigo-500/10;
+  box-shadow: 0 0 0 1px var(--color-indigo-500);
+}
+
+.split-mode-card:has(input:focus-visible) {
+  @apply ring-2 ring-indigo-500;
+}
+
+.split-two {
+  @apply grid-cols-2;
+}
+
+.split-n {
+  @apply w-32;
+}
+
+.split-plan {
+  @apply rounded-lg border border-gray-700 bg-gray-900 px-4 py-3 text-sm text-gray-300;
+}
+
+.split-plan:empty {
+  display: none;
+}
+
+.split-plan-title {
+  @apply mb-1.5 font-semibold text-white;
+}
+
+.split-plan ol {
+  @apply flex flex-wrap gap-1.5;
+}
+
+.split-plan li {
+  @apply rounded-md bg-gray-800 px-2 py-0.5 text-xs text-gray-200 tabular-nums;
+}
+
+.split-plan li.more {
+  @apply bg-transparent text-gray-400;
 }
