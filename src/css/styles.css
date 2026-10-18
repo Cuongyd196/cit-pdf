@@ -203,7 +203,8 @@ body {
 
 /* Custom file input */
 input[type='file']::file-selector-button {
-  @apply bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg cursor-pointer hover:bg-indigo-700 transition-colors duration-200 mr-4;
+  @apply bg-indigo-600 font-semibold py-2 px-4 rounded-lg cursor-pointer hover:bg-indigo-700 transition-colors duration-200 mr-4;
+  color: #ffffff;
 }
 
 /* Style for drag-and-drop placeholder */
@@ -336,7 +337,8 @@ html[data-theme='light'] {
   --color-gray-800: #ffffff;
   --color-gray-700: #e5e7eb;
   --color-gray-600: #d1d5db;
-  --color-gray-500: #6b7280;
+  /* 4.5:1 on the page background (#f3f4f6), still lighter than gray-400. */
+  --color-gray-500: #5f6673;
   --color-gray-400: #4b5563;
   --color-gray-300: #374151;
   --color-gray-200: #1f2937;
@@ -352,7 +354,9 @@ html[data-theme='light'] body {
   color: #374151;
 }
 
-/* Text on solid accent backgrounds stays white. */
+/* Text on solid accent backgrounds stays white. This only sees utility
+   classes in markup: a component class that @applies an accent background
+   sets color: #ffffff itself. */
 html[data-theme='light']
   :is(
     [class*='bg-indigo-5'],
@@ -437,7 +441,8 @@ body:has(#desktop-statusbar) .pdf-view-panel {
 }
 
 .desktop-update-banner-action {
-  @apply flex-shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white no-underline hover:bg-indigo-700;
+  @apply flex-shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold no-underline hover:bg-indigo-700;
+  color: #ffffff;
 }
 
 .desktop-update-banner-dismiss {
@@ -568,7 +573,8 @@ body.desktop-reading:has(#desktop-sidebar) {
 }
 
 .desktop-saved-toast-action.primary {
-  @apply border-transparent bg-indigo-600 font-semibold text-white hover:bg-indigo-700;
+  @apply border-transparent bg-indigo-600 font-semibold hover:bg-indigo-700;
+  color: #ffffff;
 }
 
 .desktop-saved-toast-close {
@@ -780,7 +786,8 @@ body.desktop-home-start .desktop-home {
 }
 
 .desktop-home-open {
-  @apply h-11 flex-shrink-0 rounded-lg bg-indigo-600 px-5 font-semibold text-white hover:bg-indigo-700;
+  @apply h-11 flex-shrink-0 rounded-lg bg-indigo-600 px-5 font-semibold hover:bg-indigo-700;
+  color: #ffffff;
 }
 
 .desktop-home-recent {
@@ -824,8 +831,15 @@ button.desktop-home-file:hover {
   @apply truncate text-xs text-gray-400;
 }
 
+/* The column stays put while a long list of recent files scrolls, so
+   "All tools" at its foot stays on screen. */
 .desktop-home-tools {
   @apply flex w-72 flex-shrink-0 flex-col gap-4 border-l border-gray-700 bg-gray-800 px-5 py-7;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: calc(100vh - 2rem);
+  overflow-y: auto;
 }
 
 .desktop-home-search {
@@ -861,8 +875,12 @@ button.desktop-home-file:hover {
   @apply leading-snug;
 }
 
+/* In a short window the column scrolls; this link stays at its foot. */
 .desktop-home-all {
   @apply mt-auto flex items-center justify-between rounded-lg bg-gray-700 px-4 py-3 text-sm font-semibold text-white no-underline hover:bg-gray-600;
+  position: sticky;
+  bottom: 0;
+  flex-shrink: 0;
 }
 
 .desktop-home-back {
@@ -881,6 +899,13 @@ button.desktop-home-file:hover {
 
   .desktop-home-tools {
     @apply w-auto border-t border-l-0;
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+
+  .desktop-home-all {
+    position: static;
   }
 }
 
@@ -2509,4 +2534,157 @@ details > summary .icon {
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.25rem 0;
+}
+
+/* ---- Tool workspace (desktop/workspace.ts): once a file is open in the PDF
+   editor or Sign, one slim bar replaces the tool's card and the working area
+   fills the rest of the window. */
+.desktop-workspace-bar {
+  display: none;
+}
+
+body.desktop-workspace #uploader {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  height: calc(100vh - 2rem);
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body.desktop-workspace:not(:has(#desktop-statusbar)) #uploader {
+  height: 100vh;
+}
+
+body.desktop-workspace .desktop-workspace-bar {
+  @apply flex flex-none items-center gap-2 border-b border-gray-700 bg-gray-800 px-3;
+  height: 3.5rem;
+}
+
+body.desktop-workspace #tool-uploader:not(:has(.desktop-workspace-area)) {
+  display: none;
+}
+
+body.desktop-workspace #tool-uploader:has(.desktop-workspace-area) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+body.desktop-workspace #tool-uploader > :not(.desktop-workspace-area) {
+  display: none;
+}
+
+body.desktop-workspace .desktop-workspace-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+body.desktop-workspace .desktop-workspace-leftover {
+  display: none;
+}
+
+/* The viewers' web heights (85vh, 75vh) give way to the space left. */
+body.desktop-workspace #canvas-container-sign,
+body.desktop-workspace #embed-pdf-container {
+  flex: 1;
+  min-height: 0;
+  height: auto !important;
+  border: 0;
+  border-radius: 0;
+}
+
+.desktop-workspace-title {
+  @apply truncate text-base font-bold text-white;
+  flex-shrink: 0;
+  max-width: 16rem;
+}
+
+.desktop-workspace-divider {
+  @apply mx-1 h-6 w-px flex-none bg-gray-700;
+}
+
+.desktop-workspace-file {
+  @apply flex min-w-0 items-center gap-2 text-sm text-gray-200;
+}
+
+.desktop-workspace-file > i {
+  @apply flex-none text-lg text-red-400;
+}
+
+.desktop-workspace-file-name {
+  @apply truncate font-medium;
+}
+
+.desktop-workspace-file-meta {
+  @apply flex-none text-xs text-gray-500;
+}
+
+.desktop-workspace-spacer {
+  flex: 1;
+}
+
+.desktop-workspace-controls {
+  @apply flex flex-none items-center gap-3;
+}
+
+.desktop-workspace-controls:empty {
+  display: none;
+}
+
+.desktop-workspace-icon {
+  @apply flex h-9 w-9 flex-none items-center justify-center rounded-lg text-lg text-indigo-400 hover:bg-gray-700;
+}
+
+.desktop-workspace-icon.danger {
+  @apply text-red-400;
+}
+
+.desktop-workspace-button {
+  @apply flex h-9 flex-none items-center gap-2 rounded-lg border border-gray-600 px-3 text-sm font-medium text-gray-200 hover:bg-gray-700;
+}
+
+.desktop-workspace-button.accent {
+  @apply border-indigo-500 text-indigo-300 font-semibold;
+}
+
+.desktop-workspace-check {
+  @apply flex flex-none cursor-pointer items-center gap-2 text-sm text-gray-300;
+}
+
+.desktop-workspace-check input {
+  @apply h-4 w-4;
+  accent-color: var(--color-indigo-600);
+}
+
+.desktop-workspace-save {
+  @apply ml-1 flex h-9 flex-none items-center gap-2 rounded-lg bg-indigo-600 px-5 text-sm font-semibold hover:bg-indigo-700;
+  color: #ffffff;
+}
+
+.desktop-workspace-save.hidden {
+  display: none;
+}
+
+/* Narrow windows: the file's details give way before the controls do. */
+@media (max-width: 1100px) {
+  .desktop-workspace-file-meta,
+  .desktop-workspace-button > span {
+    display: none;
+  }
 }

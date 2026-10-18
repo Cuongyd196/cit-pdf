@@ -2,7 +2,7 @@
 import { createIcons, icons } from 'lucide';
 import { showAlert, showLoader, hideLoader } from '../ui.js';
 import { formatBytes, downloadFile } from '../utils/helpers.js';
-import { makeUniqueFileKey } from '../utils/deduplicate-filename.js';
+import { deduplicateFileName } from '../utils/deduplicate-filename.js';
 import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
 import { getEditorDisabledCategories } from '../utils/disabled-tools.js';
 import { editorFontFallback } from '../config/editor-fonts.js';
@@ -62,6 +62,10 @@ let docManagerPlugin: DocManagerPlugin | null = null;
 let isViewerInitialized = false;
 let currentFileName = 'document.pdf';
 const fileEntryMap = new Map<string, HTMLElement>();
+// Each open document's name in the viewer, which is also its tab label:
+// the file name, with " (1)" added when that name is already open.
+const openNames = new Set<string>();
+const nameById = new Map<string, string>();
 
 function resetViewer() {
   const pdfWrapper = document.getElementById('embed-pdf-wrapper');
@@ -78,6 +82,8 @@ function resetViewer() {
   docManagerPlugin = null;
   isViewerInitialized = false;
   fileEntryMap.clear();
+  openNames.clear();
+  nameById.clear();
 }
 
 function removeFileEntry(documentId: string) {
@@ -169,6 +175,9 @@ async function handleFiles(files: FileList) {
       hideLoader();
       return;
     }
+    const names = decryptedFiles.map((file) =>
+      deduplicateFileName(file.name, openNames)
+    );
 
     if (!isViewerInitialized) {
       const firstFile = decryptedFiles[0];
@@ -207,6 +216,8 @@ async function handleFiles(files: FileList) {
       // The viewer reports a closed document by its id alone.
       docManagerPlugin.onDocumentClosed((data) => {
         const docId = typeof data === 'string' ? data : data?.id || '';
+        openNames.delete(nameById.get(docId) ?? '');
+        nameById.delete(docId);
         removeFileEntry(docId);
       });
 
@@ -215,6 +226,7 @@ async function handleFiles(files: FileList) {
           const docId = data?.id;
           const docKey = data?.name;
           if (!docId) return;
+          if (docKey) nameById.set(docId, docKey);
           const pendingEntry = fileDisplayArea.querySelector(
             `[data-pending-name="${CSS.escape(docKey)}"]`
           ) as HTMLElement;
@@ -233,11 +245,11 @@ async function handleFiles(files: FileList) {
         }
       );
 
-      addFileEntries(fileDisplayArea, decryptedFiles);
+      addFileEntries(fileDisplayArea, decryptedFiles, names);
 
       docManagerPlugin.openDocumentBuffer({
         buffer: firstBuffer,
-        name: makeUniqueFileKey(0, firstFile.name),
+        name: names[0],
         autoActivate: true,
       });
 
@@ -245,7 +257,7 @@ async function handleFiles(files: FileList) {
         const buffer = await decryptedFiles[i].arrayBuffer();
         docManagerPlugin.openDocumentBuffer({
           buffer,
-          name: makeUniqueFileKey(i, decryptedFiles[i].name),
+          name: names[i],
           autoActivate: false,
         });
       }
@@ -327,13 +339,13 @@ async function handleFiles(files: FileList) {
         });
       }
     } else {
-      addFileEntries(fileDisplayArea, decryptedFiles);
+      addFileEntries(fileDisplayArea, decryptedFiles, names);
 
       for (let i = 0; i < decryptedFiles.length; i++) {
         const buffer = await decryptedFiles[i].arrayBuffer();
         docManagerPlugin.openDocumentBuffer({
           buffer,
-          name: makeUniqueFileKey(i, decryptedFiles[i].name),
+          name: names[i],
           autoActivate: true,
         });
       }
@@ -346,13 +358,17 @@ async function handleFiles(files: FileList) {
   }
 }
 
-function addFileEntries(fileDisplayArea: HTMLElement, files: File[]) {
+function addFileEntries(
+  fileDisplayArea: HTMLElement,
+  files: File[],
+  names: string[]
+) {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const fileDiv = document.createElement('div');
     fileDiv.className =
       'flex items-center justify-between bg-gray-700 p-3 rounded-lg';
-    fileDiv.setAttribute('data-pending-name', makeUniqueFileKey(i, file.name));
+    fileDiv.setAttribute('data-pending-name', names[i]);
 
     const infoContainer = document.createElement('div');
     infoContainer.className = 'flex flex-col flex-1 min-w-0';

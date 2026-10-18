@@ -11,6 +11,7 @@ import { VIEWER_SLUG, openFileAction } from './open-file.js';
 import { applyDesktopStrings, ds, type DesktopStringKey } from './strings.js';
 import { THEME_EVENT, currentTheme, setTheme } from './theme.js';
 import { initUpdateBanner } from './update-check.js';
+import { initToolWorkspace } from './workspace.js';
 import {
   VIEWER_SELECT_EVENT,
   VIEWER_TABS_EVENT,
@@ -336,13 +337,18 @@ export function initDesktopShell(options: ShellOptions): void {
     (slug) => toolsBySlug.has(slug)
   );
   initViewerActions(toolsBySlug, pick(OPEN_FILE_TOOLS));
+  initToolWorkspace({
+    back:
+      opened?.backFromTool ??
+      (() => document.getElementById('back-to-tools')?.click()),
+    setReading,
+  });
   initHomeStart(
     pick(
       [...new Set([...favorites, ...recent, ...HOME_TOOLS])].filter(
         (slug) => slug !== VIEWER_SLUG
       )
     ).slice(0, HOME_TOOL_COUNT),
-    toolsBySlug.size,
     opened?.goToViewer
   );
 }
@@ -579,7 +585,12 @@ function initOpenedFiles(
   currentTool: ShellTool | undefined,
   viewerTool: ShellTool | undefined,
   isTool: (slug: string) => boolean
-): { goToViewer: (file: OpenedFile | OpenedFile[]) => void } | undefined {
+):
+  | {
+      goToViewer: (file: OpenedFile | OpenedFile[]) => void;
+      backFromTool: () => void;
+    }
+  | undefined {
   const bridge = getBridge();
   if (!bridge) return;
 
@@ -767,7 +778,10 @@ function initOpenedFiles(
   );
 
   // A tool saved its result: say where, and offer to look at it.
+  dropSuccessBoxForSavedNotice();
   bridge.onDownloadSaved((saved) => {
+    lastSavedAt = Date.now();
+    dismissSuccessBox();
     showSavedToast(saved, {
       canView: saved.isPdf && Boolean(viewerTool),
       view: () => {
@@ -835,7 +849,14 @@ function initOpenedFiles(
   };
   bridge.onFileOpened(() => void check());
   void check();
-  return { goToViewer };
+
+  // The tool workspace's back button: to the document when it came from
+  // the viewer, else to the tools.
+  const backFromTool = (): void => {
+    if (!onViewer && pageFile && viewerHas(pageFile)) goToViewer(pageFile);
+    else document.getElementById('back-to-tools')?.click();
+  };
+  return { goToViewer, backFromTool };
 }
 
 /** "10 min ago", "Today 14:05", "Yesterday 09:30", else the date. */
@@ -919,7 +940,6 @@ function renderHomeRecentFiles(
  */
 function initHomeStart(
   tools: ShellTool[],
-  toolCount: number,
   goToViewer: ((files: OpenedFile[]) => void) | undefined
 ): void {
   const start = document.getElementById('desktop-home');
@@ -959,9 +979,7 @@ function initHomeStart(
   );
   const all = document.getElementById('home-all-tools');
   if (all) {
-    all.querySelector('span')!.textContent = ds('homeAllTools', {
-      count: String(toolCount),
-    });
+    all.querySelector('span')!.textContent = ds('homeAllTools');
     all.addEventListener('click', (event) => {
       event.preventDefault();
       window.location.hash = ALL_TOOLS_HASH;
@@ -1095,6 +1113,37 @@ function initViewerActions(
 
   row.classList.remove('hidden');
   rewriteLinks();
+}
+
+// A tool's "Success" box and the "Saved" notice say the same thing; the
+// notice stays, since it also opens the file or its folder. A box shown
+// this long before or after a save is that save's.
+const SUCCESS_BOX_WINDOW_MS = 5000;
+let lastSavedAt = 0;
+
+/** Closes an open "Success" box as its OK button would. */
+function dismissSuccessBox(): void {
+  const modal = document.getElementById('alert-modal');
+  if (
+    !modal ||
+    modal.classList.contains('hidden') ||
+    modal.dataset.alertType !== 'success'
+  ) {
+    return;
+  }
+  // OK also runs what the tool does next (often: back to its start).
+  document.getElementById('alert-ok')?.click();
+}
+
+function dropSuccessBoxForSavedNotice(): void {
+  const modal = document.getElementById('alert-modal');
+  if (!modal) return;
+  new MutationObserver(() => {
+    if (Date.now() - lastSavedAt < SUCCESS_BOX_WINDOW_MS) dismissSuccessBox();
+  }).observe(modal, {
+    attributes: true,
+    attributeFilter: ['class', 'data-alert-type'],
+  });
 }
 
 /** A short notice that a result was saved, with ways to get to it. */

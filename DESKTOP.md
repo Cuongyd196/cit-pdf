@@ -18,6 +18,9 @@ Tài liệu này dành cho người phát triển và người đóng gói bản
 ### Giao diện
 
 - **Trang chủ:** ô kéo thả / nút Mở tệp (nhiều tệp, mỗi tệp một tab trong trình xem), bảng tệp gần đây (tên, thư mục, lần mở cuối; lưu ở `userData/recent-files.json`), cột phải gồm ô tìm công cụ, 8 công cụ hay dùng (yêu thích → dùng gần đây → mặc định) và nút "Tất cả công cụ". Lưới công cụ đầy đủ nằm ở `index.html#tools`. Ở trang chủ và khi đang đọc, thanh bên thu thành dải biểu tượng.
+- **Chế độ làm việc** (`src/js/desktop/workspace.ts`): khi Trình chỉnh sửa PDF hoặc Ký PDF đã mở tệp, thẻ công cụ (tiêu đề, ô kéo thả, dòng tệp) thu thành một thanh gồm nút quay lại, tên công cụ, tệp, tuỳ chọn của công cụ và nút Lưu; vùng làm việc cao hết cửa sổ. Nút của công cụ được chuyển lên thanh (không sao chép), nên mã của công cụ vẫn tìm thấy chúng theo id. Thêm công cụ: một mục trong `WORKSPACE_TOOLS`.
+- **Ký PDF:** ảnh chữ ký/con dấu giữ màu (`sign-images.ts`), cả khi chọn ở tab "Hình ảnh" của hộp "Thêm chữ ký"; ảnh đã lưu nằm trong IndexedDB (`sign-library.ts`) và hiện trong menu chữ ký của PDF.js. Nút tải và Ctrl+S trong khung xem đi qua đường lưu của công cụ.
+- Sau khi lưu, thông báo "Đã lưu" ở góc thay cho hộp "Thành công" của công cụ (hộp đó tự đóng như khi bấm OK).
 - **Thanh bên trái:** ô tìm công cụ, mục yêu thích, công cụ dùng gần đây và các nhóm công cụ.
 - **Thanh dưới:** nút đổi nhanh giao diện sáng/tối.
 - **Màu chủ đạo:** xanh teal; phông chữ Inter (hỗ trợ đủ dấu tiếng Việt).
