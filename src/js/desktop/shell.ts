@@ -351,6 +351,7 @@ export function initDesktopShell(options: ShellOptions): void {
       opened?.backFromTool ??
       (() => document.getElementById('back-to-tools')?.click()),
     setReading,
+    currentFile: () => pageFile,
   });
   initHomeStart(
     pick(
@@ -626,8 +627,10 @@ function initOpenedFiles(
       fileOrigins.set(pdf, origin);
       // In the viewer the tab on screen decides, see below.
       if (index === 0 && !onViewer) {
+        // A file with no path on disk (dropped from a browser) clears the
+        // previous one, so nothing is ever saved over the wrong file.
         void origin.then((opened) => {
-          if (opened) pageFile = opened;
+          pageFile = opened;
         });
       }
     });
@@ -1184,9 +1187,16 @@ function showSavedToast(
 
   const text = el('div', 'min-w-0 flex-1');
   text.append(
-    el('p', 'text-sm font-semibold text-white', ds('savedTitle')),
+    el(
+      'p',
+      'text-sm font-semibold text-white',
+      ds(saved.overwritten ? 'savedOverwritten' : 'savedTitle')
+    ),
     el('p', 'truncate text-xs text-gray-400', saved.name)
   );
+  if (saved.overwriteFailed) {
+    text.append(el('p', 'mt-1 text-xs text-amber-300', ds('overwriteFailed')));
+  }
   text.title = saved.path;
 
   const actions = el('div', 'flex flex-shrink-0 items-center gap-2');

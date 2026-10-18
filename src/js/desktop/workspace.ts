@@ -9,6 +9,8 @@
  * Controls are moved onto the bar, not copied, so the tool's own code keeps
  * finding them by id and keeps its listeners.
  */
+import { getBridge, type OpenedFile, type SaveMode } from './bridge.js';
+import { confirmOverwrite, overwriteConfirmed } from './confirm-overwrite.js';
 import { ds, type DesktopStringKey } from './strings.js';
 
 interface WorkspaceTool {
@@ -35,12 +37,32 @@ interface WorkspaceTool {
   save?: string;
   /** Containers the moved controls leave behind, hidden in the workspace. */
   leftovers?: string[];
+  /**
+   * "Save" may replace the file the tool opened (with "Save as…" beside it):
+   * true when the bar shows that same file, or a check of its own.
+   */
+  overwrite?: true | ((file: OpenedFile) => boolean);
+}
+
+/**
+ * The PDF editor exports the document on screen but names it after the first
+ * one opened, so it replaces a file only while it holds just that file. Its
+ * page lists the open documents in data-editor-documents.
+ */
+function editorHoldsOnly(file: OpenedFile): boolean {
+  try {
+    const names = JSON.parse(document.body.dataset.editorDocuments || '[]');
+    return Array.isArray(names) && names.length === 1 && names[0] === file.name;
+  } catch {
+    return false;
+  }
 }
 
 const WORKSPACE_TOOLS: Record<string, WorkspaceTool> = {
   'edit-pdf': {
     area: '#embed-pdf-wrapper',
     save: '#download-edited-pdf',
+    overwrite: editorHoldsOnly,
   },
   'sign-pdf': {
     area: '#signature-editor',
@@ -56,6 +78,7 @@ const WORKSPACE_TOOLS: Record<string, WorkspaceTool> = {
       ['#sign-image-btn', '#signature-editor > div:has(#sign-image-btn) > p'],
     ],
     save: '#process-btn',
+    overwrite: true,
     leftovers: [
       '#signature-editor > div:has(#sign-image-btn)',
       '#signature-editor > div:has(#flatten-signature-toggle)',
@@ -68,6 +91,7 @@ const WORKSPACE_TOOLS: Record<string, WorkspaceTool> = {
     controls: ['#page-order-input', '#apply-order-btn'],
     captions: { '#page-order-input': 'workspacePageOrder' },
     save: '#process-btn',
+    overwrite: true,
     leftovers: ['#advanced-settings'],
   },
   'rotate-pdf': {
@@ -77,6 +101,7 @@ const WORKSPACE_TOOLS: Record<string, WorkspaceTool> = {
     controls: ['#rotate-all-left', '#rotate-all-right'],
     captions: { '#rotate-all-left': 'workspaceRotateAll' },
     save: '#process-btn',
+    overwrite: true,
     leftovers: ['#tool-options > div:has(#rotate-all-left)'],
   },
   'rotate-custom': {
@@ -91,6 +116,7 @@ const WORKSPACE_TOOLS: Record<string, WorkspaceTool> = {
     ],
     captions: { '#batch-decrement': 'workspaceRotateAll' },
     save: '#process-btn',
+    overwrite: true,
     leftovers: ['#tool-options > div:has(#batch-apply)'],
   },
   'delete-pages': {
@@ -100,6 +126,7 @@ const WORKSPACE_TOOLS: Record<string, WorkspaceTool> = {
     controls: ['#pages-to-delete'],
     captions: { '#pages-to-delete': 'workspaceDeletePages' },
     save: '#process-btn',
+    overwrite: true,
     leftovers: ['label[for="pages-to-delete"]'],
   },
 };
@@ -109,6 +136,8 @@ export interface WorkspaceOptions {
   back: () => void;
   /** Shrinks the sidebar to its rail while the workspace is on. */
   setReading: (on: boolean) => void;
+  /** The file this page works on, when the app knows where it is on disk. */
+  currentFile: () => OpenedFile | null;
 }
 
 function pageSlug(): string {
@@ -199,6 +228,18 @@ export function initToolWorkspace(options: WorkspaceOptions): void {
   bar.append(make('span', 'desktop-workspace-spacer'));
   const controls = make('div', 'desktop-workspace-controls');
   bar.append(controls);
+
+  // "Save as…" sits before Save, shown while Save would replace the file.
+  const saveAs = make(
+    'button',
+    'desktop-workspace-button desktop-workspace-save-as'
+  );
+  saveAs.type = 'button';
+  saveAs.hidden = true;
+  saveAs.title = ds('saveAsHint');
+  saveAs.setAttribute('aria-label', ds('workspaceSaveAs'));
+  saveAs.append(icon('copy'), make('span', '', ds('workspaceSaveAs')));
+  bar.append(saveAs);
   uploader.prepend(bar);
 
   // Moves what exists now; the rest (a save button made once the viewer is
@@ -243,6 +284,7 @@ export function initToolWorkspace(options: WorkspaceOptions): void {
           make('span', '', ds('workspaceSave'))
         );
         bar.append(save);
+        refreshSave();
       }
     }
   };
@@ -259,6 +301,98 @@ export function initToolWorkspace(options: WorkspaceOptions): void {
     setText(fileMeta, name?.nextElementSibling?.textContent?.trim() ?? '');
     fileName.title = fileName.textContent ?? '';
   };
+  // ---- Save over the opened file, or Save as
+  const saveButton = (): HTMLElement | null =>
+    tool.save ? document.querySelector<HTMLElement>(tool.save) : null;
+  const shown = (el: HTMLElement | null): el is HTMLElement =>
+    !!el && !el.classList.contains('hidden') && el.style.display !== 'none';
+  const overwriteFile = (): OpenedFile | null => {
+    const file = options.currentFile();
+    if (!file || !tool.overwrite) return null;
+    if (typeof tool.overwrite === 'function') {
+      return tool.overwrite(file) ? file : null;
+    }
+    return fileName?.textContent === file.name ? file : null;
+  };
+  const refreshSave = (): void => {
+    const save = saveButton();
+    const file = overwriteFile();
+    const canReplace = shown(save) && !!file;
+    if (saveAs.hidden === canReplace) saveAs.hidden = !canReplace;
+    if (save) {
+      const hint = file ? ds('saveOverwriteHint', { name: file.name }) : '';
+      if (save.title !== hint) save.title = hint;
+    }
+  };
+
+  // Every route to the tool's save (its button, Ctrl+S, the viewer's own
+  // save) comes through here: say where the file goes, then let it run.
+  let passThrough = false;
+  let asked: SaveMode | null = null;
+  const runSave = async (save: HTMLElement): Promise<void> => {
+    const file = overwriteFile();
+    let mode: SaveMode | null = asked ?? (file ? 'overwrite' : null);
+    asked = null;
+    if (mode === 'overwrite' && file && !overwriteConfirmed()) {
+      const answer = await confirmOverwrite(file.name);
+      if (answer === 'cancel') return;
+      mode = answer;
+    }
+    const bridge = getBridge();
+    if (mode && file && bridge) await bridge.setSaveTarget(mode, file.path);
+    passThrough = true;
+    try {
+      save.click();
+    } finally {
+      passThrough = false;
+    }
+  };
+  document.addEventListener(
+    'click',
+    (e) => {
+      if (passThrough) return;
+      const save = saveButton();
+      const target = e.target as Element | null;
+      if (!save || !target || !save.contains(target)) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      void runSave(save);
+    },
+    true
+  );
+  saveAs.addEventListener('click', () => {
+    const save = saveButton();
+    if (!shown(save)) return;
+    asked = 'saveAs';
+    save.click();
+  });
+  const requestSave = (asCopy: boolean): boolean => {
+    const save = saveButton();
+    if (!on || !shown(save)) return false;
+    if (asCopy && !saveAs.hidden) asked = 'saveAs';
+    save.click();
+    return true;
+  };
+  window.addEventListener(
+    'keydown',
+    (e) => {
+      if (
+        !(e.ctrlKey || e.metaKey) ||
+        e.altKey ||
+        e.key.toLowerCase() !== 's'
+      ) {
+        return;
+      }
+      if (requestSave(e.shiftKey)) e.preventDefault();
+    },
+    true
+  );
+  // A viewer frame's own Ctrl+S or download button (Sign) asks this way.
+  document.addEventListener('cit:save-request', (e) => {
+    const asCopy = !!(e as CustomEvent<{ saveAs?: boolean }>).detail?.saveAs;
+    if (requestSave(asCopy)) e.preventDefault();
+  });
+
   const allMoved = (): boolean =>
     (tool.controls ?? []).every((selector) => moved.has(selector)) &&
     (!tool.save || moved.has(tool.save));
@@ -269,6 +403,7 @@ export function initToolWorkspace(options: WorkspaceOptions): void {
     if (open) {
       if (!allMoved()) adopt();
       refreshFile();
+      refreshSave();
     }
     if (open === on) return;
     on = open;
@@ -300,7 +435,7 @@ export function initToolWorkspace(options: WorkspaceOptions): void {
     childList: true,
     characterData: true,
     attributes: true,
-    attributeFilter: ['class'],
+    attributeFilter: ['class', 'data-editor-documents'],
   });
   update();
 }

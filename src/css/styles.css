@@ -2924,3 +2924,11 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
   line-height: 1;
   vertical-align: middle;
 }
+
+/* On a crowded bar Save as gives way first: its icon stays, its label goes,
+   and the file name keeps the room. */
+@media (max-width: 1400px) {
+  .desktop-workspace-save-as > span {
+    display: none;
+  }
+}

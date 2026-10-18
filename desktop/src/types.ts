@@ -104,7 +104,14 @@ export interface SavedDownload {
   isPdf: boolean;
   /** A document type that is safe to hand to its default program. */
   canOpen: boolean;
+  /** It replaced the file the tool was working on. */
+  overwritten?: boolean;
+  /** Replacing that file failed (locked by another program); saved next to it. */
+  overwriteFailed?: boolean;
 }
+
+/** Where a tool's next PDF download goes (see SET_SAVE_TARGET). */
+export type SaveMode = 'overwrite' | 'saveAs';
 
 export const IPC_CHANNELS = {
   GET_MODULES_STATUS: 'bento:get-modules-status',
@@ -129,4 +136,5 @@ export const IPC_CHANNELS = {
   NOTE_RECENT_FILE: 'bento:note-recent-file',
   LIST_RECENT_FILES: 'bento:list-recent-files',
   CLEAR_RECENT_FILES: 'bento:clear-recent-files',
+  SET_SAVE_TARGET: 'bento:set-save-target',
 } as const;

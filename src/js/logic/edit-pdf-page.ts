@@ -67,6 +67,14 @@ const fileEntryMap = new Map<string, HTMLElement>();
 const openNames = new Set<string>();
 const nameById = new Map<string, string>();
 
+// The open documents' names, for the desktop app: it saves over the original
+// file only while the editor holds that one document.
+function listOpenDocuments(): void {
+  document.body.dataset.editorDocuments = JSON.stringify([
+    ...nameById.values(),
+  ]);
+}
+
 function resetViewer() {
   const pdfWrapper = document.getElementById('embed-pdf-wrapper');
   const pdfContainer = document.getElementById('embed-pdf-container');
@@ -84,6 +92,7 @@ function resetViewer() {
   fileEntryMap.clear();
   openNames.clear();
   nameById.clear();
+  listOpenDocuments();
 }
 
 function removeFileEntry(documentId: string) {
@@ -218,6 +227,7 @@ async function handleFiles(files: FileList) {
         const docId = typeof data === 'string' ? data : data?.id || '';
         openNames.delete(nameById.get(docId) ?? '');
         nameById.delete(docId);
+        listOpenDocuments();
         removeFileEntry(docId);
       });
 
@@ -227,6 +237,7 @@ async function handleFiles(files: FileList) {
           const docKey = data?.name;
           if (!docId) return;
           if (docKey) nameById.set(docId, docKey);
+          listOpenDocuments();
           const pendingEntry = fileDisplayArea.querySelector(
             `[data-pending-name="${CSS.escape(docKey)}"]`
           ) as HTMLElement;

@@ -9,6 +9,7 @@ import {
   type PrinterInfo,
   type PrintRequest,
   type PrintResult,
+  type SaveMode,
   type SavedDownload,
   type UpdateCheckResult,
 } from './types.js';
@@ -100,6 +101,12 @@ const bridge = {
     return () => {
       ipcRenderer.removeListener(IPC_CHANNELS.DOWNLOAD_SAVED, handler);
     };
+  },
+
+  // The next PDF this page downloads replaces the file it opened, or opens
+  // "Save as" in that file's folder. Only a file the user opened is accepted.
+  setSaveTarget: (mode: SaveMode, filePath: string): Promise<boolean> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.SET_SAVE_TARGET, mode, filePath);
   },
 
   showSavedInFolder: (filePath: string): Promise<boolean> => {
