@@ -245,6 +245,8 @@ const init = async () => {
     'Remove Restrictions': 'tools:removeRestrictions',
     'Repair PDF': 'tools:repairPdf',
     'Encrypt PDF': 'tools:encryptPdf',
+    'Protect PDF': 'tools:protectPdf',
+    'Unlock PDF': 'tools:unlockPdf',
     'Sanitize PDF': 'tools:sanitizePdf',
     'Decrypt PDF': 'tools:decryptPdf',
     'Flatten PDF': 'tools:flattenPdf',

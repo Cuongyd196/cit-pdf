@@ -18,7 +18,12 @@ import {
 } from '../../logic/view-pdf-events.js';
 import { getBridge, type OpenedFile, type SaveMode } from '../bridge.js';
 import { confirmOverwrite, overwriteConfirmed } from '../confirm-overwrite.js';
-import { ds } from '../strings.js';
+import type { MenuChoice } from '../menu.js';
+import { ds, type DesktopStringKey } from '../strings.js';
+import {
+  exportEmbedEditorPdf,
+  startEmbedEditor,
+} from '../../logic/embed-editor.js';
 import { EditHistory } from './history.js';
 import {
   STUDIO_TOOLS,
@@ -30,11 +35,25 @@ import {
 
 const OPEN_KEY = 'cit:studio-open';
 
+// On the row above the document, by tool id, with the label they get there;
+// the rest of Studio's tools are in its "More" menu.
+const ROW_TOOLS: Array<[string, DesktopStringKey]> = [
+  ['edit', 'studioEdit'],
+  ['rotate', 'quickRotate'],
+  ['compress', 'quickCompress'],
+  ['delete-pages', 'studioDelete'],
+  ['insert', 'studioInsertShort'],
+  ['extract', 'studioExtractShort'],
+];
+const MORE_TOOLS = ['watermark', 'page-numbers', 'flatten'];
+
 export interface StudioOptions {
   /** The quick-action row above the document. */
   row: HTMLElement;
   /** The file on disk behind the tab on screen, if it has one. */
   currentFile: () => OpenedFile | null;
+  /** Hands the tools not on the row to the row's "Other tools" menu. */
+  inPlaceChoices: (list: () => MenuChoice[]) => void;
 }
 
 function make<K extends keyof HTMLElementTagNameMap>(
@@ -163,16 +182,60 @@ export async function initStudio(options: StudioOptions): Promise<void> {
   let busy = false;
   let pendingSave: { file: File; bytes: Uint8Array } | null = null;
   let message: { text: string; error: boolean } | null = null;
+  // The full editor, open over one document's viewer.
+  let editing: {
+    file: File;
+    host: HTMLElement;
+    registry: Awaited<ReturnType<typeof startEmbedEditor>>['registry'] | null;
+    drawerWasOpen: boolean;
+  } | null = null;
 
-  // ---- Studio button on the quick-action row
-  const toggle = make('button', 'pdf-view-action studio-toggle');
-  toggle.type = 'button';
-  toggle.title = ds('studioOpenHint');
-  toggle.append(icon('toolbox'), make('span', '', ds('studioOpen')));
-  toggle.addEventListener('click', () => setOpen(drawer.hidden));
+  // ---- Tools on the row above the document: each opens its options in the
+  // drawer (or, for editing, the editor itself).
+  const toolById = (id: string) => STUDIO_TOOLS.find((t) => t.id === id);
+  const openTool = (next: StudioTool) => {
+    if (next.opensEditor) {
+      void startEditing();
+      return;
+    }
+    // Its button again closes the drawer.
+    if (!drawer.hidden && tool === next) {
+      setOpen(false);
+      return;
+    }
+    showTool(next);
+    setOpen(true);
+  };
+  const rowButtons = new Map<string, HTMLElement>();
+  for (const [id, label] of ROW_TOOLS) {
+    const rowTool = toolById(id);
+    if (!rowTool) continue;
+    const button = make('button', 'pdf-view-action studio-row-tool');
+    button.type = 'button';
+    button.dataset.tool = id;
+    button.title = ds(rowTool.hint);
+    button.append(icon(rowTool.icon), make('span', '', ds(label)));
+    button.addEventListener('click', () => openTool(rowTool));
+    rowButtons.set(id, button);
+  }
+  options.inPlaceChoices(() =>
+    MORE_TOOLS.flatMap((id) => {
+      const moreTool = toolById(id);
+      return moreTool
+        ? [
+            {
+              icon: `ph-${moreTool.icon}`,
+              label: ds(moreTool.name),
+              id,
+              run: () => openTool(moreTool),
+            },
+          ]
+        : [];
+    })
+  );
   const divider = options.row.querySelector('.pdf-view-actions-divider');
-  if (divider) divider.after(toggle, make('span', 'pdf-view-actions-divider'));
-  else options.row.prepend(toggle);
+  if (divider) divider.after(...rowButtons.values());
+  else options.row.prepend(...rowButtons.values());
 
   // ---- Undo, Redo, Save on the same row, once there are changes
   const cluster = make('div', 'studio-cluster hidden');
@@ -207,9 +270,8 @@ export async function initStudio(options: StudioOptions): Promise<void> {
   function setOpen(open: boolean): void {
     drawer!.hidden = !open;
     drawer!.classList.toggle('hidden', !open);
-    toggle.classList.toggle('active', open);
-    toggle.setAttribute('aria-expanded', String(open));
     setStoredItem(OPEN_KEY, open ? '1' : '0');
+    render();
     if (open && !tool) {
       window.setTimeout(() =>
         body.querySelector<HTMLInputElement>('.studio-search')?.focus()
@@ -243,7 +305,7 @@ export async function initStudio(options: StudioOptions): Promise<void> {
             make('span', 'studio-tool-hint', ds(t.hint))
           );
           item.append(icon(t.icon), text);
-          item.addEventListener('click', () => showTool(t));
+          item.addEventListener('click', () => pick(t));
           return item;
         })
       );
@@ -255,7 +317,7 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     input.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter') return;
       const first = search(input.value)[0];
-      if (first) showTool(first);
+      if (first) pick(first);
     });
     fill();
     body.replaceChildren(input, list);
@@ -275,9 +337,14 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     } else {
       input = make(
         'input',
-        field.kind === 'color' ? 'studio-color' : 'studio-input'
+        field.kind === 'color'
+          ? 'studio-color'
+          : field.kind === 'file'
+            ? 'studio-file'
+            : 'studio-input'
       );
       input.type = field.kind;
+      if (field.kind === 'file') input.accept = '.pdf,application/pdf';
       if (field.kind === 'number') {
         input.min = String(field.min);
         input.max = String(field.max);
@@ -285,15 +352,56 @@ export async function initStudio(options: StudioOptions): Promise<void> {
       if (field.kind === 'text' && field.placeholder) {
         input.placeholder = ds(field.placeholder);
       }
-      input.value = String(field.value);
+      if (field.kind !== 'file') input.value = String(field.value);
     }
     input.name = field.id;
     input.id = `studio-field-${field.id}`;
     const label = make('label', 'studio-label', ds(field.label));
     label.htmlFor = input.id;
     const wrap = make('div', 'studio-field');
+    wrap.dataset.field = field.id;
+    if (field.kind === 'file' && input instanceof HTMLInputElement) {
+      // The system's own button speaks the system's language; ours, the app's.
+      const file = input;
+      file.hidden = true;
+      const pick = make('button', 'studio-file-pick');
+      pick.type = 'button';
+      pick.append(
+        icon('folder-open'),
+        make('span', '', ds('studioChooseFile'))
+      );
+      const chosen = make('span', 'studio-file-name', ds('studioNoFile'));
+      pick.addEventListener('click', () => file.click());
+      file.addEventListener('change', () => {
+        chosen.textContent = file.files?.[0]?.name ?? ds('studioNoFile');
+        chosen.classList.toggle('chosen', Boolean(file.files?.[0]));
+      });
+      const row = make('div', 'studio-file-row');
+      row.append(pick, chosen);
+      wrap.append(label, file, row);
+      return wrap;
+    }
+    if (field.kind === 'number' && field.shownWhen) wrap.hidden = true;
     wrap.append(label, input);
     return wrap;
+  }
+
+  /** Shows the fields that depend on another field's value. */
+  function followShownWhen(form: HTMLFormElement, fields: StudioField[]): void {
+    const update = () => {
+      for (const field of fields) {
+        if (field.kind !== 'number' || !field.shownWhen) continue;
+        const other = form.elements.namedItem(
+          field.shownWhen.field
+        ) as HTMLSelectElement | null;
+        const wrap = form.querySelector<HTMLElement>(
+          `[data-field="${field.id}"]`
+        );
+        if (wrap) wrap.hidden = other?.value !== field.shownWhen.value;
+      }
+    };
+    form.addEventListener('change', update);
+    update();
   }
 
   function showTool(next: StudioTool): void {
@@ -312,6 +420,7 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     const form = make('form', 'studio-form');
     form.noValidate = true;
     form.append(...next.fields.map(fieldInput));
+    followShownWhen(form, next.fields);
     const note = make('p', 'studio-message');
     note.setAttribute('role', 'status');
     const apply = make('button', 'studio-apply');
@@ -321,18 +430,146 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const values: StudioValues = {};
+      const files: Record<string, File | undefined> = {};
       for (const field of next.fields) {
         const input = form.elements.namedItem(field.id) as
           | HTMLInputElement
           | HTMLSelectElement
           | null;
         values[field.id] = input?.value ?? String(field.value);
+        if (field.kind === 'file' && input instanceof HTMLInputElement) {
+          files[field.id] = input.files?.[0];
+        }
       }
-      void applyTool(next, values);
+      void applyTool(next, values, files);
     });
     body.replaceChildren(back, heading, hint, form);
     render();
     form.querySelector<HTMLElement>('input, select')?.focus();
+  }
+
+  function pick(next: StudioTool): void {
+    if (next.opensEditor) void startEditing();
+    else showTool(next);
+  }
+
+  async function historyFor(file: File): Promise<EditHistory> {
+    const known = histories.get(file);
+    if (known) return known;
+    const buffer = await file.arrayBuffer();
+    const made = histories.get(file);
+    if (made) return made;
+    const history = new EditHistory(new Uint8Array(buffer));
+    histories.set(file, history);
+    return history;
+  }
+
+  /**
+   * Opens the full editor over the document on screen, on its current
+   * version. "Done" makes what was edited one step of the history.
+   */
+  async function startEditing(): Promise<void> {
+    const file = docs.active();
+    const container = document.getElementById('pdf-viewer-container');
+    if (!file || !container || busy || editing) return;
+    const history = await historyFor(file);
+
+    const host = make('div', 'studio-edit');
+    const bar = make('div', 'studio-edit-bar');
+    const title = make('div', 'studio-edit-title');
+    title.append(
+      icon('pencil-simple-line'),
+      make('span', 'font-semibold text-white', ds('studioEdit')),
+      make('span', 'studio-edit-hint', ds('studioEditDoneHint'))
+    );
+    const note = make('span', 'studio-edit-note');
+    note.setAttribute('role', 'status');
+    const cancel = make('button', 'studio-edit-cancel', ds('cancel'));
+    const done = make('button', 'studio-edit-done');
+    cancel.type = done.type = 'button';
+    done.append(icon('check'), make('span', '', ds('studioEditDone')));
+    cancel.addEventListener('click', () => void finishEditing(false));
+    done.addEventListener('click', () => void finishEditing(true));
+    bar.append(title, note, cancel, done);
+    const area = make('div', 'studio-edit-body');
+    area.append(make('p', 'studio-edit-loading', ds('studioEditLoading')));
+    host.append(bar, area);
+    container.append(host);
+
+    editing = {
+      file,
+      host,
+      registry: null,
+      drawerWasOpen: !drawer!.hidden,
+    };
+    setOpen(false);
+    // Until "Done", leaving or closing the tab asks first.
+    docs.setDirty(file, true);
+    render();
+    try {
+      const started = await startEmbedEditor(area, {
+        fileName: file.name,
+        tabBar: 'never',
+        maxDocuments: 1,
+      });
+      if (editing?.host !== host) {
+        host.remove();
+        return;
+      }
+      const manager = started.registry
+        .getPlugin('document-manager')
+        .provides() as unknown as {
+        openDocumentBuffer(options: {
+          buffer: ArrayBuffer;
+          name: string;
+          autoActivate: boolean;
+        }): void;
+      };
+      manager.openDocumentBuffer({
+        buffer: history.current.slice().buffer,
+        name: file.name,
+        autoActivate: true,
+      });
+      editing.registry = started.registry;
+    } catch (e) {
+      console.error('[Studio] The editor did not start:', e);
+      note.textContent = ds('studioFailed');
+    }
+    render();
+  }
+
+  /** Leaves the editor, keeping what was edited as a step, or not. */
+  async function finishEditing(keep: boolean): Promise<void> {
+    const session = editing;
+    if (!session || busy) return;
+    const history = histories.get(session.file);
+    if (keep && session.registry && history) {
+      busy = true;
+      render();
+      const note = session.host.querySelector('.studio-edit-note');
+      if (note) note.textContent = ds('studioApplying');
+      try {
+        const bytes = await exportEmbedEditorPdf(session.registry);
+        history.push(ds('studioEdit'), bytes);
+        editing = null;
+        session.host.remove();
+        await show(session.file, bytes);
+      } catch (e) {
+        console.error('[Studio] Could not take the edits:', e);
+        if (note) note.textContent = ds('studioFailed');
+        busy = false;
+        render();
+        return;
+      } finally {
+        busy = false;
+      }
+    } else {
+      editing = null;
+      session.host.remove();
+      docs.setDirty(session.file, history?.dirty ?? false);
+    }
+    if (session.drawerWasOpen) setOpen(true);
+    render();
   }
 
   async function show(file: File, bytes: Uint8Array): Promise<void> {
@@ -342,7 +579,8 @@ export async function initStudio(options: StudioOptions): Promise<void> {
 
   async function applyTool(
     which: StudioTool,
-    values: StudioValues
+    values: StudioValues,
+    files: Record<string, File | undefined> = {}
   ): Promise<void> {
     const file = docs.active();
     if (!file || busy) return;
@@ -350,12 +588,19 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     message = null;
     render();
     try {
-      let history = histories.get(file);
-      if (!history) {
-        history = new EditHistory(new Uint8Array(await file.arrayBuffer()));
-        histories.set(file, history);
+      const history = await historyFor(file);
+      const result = await which.apply(history.current, values, {
+        files,
+        fileName: file.name,
+      });
+      if (which.makesFile) {
+        await saveNewFile(result.bytes, result.fileName ?? file.name);
+        message = {
+          text: ds('studioMadeFile', { name: result.fileName ?? file.name }),
+          error: false,
+        };
+        return;
       }
-      const result = await which.apply(history.current, values);
       history.push(result.label, result.bytes);
       await show(file, result.bytes);
       message = {
@@ -375,6 +620,7 @@ export async function initStudio(options: StudioOptions): Promise<void> {
   }
 
   async function step(kind: 'undo' | 'redo' | 'revert'): Promise<void> {
+    if (editing) return;
     const file = docs.active();
     const history = file ? histories.get(file) : undefined;
     if (!file || !history || busy) return;
@@ -396,8 +642,24 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     }
   }
 
+  /** A file made from the document, offered in its folder under its name. */
+  async function saveNewFile(bytes: Uint8Array, name: string): Promise<void> {
+    const file = docs.active();
+    const opened = options.currentFile();
+    if (file && opened && opened.name === file.name) {
+      await bridge!.setSaveTarget('saveAs', opened.path);
+    }
+    downloadFile(
+      new Blob([bytes as BlobPart], { type: 'application/pdf' }),
+      name
+    );
+  }
+
   /** Saves the tab on screen; false when it has nothing Studio changed. */
   async function saveActive(asCopy: boolean): Promise<boolean> {
+    // Saving from the editor keeps what was edited first.
+    if (editing) await finishEditing(true);
+    if (editing) return true;
     const file = docs.active();
     const history = file ? histories.get(file) : undefined;
     if (!file || !history || busy) return false;
@@ -466,9 +728,10 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     const file = docs.active();
     const history = activeHistory();
     cluster.classList.toggle('hidden', !history);
-    undo.disabled = busy || !history?.canUndo;
-    redo.disabled = busy || !history?.canRedo;
-    const dirty = Boolean(history?.dirty);
+    // While the editor is open, its own undo applies.
+    undo.disabled = busy || Boolean(editing) || !history?.canUndo;
+    redo.disabled = busy || Boolean(editing) || !history?.canRedo;
+    const dirty = Boolean(history?.dirty) || Boolean(editing);
     unsaved.hidden = !dirty;
     save.disabled = busy || !dirty;
     saveAs.disabled = busy;
@@ -489,6 +752,20 @@ export async function initStudio(options: StudioOptions): Promise<void> {
       note.classList.toggle('error', Boolean(message?.error));
     }
     drawer!.classList.toggle('busy', busy);
+    // The row shows which tool the drawer holds.
+    const shown = drawer!.hidden ? null : tool?.id;
+    for (const [id, button] of rowButtons) {
+      button.classList.toggle(
+        'active',
+        id === shown || (id === 'edit' && Boolean(editing))
+      );
+    }
+    options.row
+      .querySelector('.studio-more')
+      ?.classList.toggle(
+        'active',
+        Boolean(shown && MORE_TOOLS.includes(shown))
+      );
     renderHistory(history);
   }
 
@@ -499,6 +776,14 @@ export async function initStudio(options: StudioOptions): Promise<void> {
       if (!files.includes(file)) histories.delete(file);
     }
     if (pendingSave && !files.includes(pendingSave.file)) pendingSave = null;
+    if (editing && !files.includes(editing.file)) {
+      // Its tab was closed (the user chose to discard).
+      editing.host.remove();
+      editing = null;
+    } else if (editing && docs.active() !== editing.file) {
+      // Another tab: keep what was edited, then show that tab.
+      void finishEditing(true);
+    }
     message = null;
     render();
   });
@@ -516,11 +801,12 @@ export async function initStudio(options: StudioOptions): Promise<void> {
       typeof target?.closest === 'function' &&
       target.closest('input, textarea, select, [contenteditable]') !== null;
     if (key === 's') {
-      if (!activeHistory()) return false;
+      if (!activeHistory() && !editing) return false;
       void saveActive(e.shiftKey);
       return true;
     }
-    if (typing || !activeHistory()) return false;
+    // In the editor, Ctrl+Z / Ctrl+Y are its own.
+    if (typing || editing || !activeHistory()) return false;
     if (key === 'z' && !e.shiftKey) {
       void step('undo');
       return true;

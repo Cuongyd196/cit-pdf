@@ -238,9 +238,16 @@ function watchDownloads() {
         item.setSavePath(temp);
       } else if (target.until > Date.now()) {
         const ext = path.extname(target.path);
-        const name = fill(ui().editedCopy, {
-          name: path.basename(target.path, ext),
-        });
+        // A result named on its own (pages taken out, say) keeps its name;
+        // the document itself is offered as "<name> (edited)".
+        const stem = path.basename(target.path, ext);
+        const offered = path.basename(
+          item.getFilename(),
+          path.extname(item.getFilename())
+        );
+        const name = offered.toLowerCase().startsWith(`${stem.toLowerCase()} (`)
+          ? offered
+          : fill(ui().editedCopy, { name: stem });
         item.setSaveDialogOptions({
           defaultPath: path.join(path.dirname(target.path), `${name}.pdf`),
           filters: [{ name: 'PDF', extensions: ['pdf'] }],

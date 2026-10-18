@@ -1325,11 +1325,11 @@
     "faqPrivacyAnswer": "Chắc chắn! Toàn bộ quá trình xử lý diễn ra trong trình duyệt của bạn. Tệp của bạn không bao giờ rời khỏi thiết bị, đảm bảo quyền riêng tư hoàn toàn."
   },
   "unlockPdf": {
-    "name": "Giải mã PDF",
+    "name": "Gỡ mật khẩu PDF",
     "subtitle": "Mở khóa PDF bằng cách xóa bảo vệ mật khẩu."
   },
   "protectPdf": {
-    "name": "Mã hóa PDF",
+    "name": "Đặt mật khẩu PDF",
     "subtitle": "Khóa PDF của bạn bằng cách thêm mật khẩu."
   }
 }

@@ -2936,9 +2936,6 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
 /* Studio (studio.ts): tools applied in place to the document in the viewer.
    The drawer sits right of the document; Undo, Redo and Save go at the end
    of the quick-action row once the document has changes. */
-.studio-toggle.active {
-  @apply bg-gray-700 text-white;
-}
 
 .studio-cluster {
   @apply ml-auto flex flex-shrink-0 items-center gap-0.5 pl-2;
@@ -3125,9 +3122,178 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
   box-shadow: -12px 0 12px -6px var(--color-gray-900);
 }
 
-/* With the drawer open the quick actions keep only their icons. */
-body:has(#studio-drawer:not(.hidden))
-  .pdf-view-action:not(.studio-toggle, .studio-save-as)
-  > span {
+/* Studio: the full editor (EmbedPDF) open over the document. */
+.studio-edit {
+  @apply absolute inset-0 z-10 flex flex-col bg-gray-900;
+}
+
+.studio-edit-bar {
+  @apply flex flex-none items-center gap-2 border-b border-gray-700 bg-gray-800 px-3 py-1.5 text-sm;
+}
+
+.studio-edit-title {
+  @apply flex min-w-0 flex-1 items-center gap-2;
+}
+
+.studio-edit-title > i {
+  @apply text-lg text-indigo-400;
+}
+
+.studio-edit-hint {
+  @apply truncate text-xs text-gray-400;
+}
+
+.studio-edit-note {
+  @apply text-xs text-amber-300;
+}
+
+.studio-edit-cancel {
+  @apply rounded-md px-3 py-1.5 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white;
+}
+
+.studio-edit-done {
+  @apply flex items-center gap-1.5 rounded-md bg-indigo-600 px-4 py-1.5 text-sm font-semibold hover:bg-indigo-700;
+  color: #ffffff;
+}
+
+.studio-edit-body {
+  @apply relative min-h-0 flex-1;
+}
+
+.studio-edit-body > * {
+  width: 100%;
+  height: 100%;
+}
+
+.studio-edit-loading {
+  @apply flex items-center justify-center text-sm text-gray-400;
+}
+
+/* Drop-down list of a menu button (menu.ts), placed on the page. */
+.desktop-menu {
+  @apply fixed z-50 flex min-w-56 flex-col rounded-lg border border-gray-700 bg-gray-800 py-1 shadow-2xl;
+}
+
+.desktop-menu-item {
+  @apply flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-gray-200 no-underline hover:bg-gray-700 hover:text-white focus:bg-gray-700 focus:outline-none;
+}
+
+.desktop-menu-item > i {
+  @apply text-base text-indigo-400;
+}
+
+.desktop-menu-heading {
+  @apply px-3 pt-2 pb-1 text-xs font-semibold tracking-wide text-gray-400 uppercase;
+}
+
+.desktop-menu-heading:not(:first-child) {
+  @apply mt-1 border-t border-gray-700 pt-3;
+}
+
+.desktop-menu-item > i.desktop-menu-external {
+  @apply ml-auto text-sm text-gray-500;
+}
+
+.desktop-menu-caret {
+  @apply text-xs text-gray-400;
+}
+
+.desktop-menu-separator {
+  @apply my-1 border-t border-gray-700;
+}
+
+/* Viewer: picker of tools that open the document on their own page. */
+.desktop-picker-overlay {
+  @apply fixed inset-0 z-50 flex items-start justify-center bg-black/70 p-4 pt-[10vh];
+}
+
+.desktop-picker {
+  @apply flex max-h-[80vh] w-full max-w-2xl flex-col rounded-xl border border-gray-700 bg-gray-800 p-5 shadow-2xl;
+}
+
+.desktop-picker-title {
+  @apply text-lg font-bold text-white;
+}
+
+.desktop-picker-file {
+  @apply mt-0.5 mb-3 truncate text-sm text-gray-400;
+}
+
+.desktop-picker-search {
+  @apply mb-3 w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none;
+}
+
+.desktop-picker-body {
+  @apply min-h-0 overflow-y-auto;
+}
+
+.desktop-picker-group + .desktop-picker-group {
+  @apply mt-3;
+}
+
+.desktop-picker-heading {
+  @apply mb-1.5 text-xs font-semibold tracking-wide text-gray-400 uppercase;
+}
+
+.desktop-picker-grid {
+  @apply grid grid-cols-2 gap-1.5 sm:grid-cols-3;
+}
+
+.desktop-picker-tool {
+  @apply flex min-w-0 items-center gap-2 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-200 no-underline hover:border-indigo-500 hover:text-white;
+}
+
+.desktop-picker-tool > i {
+  @apply flex-none text-lg text-indigo-400;
+}
+
+.desktop-picker-tool > span {
+  @apply truncate;
+}
+
+.desktop-picker-all {
+  @apply mt-3 text-sm font-medium text-indigo-400 hover:text-indigo-300;
+}
+
+.desktop-picker-empty {
+  @apply py-6 text-center text-sm text-gray-400;
+}
+
+.pdf-view-action > i.desktop-menu-caret {
+  @apply text-xs text-gray-400;
+}
+
+/* Studio's tool on the row whose options the drawer shows. */
+.studio-row-tool.active,
+.studio-more.active {
+  @apply bg-gray-700 text-white;
+}
+
+/* Studio: a file field (Insert another PDF). */
+.studio-file {
+  @apply w-full cursor-pointer rounded-lg border border-dashed border-gray-600 bg-gray-900 px-3 py-2 text-sm text-gray-300 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-gray-700 file:px-3 file:py-1 file:text-sm file:font-medium file:text-white hover:border-indigo-500;
+}
+
+.studio-field[hidden] {
   display: none;
+}
+
+.studio-file-row {
+  @apply flex min-w-0 items-center gap-3;
+}
+
+.studio-file-pick {
+  @apply flex flex-none items-center gap-1.5 rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm font-medium text-white hover:border-indigo-500 hover:bg-gray-600;
+}
+
+.studio-file-pick > i {
+  @apply text-base text-indigo-400;
+}
+
+.studio-file-name {
+  @apply min-w-0 truncate text-sm text-gray-400;
+}
+
+.studio-file-name.chosen {
+  @apply text-white;
 }

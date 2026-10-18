@@ -10,6 +10,7 @@ import {
   addTextWatermark,
   parseDeletePages,
   parsePageRange,
+  splitPdf,
   type PageNumberFormat,
   type PageNumberPosition,
 } from '../../utils/pdf-operations.js';
@@ -32,6 +33,8 @@ export type StudioField =
       min: number;
       max: number;
       value: number;
+      /** Shown only while another field has this value. */
+      shownWhen?: { field: string; value: string };
     }
   | {
       kind: 'text';
@@ -40,14 +43,24 @@ export type StudioField =
       placeholder?: DesktopStringKey;
       value: string;
     }
-  | { kind: 'color'; id: string; label: DesktopStringKey; value: string };
+  | { kind: 'color'; id: string; label: DesktopStringKey; value: string }
+  | { kind: 'file'; id: string; label: DesktopStringKey; value: '' };
 
 export type StudioValues = Record<string, string>;
+
+export interface StudioContext {
+  /** Files picked in the tool's file fields, by field id. */
+  files: Record<string, File | undefined>;
+  /** Name of the document the tool works on. */
+  fileName: string;
+}
 
 export interface StudioResult {
   bytes: Uint8Array;
   /** The step's name in the history. */
   label: string;
+  /** For a tool that makes a new file: the name offered for it. */
+  fileName?: string;
 }
 
 export interface StudioTool {
@@ -56,8 +69,25 @@ export interface StudioTool {
   name: DesktopStringKey;
   hint: DesktopStringKey;
   fields: StudioField[];
-  apply(bytes: Uint8Array, values: StudioValues): Promise<StudioResult>;
+  /**
+   * Opens the full editor (EmbedPDF) over the document instead of a form;
+   * such a tool has no apply of its own.
+   */
+  opensEditor?: true;
+  /**
+   * Makes a new file from the document (saved through "Save as") instead of
+   * changing it; the document and its history stay as they are.
+   */
+  makesFile?: true;
+  apply(
+    bytes: Uint8Array,
+    values: StudioValues,
+    context: StudioContext
+  ): Promise<StudioResult>;
 }
+
+/** Characters Windows does not allow in a file name. */
+const fileNameSafe = (text: string) => text.replace(/[\\/:*?"<>|]/g, '-');
 
 /** A problem with what the user asked for, shown beside the fields. */
 export class StudioInputError extends Error {}
@@ -106,6 +136,17 @@ const pageNumberPosition: StudioField = {
 };
 
 export const STUDIO_TOOLS: StudioTool[] = [
+  {
+    id: 'edit',
+    icon: 'pencil-simple-line',
+    name: 'studioEdit',
+    hint: 'studioEditHint',
+    fields: [],
+    opensEditor: true,
+    apply() {
+      return Promise.reject(new Error('Edits are made in the editor'));
+    },
+  },
   {
     id: 'rotate',
     icon: 'arrow-clockwise',
@@ -176,6 +217,107 @@ export const STUDIO_TOOLS: StudioTool[] = [
       return {
         bytes: await save(doc),
         label: `${ds('studioDelete')} ${values.pages.trim()}`,
+      };
+    },
+  },
+  {
+    id: 'insert',
+    icon: 'file-plus',
+    name: 'studioInsert',
+    hint: 'studioInsertHint',
+    fields: [
+      { kind: 'file', id: 'source', label: 'studioInsertFile', value: '' },
+      {
+        kind: 'select',
+        id: 'where',
+        label: 'studioInsertWhere',
+        options: [
+          ['end', 'studioInsertEnd'],
+          ['start', 'studioInsertStart'],
+          ['after', 'studioInsertAfter'],
+        ],
+        value: 'end',
+      },
+      {
+        kind: 'number',
+        id: 'after',
+        label: 'studioInsertAfterPage',
+        min: 1,
+        max: 9999,
+        value: 1,
+        shownWhen: { field: 'where', value: 'after' },
+      },
+    ],
+    async apply(bytes, values, { files }) {
+      const source = files.source;
+      if (!source) throw new StudioInputError(ds('studioInsertNoFile'));
+      let added: Awaited<ReturnType<typeof loadPdfDocument>>;
+      try {
+        added = await loadPdfDocument(
+          new Uint8Array(await source.arrayBuffer())
+        );
+      } catch {
+        throw new StudioInputError(
+          ds('studioInsertBad', { name: source.name })
+        );
+      }
+      const doc = await loadPdfDocument(bytes);
+      const total = doc.getPageCount();
+      const at =
+        values.where === 'start'
+          ? 0
+          : values.where === 'after'
+            ? Math.min(Math.max(Number(values.after) || 0, 0), total)
+            : total;
+      const pages = await doc.copyPages(added, added.getPageIndices());
+      pages.forEach((page, i) => doc.insertPage(at + i, page));
+      const where =
+        values.where === 'start'
+          ? ds('studioInsertStart')
+          : values.where === 'after'
+            ? ds('studioInsertAfterN', { n: at })
+            : ds('studioInsertEnd');
+      return {
+        bytes: await save(doc),
+        label: ds('studioInsertStep', {
+          name: source.name,
+          n: pages.length,
+          where: where.toLowerCase(),
+        }),
+      };
+    },
+  },
+  {
+    id: 'extract',
+    icon: 'export',
+    name: 'studioExtract',
+    hint: 'studioExtractHint',
+    makesFile: true,
+    fields: [
+      {
+        kind: 'text',
+        id: 'pages',
+        label: 'studioPages',
+        placeholder: 'studioPagesHint',
+        value: '',
+      },
+    ],
+    async apply(bytes, values, { fileName }) {
+      const doc = await loadPdfDocument(bytes);
+      const total = doc.getPageCount();
+      const asked = values.pages.trim();
+      const pages = asked ? parsePageRange(asked, total) : [];
+      if (pages.length === 0) {
+        throw new StudioInputError(ds('studioPagesInvalid', { n: total }));
+      }
+      const stem = fileName.replace(/\.pdf$/i, '');
+      return {
+        bytes: await splitPdf(bytes, pages),
+        label: ds('studioExtract'),
+        fileName: `${ds('studioExtractName', {
+          name: stem,
+          pages: fileNameSafe(asked.replace(/\s+/g, '')),
+        })}.pdf`,
       };
     },
   },
