@@ -56,6 +56,8 @@ export interface SavedDownload {
 export interface OpenedFile {
   path: string;
   name: string;
+  /** Recent files only: when it was last opened, in ms since the epoch. */
+  openedAt?: number;
 }
 
 export interface PrinterInfo {

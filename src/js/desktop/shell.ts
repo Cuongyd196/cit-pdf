@@ -9,8 +9,16 @@ import { getStoredItem, setStoredItem } from '../utils/safe-storage.js';
 import { getBridge, type OpenedFile, type SavedDownload } from './bridge.js';
 import { VIEWER_SLUG, openFileAction } from './open-file.js';
 import { applyDesktopStrings, ds, type DesktopStringKey } from './strings.js';
-import { THEME_EVENT, currentTheme, setTheme } from './theme.js';
+import {
+  THEME_EVENT,
+  initTheme,
+  setThemePreference,
+  themePreference,
+  type ThemePreference,
+} from './theme.js';
 import { initUpdateBanner } from './update-check.js';
+import { initIconFamily } from './icons.js';
+import { initToolWorkspace } from './workspace.js';
 import {
   VIEWER_SELECT_EVENT,
   VIEWER_TABS_EVENT,
@@ -60,6 +68,22 @@ const QUICK_ACTIONS: Array<[string, DesktopStringKey]> = [
   ['protect-pdf', 'quickProtect'],
 ];
 const MAX_RECENT = 5;
+
+// Home page: tools offered beside the recent files, after the user's
+// favorites and recently used ones.
+const HOME_TOOLS = [
+  'compress-pdf',
+  'merge-pdf',
+  'split-pdf',
+  'pdf-to-word',
+  'ocr-pdf',
+  'edit-pdf-text',
+  'sign-pdf',
+  'jpg-to-pdf',
+];
+const HOME_TOOL_COUNT = 8;
+// The home page shows all tools instead of its start view at this hash.
+const ALL_TOOLS_HASH = '#tools';
 
 // Tools offered when a PDF is opened from the OS, most common first.
 const OPEN_FILE_TOOLS = [
@@ -118,6 +142,7 @@ export function initDesktopShell(options: ShellOptions): void {
   if (!nav) return;
 
   applyDesktopStrings();
+  initIconFamily();
 
   const shellCategories: ShellCategory[] = categories.map((category) => {
     const categoryKey = options.categoryTranslationKeys[category.name];
@@ -311,15 +336,30 @@ export function initDesktopShell(options: ShellOptions): void {
   renderHomeRecent(pick(recent));
   void initUpdateBanner();
 
+  initTheme();
   initThemeToggle();
   void updateModulesStatus();
-  initOpenedFiles(
+  const opened = initOpenedFiles(
     pick(OPEN_FILE_TOOLS),
     currentTool,
     toolsBySlug.get(VIEWER_SLUG),
     (slug) => toolsBySlug.has(slug)
   );
   initViewerActions(toolsBySlug, pick(OPEN_FILE_TOOLS));
+  initToolWorkspace({
+    back:
+      opened?.backFromTool ??
+      (() => document.getElementById('back-to-tools')?.click()),
+    setReading,
+  });
+  initHomeStart(
+    pick(
+      [...new Set([...favorites, ...recent, ...HOME_TOOLS])].filter(
+        (slug) => slug !== VIEWER_SLUG
+      )
+    ).slice(0, HOME_TOOL_COUNT),
+    opened?.goToViewer
+  );
 }
 
 /** Home page only: a row of recently used tools above the full grid. */
@@ -360,13 +400,25 @@ function initThemeToggle(): void {
   const icon = toggle.querySelector('i');
   const label = toggle.querySelector('span');
 
+  // Light, dark, then whatever Windows uses.
+  const next: Record<ThemePreference, ThemePreference> = {
+    light: 'dark',
+    dark: 'system',
+    system: 'light',
+  };
+  const look: Record<ThemePreference, [string, DesktopStringKey]> = {
+    light: ['ph-sun', 'themeLight'],
+    dark: ['ph-moon', 'themeDark'],
+    system: ['ph-desktop', 'themeSystem'],
+  };
   const sync = () => {
-    const light = currentTheme() === 'light';
-    if (icon) icon.className = `ph ${light ? 'ph-sun' : 'ph-moon'} text-sm`;
-    if (label) label.textContent = ds(light ? 'themeLight' : 'themeDark');
+    const [iconName, labelKey] = look[themePreference()];
+    if (icon) icon.className = `ph ${iconName} text-sm`;
+    if (label) label.textContent = ds(labelKey);
+    toggle.title = ds('themeToggleHint');
   };
   toggle.addEventListener('click', () => {
-    setTheme(currentTheme() === 'light' ? 'dark' : 'light');
+    setThemePreference(next[themePreference()]);
   });
   document.addEventListener(THEME_EVENT, sync);
   sync();
@@ -467,7 +519,7 @@ async function injectFile(file: OpenedFile, quiet = false): Promise<boolean> {
   }
 }
 
-function rememberPendingFile(file: OpenedFile): void {
+function rememberPendingFile(file: OpenedFile | OpenedFile[]): void {
   try {
     sessionStorage.setItem(PENDING_FILE_KEY, JSON.stringify(file));
   } catch (e) {
@@ -554,7 +606,12 @@ function initOpenedFiles(
   currentTool: ShellTool | undefined,
   viewerTool: ShellTool | undefined,
   isTool: (slug: string) => boolean
-): void {
+):
+  | {
+      goToViewer: (file: OpenedFile | OpenedFile[]) => void;
+      backFromTool: () => void;
+    }
+  | undefined {
   const bridge = getBridge();
   if (!bridge) return;
 
@@ -642,12 +699,13 @@ function initOpenedFiles(
     true
   );
 
-  // Goes to the viewer with a file, through a link so rewriteLinks applies
-  // the language prefix.
-  const goToViewer = (file: OpenedFile) => {
+  // Goes to the viewer with one or more files, through a link so
+  // rewriteLinks applies the language prefix.
+  const goToViewer = (file: OpenedFile | OpenedFile[]) => {
     if (!viewerTool) return;
-    // The link click below hands on the page's file: make it this one.
-    pageFile = file;
+    // The link click below hands on the page's file, which would replace
+    // what is set here: let it hand on nothing.
+    pageFile = null;
     rememberPendingFile(file);
     const link = el('a', 'hidden');
     link.href = viewerTool.href;
@@ -659,6 +717,13 @@ function initOpenedFiles(
   // Documents read lately, to pick up where the user left off: on the home
   // page and on the viewer's empty screen.
   const renderRecentFiles = async () => {
+    const home = document.getElementById('home-recent-files');
+    if (home) {
+      renderHomeRecentFiles(home, await bridge.listRecentFiles(), (file) =>
+        goToViewer(file)
+      );
+      return;
+    }
     const anchor =
       (onViewer && document.getElementById('drop-zone')) ||
       document.getElementById('desktop-recent') ||
@@ -734,7 +799,10 @@ function initOpenedFiles(
   );
 
   // A tool saved its result: say where, and offer to look at it.
+  dropSuccessBoxForSavedNotice();
   bridge.onDownloadSaved((saved) => {
+    lastSavedAt = Date.now();
+    dismissSuccessBox();
     showSavedToast(saved, {
       canView: saved.isPdf && Boolean(viewerTool),
       view: () => {
@@ -748,19 +816,20 @@ function initOpenedFiles(
   // What the previous page left behind: a file handed over to this tool
   // and, for the viewer, the tabs it had open.
   const restore = async () => {
-    let pending: OpenedFile | null = null;
+    let pending: OpenedFile[] = [];
     try {
       const stored = sessionStorage.getItem(PENDING_FILE_KEY);
       if (stored) {
         sessionStorage.removeItem(PENDING_FILE_KEY);
-        pending = JSON.parse(stored) as OpenedFile;
+        const parsed = JSON.parse(stored) as OpenedFile | OpenedFile[];
+        pending = Array.isArray(parsed) ? parsed : [parsed];
       }
     } catch (e) {
       console.warn('[Desktop] Could not restore opened file:', e);
     }
 
     if (!onViewer) {
-      if (pending && (await injectFile(pending))) markBackButton();
+      if (pending[0] && (await injectFile(pending[0]))) markBackButton();
       return;
     }
     const saved = readViewerTabs();
@@ -768,8 +837,11 @@ function initOpenedFiles(
     // A saved file may be gone by now: skip it without a message.
     for (const file of saved.files) await openInViewer(file, true);
     restoringTabs = false;
-    const front =
-      pending ?? saved.files.find((file) => file.path === saved.active);
+    if (pending.length > 0) {
+      for (const file of pending) await openInViewer(file);
+      return;
+    }
+    const front = saved.files.find((file) => file.path === saved.active);
     if (front) await openInViewer(front);
   };
   const restored = restore();
@@ -798,6 +870,206 @@ function initOpenedFiles(
   };
   bridge.onFileOpened(() => void check());
   void check();
+
+  // The tool workspace's back button: to the document when it came from
+  // the viewer, else to the tools.
+  const backFromTool = (): void => {
+    if (!onViewer && pageFile && viewerHas(pageFile)) goToViewer(pageFile);
+    else document.getElementById('back-to-tools')?.click();
+  };
+  return { goToViewer, backFromTool };
+}
+
+/** "10 min ago", "Today 14:05", "Yesterday 09:30", else the date. */
+function formatOpenedAt(at: number | undefined, now = Date.now()): string {
+  if (!at) return '';
+  const minutes = Math.floor((now - at) / 60000);
+  if (minutes < 1) return ds('timeJustNow');
+  if (minutes < 60) return ds('timeMinutes', { n: String(minutes) });
+  const date = new Date(at);
+  const time = date.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const startOfToday = new Date(now).setHours(0, 0, 0, 0);
+  if (at >= startOfToday) return ds('timeToday', { time });
+  if (at >= startOfToday - 86400000) return ds('timeYesterday', { time });
+  return date.toLocaleDateString(undefined, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+/** Home page: the recent files as a table, or a hint while there are none. */
+function renderHomeRecentFiles(
+  container: HTMLElement,
+  files: OpenedFile[],
+  open: (file: OpenedFile) => void
+): void {
+  const bridge = getBridge();
+  const heading = el('div', 'flex items-baseline justify-between gap-3');
+  heading.append(el('h2', 'desktop-recent-heading', ds('recentFiles')));
+  if (files.length === 0) {
+    container.replaceChildren(
+      heading,
+      el('p', 'desktop-home-empty', ds('recentEmpty'))
+    );
+    return;
+  }
+
+  const clear = el('button', 'desktop-recent-files-clear', ds('recentClear'));
+  clear.type = 'button';
+  clear.addEventListener('click', () => {
+    void bridge?.clearRecentFiles();
+    renderHomeRecentFiles(container, [], open);
+  });
+  heading.append(clear);
+
+  const head = el('div', 'desktop-home-file desktop-home-file-head');
+  head.setAttribute('aria-hidden', 'true');
+  head.append(
+    el('span'),
+    el('span', '', ds('recentName')),
+    el('span', '', ds('recentFolder')),
+    el('span', '', ds('recentWhen'))
+  );
+
+  const list = el('div', 'desktop-home-files');
+  for (const file of files) {
+    const row = el('button', 'desktop-home-file');
+    row.type = 'button';
+    row.title = file.path;
+    row.dataset.noTranslate = '';
+    const folder = file.path.slice(0, -file.name.length).replace(/[\\/]$/, '');
+    row.append(
+      el('i', 'ph ph-file-pdf'),
+      el('span', 'desktop-home-file-name', file.name),
+      el('span', 'desktop-home-file-meta', folder),
+      el('span', 'desktop-home-file-meta', formatOpenedAt(file.openedAt))
+    );
+    row.addEventListener('click', () => open(file));
+    list.append(row);
+  }
+  container.replaceChildren(heading, head, list);
+}
+
+/**
+ * Home page start view: open a file or pick up a recent one, with the
+ * tools reduced to a short column. The full grid stays one click away, at
+ * index.html#tools, which the logo and "Back to home" leave again.
+ */
+function initHomeStart(
+  tools: ShellTool[],
+  goToViewer: ((files: OpenedFile[]) => void) | undefined
+): void {
+  const start = document.getElementById('desktop-home');
+  const bridge = getBridge();
+  if (!start || !bridge) return;
+
+  const applyView = () => {
+    const all = window.location.hash === ALL_TOOLS_HASH;
+    document.body.classList.toggle('desktop-home-start', !all);
+    // The start view needs no tool list in the sidebar: a rail is enough.
+    document.body.classList.toggle('desktop-reading', !all);
+  };
+  applyView();
+  window.addEventListener('hashchange', applyView);
+
+  // Way back from the full grid.
+  const back = el('a', 'desktop-home-back');
+  back.href = '#';
+  back.append(el('i', 'ph ph-arrow-left'), el('span', '', ds('homeBack')));
+  back.addEventListener('click', (event) => {
+    event.preventDefault();
+    history.replaceState(null, '', window.location.pathname);
+    applyView();
+  });
+  document.getElementById('tools-header')?.before(back);
+
+  // Frequently used tools.
+  const grid = document.getElementById('home-tools');
+  grid?.replaceChildren(
+    ...tools.map((tool) => {
+      const card = el('a', 'desktop-home-tool');
+      card.href = tool.href;
+      card.title = tool.subtitle || tool.name;
+      card.append(iconEl(tool.icon), el('span', '', tool.name));
+      return card;
+    })
+  );
+  const all = document.getElementById('home-all-tools');
+  if (all) {
+    all.querySelector('span')!.textContent = ds('homeAllTools');
+    all.addEventListener('click', (event) => {
+      event.preventDefault();
+      window.location.hash = ALL_TOOLS_HASH;
+    });
+  }
+  rewriteLinks();
+
+  // Searching hands over to the full grid's own search.
+  const search = document.getElementById(
+    'home-tool-search'
+  ) as HTMLInputElement | null;
+  const gridSearch = document.getElementById(
+    'search-bar'
+  ) as HTMLInputElement | null;
+  search?.addEventListener('input', () => {
+    if (!gridSearch) return;
+    window.location.hash = ALL_TOOLS_HASH;
+    applyView();
+    gridSearch.value = search.value;
+    search.value = '';
+    gridSearch.dispatchEvent(new Event('input', { bubbles: true }));
+    gridSearch.focus();
+  });
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (!document.body.classList.contains('desktop-home-start')) return;
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'k')
+        return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      search?.focus();
+    },
+    true
+  );
+
+  // Opening files: the button, or a drop anywhere on the start view.
+  const input = document.getElementById(
+    'home-file-input'
+  ) as HTMLInputElement | null;
+  const open = async (files: FileList | null | undefined) => {
+    const pdfs = Array.from(files ?? []).filter((file) => isPdfName(file.name));
+    const opened = (
+      await Promise.all(pdfs.map((pdf) => bridge.registerPickedFile(pdf)))
+    ).filter((file): file is OpenedFile => file !== null);
+    if (opened.length > 0) goToViewer?.(opened);
+  };
+  document.getElementById('home-open')?.addEventListener('click', () => {
+    input?.click();
+  });
+  input?.addEventListener('change', () => {
+    void open(input.files);
+    input.value = '';
+  });
+  const drop = document.getElementById('home-drop');
+  start.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    drop?.classList.add('is-dragging');
+  });
+  start.addEventListener('dragleave', (event) => {
+    if (!start.contains(event.relatedTarget as Node | null)) {
+      drop?.classList.remove('is-dragging');
+    }
+  });
+  start.addEventListener('drop', (event) => {
+    event.preventDefault();
+    drop?.classList.remove('is-dragging');
+    void open(event.dataTransfer?.files);
+  });
 }
 
 // While a document is open in the viewer the sidebar shrinks to a rail of
@@ -862,6 +1134,37 @@ function initViewerActions(
 
   row.classList.remove('hidden');
   rewriteLinks();
+}
+
+// A tool's "Success" box and the "Saved" notice say the same thing; the
+// notice stays, since it also opens the file or its folder. A box shown
+// this long before or after a save is that save's.
+const SUCCESS_BOX_WINDOW_MS = 5000;
+let lastSavedAt = 0;
+
+/** Closes an open "Success" box as its OK button would. */
+function dismissSuccessBox(): void {
+  const modal = document.getElementById('alert-modal');
+  if (
+    !modal ||
+    modal.classList.contains('hidden') ||
+    modal.dataset.alertType !== 'success'
+  ) {
+    return;
+  }
+  // OK also runs what the tool does next (often: back to its start).
+  document.getElementById('alert-ok')?.click();
+}
+
+function dropSuccessBoxForSavedNotice(): void {
+  const modal = document.getElementById('alert-modal');
+  if (!modal) return;
+  new MutationObserver(() => {
+    if (Date.now() - lastSavedAt < SUCCESS_BOX_WINDOW_MS) dismissSuccessBox();
+  }).observe(modal, {
+    attributes: true,
+    attributeFilter: ['class', 'data-alert-type'],
+  });
 }
 
 /** A short notice that a result was saved, with ways to get to it. */

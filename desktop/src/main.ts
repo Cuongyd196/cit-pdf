@@ -236,7 +236,7 @@ function createWindow(filePath?: string): BrowserWindow {
     minHeight: 640,
     title: APP_NAME,
     icon: iconPath,
-    backgroundColor: '#111827',
+    backgroundColor: '#1f2328',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -418,24 +418,39 @@ function recentFilesFile(): string {
   return path.join(app.getPath('userData'), 'recent-files.json');
 }
 
-function readRecentFiles(): string[] {
+interface RecentFile {
+  path: string;
+  /** When it was last opened, in ms since the epoch; 0 if unknown. */
+  at: number;
+}
+
+function readRecentFiles(): RecentFile[] {
   try {
     const list: unknown = JSON.parse(
       fs.readFileSync(recentFilesFile(), 'utf8')
     );
     if (!Array.isArray(list)) return [];
-    return list.filter(
-      (item): item is string =>
-        typeof item === 'string' &&
-        path.isAbsolute(item) &&
-        path.extname(item).toLowerCase() === '.pdf'
-    );
+    return list
+      .map((item): RecentFile | null => {
+        // 1.0.2 kept bare paths.
+        if (typeof item === 'string') return { path: item, at: 0 };
+        if (item && typeof item.path === 'string') {
+          return { path: item.path, at: Number(item.at) || 0 };
+        }
+        return null;
+      })
+      .filter(
+        (item): item is RecentFile =>
+          item !== null &&
+          path.isAbsolute(item.path) &&
+          path.extname(item.path).toLowerCase() === '.pdf'
+      );
   } catch {
     return [];
   }
 }
 
-function writeRecentFiles(list: string[]): void {
+function writeRecentFiles(list: RecentFile[]): void {
   try {
     fs.writeFileSync(recentFilesFile(), JSON.stringify(list), 'utf8');
   } catch (e) {
@@ -449,8 +464,10 @@ ipcMain.handle(
     if (typeof filePath !== 'string' || !allowedOpenPaths.has(filePath)) {
       return false;
     }
-    const list = readRecentFiles().filter((item) => item !== filePath);
-    writeRecentFiles([filePath, ...list].slice(0, MAX_RECENT_FILES));
+    const list = readRecentFiles().filter((item) => item.path !== filePath);
+    writeRecentFiles(
+      [{ path: filePath, at: Date.now() }, ...list].slice(0, MAX_RECENT_FILES)
+    );
     return true;
   }
 );
@@ -461,14 +478,18 @@ ipcMain.handle(
   IPC_CHANNELS.LIST_RECENT_FILES,
   async (): Promise<OpenedFile[]> => {
     const files: OpenedFile[] = [];
-    for (const filePath of readRecentFiles()) {
+    for (const { path: filePath, at } of readRecentFiles()) {
       try {
         if (!(await fs.promises.stat(filePath)).isFile()) continue;
       } catch {
         continue;
       }
       allowedOpenPaths.add(filePath);
-      files.push({ path: filePath, name: path.basename(filePath) });
+      files.push({
+        path: filePath,
+        name: path.basename(filePath),
+        openedAt: at || undefined,
+      });
     }
     return files;
   }

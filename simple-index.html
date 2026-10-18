@@ -72,6 +72,85 @@
     {{/if}}
 
     <div id="app" class="min-h-screen container mx-auto p-4 md:p-8">
+      {{#if desktop}}
+      <!-- Desktop start view: open a file or a recent one; the tools shrink
+           to a short column. The grid below stays at index.html#tools. -->
+      <div id="desktop-home" class="desktop-home">
+        <main class="desktop-home-main">
+          <div>
+            <h1 class="desktop-home-title" data-desktop-i18n="homeTitle">
+              Welcome
+            </h1>
+            <p class="desktop-home-subtitle" data-desktop-i18n="homeSubtitle">
+              Open a document to read it, or pick up a file where you left off.
+            </p>
+          </div>
+
+          <div id="home-drop" class="desktop-home-drop">
+            <span class="desktop-home-drop-icon">
+              <i class="ph ph-upload-simple"></i>
+            </span>
+            <div class="min-w-0 flex-1">
+              <div
+                class="desktop-home-drop-title"
+                data-desktop-i18n="homeDropTitle"
+              >
+                Drop PDF files here
+              </div>
+              <div
+                class="desktop-home-drop-hint"
+                data-desktop-i18n="homeDropHint"
+              >
+                Open several at once, each in its own tab.
+              </div>
+            </div>
+            <button
+              id="home-open"
+              type="button"
+              class="desktop-home-open"
+              data-desktop-i18n="homeOpen"
+            >
+              Open file
+            </button>
+            <input
+              id="home-file-input"
+              type="file"
+              accept="application/pdf,.pdf"
+              multiple
+              class="hidden"
+            />
+          </div>
+
+          <section id="home-recent-files" class="desktop-home-recent"></section>
+        </main>
+
+        <aside class="desktop-home-tools">
+          <label class="desktop-home-search">
+            <i class="ph ph-magnifying-glass"></i>
+            <input
+              id="home-tool-search"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="Search tools…"
+              data-desktop-i18n-placeholder="homeToolSearch"
+            />
+          </label>
+          <h2
+            class="desktop-home-tools-heading"
+            data-desktop-i18n="homeFrequent"
+          >
+            Frequently used
+          </h2>
+          <div id="home-tools" class="desktop-home-tool-grid"></div>
+          <a id="home-all-tools" href="#tools" class="desktop-home-all">
+            <span>All tools</span>
+            <i class="ph ph-arrow-right"></i>
+          </a>
+        </aside>
+      </div>
+      {{/if}}
+
       <!-- Simple Mode Header -->
       <div id="tools-header" class="text-center mb-12 pt-8">
         <h1 class="text-3xl md:text-4xl font-bold text-white mb-3">

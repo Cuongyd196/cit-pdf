@@ -1,7 +1,12 @@
 <!-- Apply the saved theme before the page paints to avoid a dark flash. -->
 <script>
   try {
-    if (localStorage.getItem('cit:theme') === 'light') {
+    var theme = localStorage.getItem('cit:theme');
+    if (
+      theme === 'light' ||
+      (theme === 'system' &&
+        window.matchMedia('(prefers-color-scheme: light)').matches)
+    ) {
       document.documentElement.dataset.theme = 'light';
     }
   } catch (e) {}

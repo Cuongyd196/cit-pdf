@@ -115,7 +115,12 @@ export const showAlert = (
 ) => {
   if (dom.alertTitle) dom.alertTitle.textContent = title;
   if (dom.alertMessage) dom.alertMessage.textContent = message;
-  if (dom.alertModal) dom.alertModal.classList.remove('hidden');
+  if (dom.alertModal) {
+    // The desktop shell reads this to drop a success box its "Saved"
+    // notice already covers.
+    dom.alertModal.dataset.alertType = type;
+    dom.alertModal.classList.remove('hidden');
+  }
 
   if (dom.alertOkBtn) {
     const newOkBtn = dom.alertOkBtn.cloneNode(true) as HTMLElement;

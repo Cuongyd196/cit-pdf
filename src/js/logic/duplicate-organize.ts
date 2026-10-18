@@ -128,12 +128,13 @@ export async function renderDuplicateOrganizeThumbnails() {
     pageNumberSpan.textContent = pageNumber.toString();
 
     const controlsDiv = document.createElement('div');
-    controlsDiv.className = 'flex items-center justify-center gap-4';
+    controlsDiv.className = 'flex items-center justify-center gap-2';
 
     const duplicateBtn = document.createElement('button');
     duplicateBtn.className =
-      'duplicate-btn bg-green-600 hover:bg-green-700 text-white rounded-full w-8 h-8 flex items-center justify-center';
+      'duplicate-btn text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg w-9 h-9 flex items-center justify-center';
     duplicateBtn.title = 'Duplicate Page';
+    duplicateBtn.setAttribute('aria-label', 'Duplicate Page');
     const duplicateIcon = document.createElement('i');
     duplicateIcon.setAttribute('data-lucide', 'copy-plus');
     duplicateIcon.className = 'w-5 h-5';
@@ -141,10 +142,11 @@ export async function renderDuplicateOrganizeThumbnails() {
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className =
-      'delete-btn bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center';
+      'delete-btn text-gray-300 hover:bg-red-500/15 hover:text-red-400 rounded-lg w-9 h-9 flex items-center justify-center';
     deleteBtn.title = 'Delete Page';
+    deleteBtn.setAttribute('aria-label', 'Delete Page');
     const deleteIcon = document.createElement('i');
-    deleteIcon.setAttribute('data-lucide', 'x-circle');
+    deleteIcon.setAttribute('data-lucide', 'trash-2');
     deleteIcon.className = 'w-5 h-5';
     deleteBtn.appendChild(deleteIcon);
 

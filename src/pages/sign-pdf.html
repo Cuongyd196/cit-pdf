@@ -164,6 +164,43 @@
 
       <!-- Signature Editor (shown after file upload) -->
       <div id="signature-editor" class="hidden w-full max-w-2xl mt-6">
+        <!-- Pictures of a signature or a seal, kept in colour (sign-images.ts).
+             The viewer's own Signature button draws or types a one-colour
+             signature. -->
+        <div
+          class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-gray-700 bg-gray-800 p-3"
+        >
+          <button
+            id="sign-image-btn"
+            type="button"
+            class="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+          >
+            <i data-lucide="stamp" class="h-4 w-4"></i>
+            <span>Insert signature or stamp image</span>
+          </button>
+          <label
+            class="flex cursor-pointer items-center gap-2 text-sm text-gray-300"
+          >
+            <input
+              id="sign-image-clear-white"
+              type="checkbox"
+              checked
+              class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-indigo-600"
+            />
+            <span>Remove white background</span>
+          </label>
+          <input
+            id="sign-image-input"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            class="hidden"
+          />
+          <p class="w-full text-xs text-gray-400">
+            Keeps the colours of a scanned signature or a company seal. Drag to
+            move it, drag the corner to resize. To draw or type a signature, use
+            the signature button in the viewer.
+          </p>
+        </div>
         <div
           id="canvas-container-sign"
           class="relative w-full overflow-auto bg-gray-900 rounded-lg border border-gray-600"

@@ -1,6 +1,10 @@
+/* Interface type: Be Vietnam Pro, drawn for Vietnamese diacritics. Inter
+   stays only as a font offered inside the editors. */
+@import '@fontsource/be-vietnam-pro/400.css';
+@import '@fontsource/be-vietnam-pro/500.css';
+@import '@fontsource/be-vietnam-pro/600.css';
+@import '@fontsource/be-vietnam-pro/700.css';
 @import '@fontsource/inter/400.css';
-@import '@fontsource/inter/500.css';
-@import '@fontsource/inter/600.css';
 @import '@fontsource/inter/700.css';
 @import '@fontsource/dancing-script/400.css';
 @import '@fontsource/great-vibes/400.css';
@@ -18,17 +22,24 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
   --font-dancing: 'Dancing Script', cursive;
   --font-vibes: 'Great Vibes', cursive;
   --font-kalam: 'Kalam', cursive;
   --font-lato: 'Lato', sans-serif;
   --font-merriweather: 'Merriweather', serif;
   --font-cedarville: 'Cedarville Cursive', cursive;
-  --color-gray-900: rgb(34, 34, 34);
-  --color-gray-800: rgb(42, 42, 42);
-  --color-gray-700: rgb(56, 56, 56);
-  --color-gray-600: rgb(68, 68, 68);
+  /* Dark greys with a slight cool cast, one family with the light theme's
+     greys and the teal accent. */
+  --color-gray-900: #1f2328;
+  --color-gray-800: #272c32;
+  --color-gray-700: #353b42;
+  --color-gray-600: #424952;
+  /* Hint text: 4.5:1 or more on the page and card grounds. */
+  --color-gray-500: #a3aab4;
+  --color-gray-400: #b8bec7;
+  /* Red text (warnings, reset links) readable on the dark grounds. */
+  --color-red-500: #f26b6b;
   /* Accent: the indigo scale is remapped to teal, so every indigo-* utility
      follows the brand color without touching the pages. */
   --color-indigo-50: #f0fdfa;
@@ -50,7 +61,7 @@
 }
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui;
+  --font-sans: 'Be Vietnam Pro', ui-sans-serif, system-ui;
   --font-dancing: 'Dancing Script', cursive;
   --font-vibes: 'Great Vibes', cursive;
   --font-kalam: 'Kalam', cursive;
@@ -64,8 +75,8 @@ html {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: rgb(34, 34, 34);
+  font-family: var(--font-sans);
+  background-color: #1f2328;
   color: #d1d5db;
 }
 
@@ -73,8 +84,8 @@ body {
   transition:
     transform 0.2s ease-in-out,
     box-shadow 0.2s ease-in-out;
-  border: 1px solid #383838;
-  background-color: #2a2a2a;
+  border: 1px solid #353b42;
+  background-color: #272c32;
   padding: 1.5rem;
   border-radius: 0.5rem;
   display: flex;
@@ -203,7 +214,8 @@ body {
 
 /* Custom file input */
 input[type='file']::file-selector-button {
-  @apply bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg cursor-pointer hover:bg-indigo-700 transition-colors duration-200 mr-4;
+  @apply bg-indigo-600 font-semibold py-2 px-4 rounded-lg cursor-pointer hover:bg-indigo-700 transition-colors duration-200 mr-4;
+  color: #ffffff;
 }
 
 /* Style for drag-and-drop placeholder */
@@ -281,7 +293,7 @@ footer a {
 }
 
 .pill {
-  background-color: #383838;
+  background-color: #353b42;
   /* bg-gray-700 */
   color: #d1d5db;
   /* text-gray-300 */
@@ -293,8 +305,8 @@ footer a {
 }
 
 .cta-button {
-  background-color: #0d9488;
-  /* indigo-600 */
+  /* Dark enough for white text (5.5:1). */
+  background-color: #0f766e;
   color: white;
   font-weight: 600;
   padding: 12px 24px;
@@ -304,8 +316,7 @@ footer a {
 }
 
 .cta-button:hover {
-  background-color: #0f766e;
-  /* indigo-700 */
+  background-color: #115e59;
 }
 
 .marker-text {
@@ -315,7 +326,7 @@ footer a {
 }
 
 .feature-card {
-  background-color: #2a2a2a;
+  background-color: #272c32;
   /* bg-gray-800 */
   padding: 24px;
   border-radius: 8px;
@@ -336,12 +347,54 @@ html[data-theme='light'] {
   --color-gray-800: #ffffff;
   --color-gray-700: #e5e7eb;
   --color-gray-600: #d1d5db;
-  --color-gray-500: #6b7280;
+  /* 4.5:1 on the page background (#f3f4f6), still lighter than gray-400. */
+  --color-gray-500: #5f6673;
   --color-gray-400: #4b5563;
   --color-gray-300: #374151;
   --color-gray-200: #1f2937;
   --color-gray-100: #111827;
   --color-white: #111827;
+  /* Notices and labels are written dark-first in pale tints (blue-300,
+     yellow-200, ...). On light grounds they take the deep shade. */
+  --color-blue-200: #1e40af;
+  --color-blue-300: #1e40af;
+  --color-blue-400: #1d4ed8;
+  --color-sky-300: #075985;
+  --color-sky-400: #0369a1;
+  --color-cyan-300: #155e75;
+  --color-cyan-400: #0e7490;
+  --color-yellow-200: #713f12;
+  --color-yellow-300: #713f12;
+  --color-yellow-400: #713f12;
+  --color-amber-200: #78350f;
+  --color-amber-300: #78350f;
+  --color-amber-400: #78350f;
+  /* The deep tints that dark-first notices use as their ground become pale
+     ones, so the notice reads as a light panel. */
+  --color-blue-900: #dbeafe;
+  --color-yellow-900: #fef9c3;
+  --color-amber-900: #fef3c7;
+  --color-red-900: #fee2e2;
+  --color-green-900: #dcfce7;
+  --color-orange-300: #9a3412;
+  --color-orange-400: #9a3412;
+  --color-green-300: #166534;
+  --color-green-400: #15803d;
+  --color-emerald-300: #065f46;
+  --color-emerald-400: #047857;
+  --color-teal-300: #115e59;
+  --color-teal-400: #0f766e;
+  --color-red-300: #991b1b;
+  --color-red-400: #b91c1c;
+  --color-red-500: #c81e1e;
+  --color-rose-300: #9f1239;
+  --color-rose-400: #be123c;
+  --color-pink-300: #9d174d;
+  --color-pink-400: #be185d;
+  --color-purple-300: #6b21a8;
+  --color-purple-400: #7e22ce;
+  --color-violet-300: #5b21b6;
+  --color-violet-400: #6d28d9;
   --color-indigo-200: #115e59;
   --color-indigo-300: #115e59;
   --color-indigo-400: #0f766e;
@@ -352,7 +405,9 @@ html[data-theme='light'] body {
   color: #374151;
 }
 
-/* Text on solid accent backgrounds stays white. */
+/* Text on solid accent backgrounds stays white. This only sees utility
+   classes in markup: a component class that @applies an accent background
+   sets color: #ffffff itself. */
 html[data-theme='light']
   :is(
     [class*='bg-indigo-5'],
@@ -437,7 +492,8 @@ body:has(#desktop-statusbar) .pdf-view-panel {
 }
 
 .desktop-update-banner-action {
-  @apply flex-shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white no-underline hover:bg-indigo-700;
+  @apply flex-shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold no-underline hover:bg-indigo-700;
+  color: #ffffff;
 }
 
 .desktop-update-banner-dismiss {
@@ -568,7 +624,8 @@ body.desktop-reading:has(#desktop-sidebar) {
 }
 
 .desktop-saved-toast-action.primary {
-  @apply border-transparent bg-indigo-600 font-semibold text-white hover:bg-indigo-700;
+  @apply border-transparent bg-indigo-600 font-semibold hover:bg-indigo-700;
+  color: #ffffff;
 }
 
 .desktop-saved-toast-close {
@@ -712,6 +769,197 @@ body:has(#desktop-sidebar) .category-header {
   @apply mb-2 py-2 text-base font-bold text-white;
 }
 
+/* Home page start view: open a file or a recent one, tools in a column on
+   the right. At index.html#tools the page shows the full grid instead. */
+.desktop-home {
+  display: none;
+}
+
+body.desktop-home-start #app {
+  max-width: none;
+  /* Simple mode sets an inline padding-top on #app (main.ts). */
+  padding: 0 !important;
+  min-height: 0;
+}
+
+body.desktop-home-start :is(#tools-header, #grid-view, .desktop-home-back) {
+  display: none;
+}
+
+body.desktop-home-start .desktop-home {
+  display: flex;
+  min-height: calc(100vh - 2rem);
+}
+
+.desktop-home-main {
+  @apply flex min-w-0 flex-1 flex-col gap-7;
+  padding: 2.5rem 3rem;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.desktop-home-title {
+  @apply mb-1 text-3xl font-bold text-white;
+}
+
+.desktop-home-subtitle {
+  @apply text-gray-400;
+}
+
+.desktop-home-drop {
+  @apply flex items-center gap-5 rounded-2xl border-2 border-dashed border-gray-600 bg-gray-800 px-6 py-5 transition-colors;
+}
+
+.desktop-home-drop.is-dragging {
+  border-color: var(--color-indigo-500);
+  background-color: color-mix(
+    in srgb,
+    var(--color-indigo-500) 10%,
+    transparent
+  );
+}
+
+.desktop-home-drop-icon {
+  @apply flex h-13 w-13 flex-shrink-0 items-center justify-center rounded-xl text-2xl text-indigo-400;
+  background-color: color-mix(
+    in srgb,
+    var(--color-indigo-500) 14%,
+    transparent
+  );
+}
+
+.desktop-home-drop-title {
+  @apply text-base font-semibold text-white;
+}
+
+.desktop-home-drop-hint {
+  @apply mt-0.5 text-sm text-gray-400;
+}
+
+.desktop-home-open {
+  @apply h-11 flex-shrink-0 rounded-lg bg-indigo-600 px-5 font-semibold hover:bg-indigo-700;
+  color: #ffffff;
+}
+
+.desktop-home-recent {
+  @apply flex flex-col gap-2;
+}
+
+.desktop-home-empty {
+  @apply rounded-xl border border-gray-700 px-4 py-6 text-center text-sm text-gray-400;
+}
+
+.desktop-home-files {
+  @apply flex flex-col gap-1.5;
+}
+
+.desktop-home-file {
+  @apply grid w-full items-center gap-x-4 px-4 text-left;
+  grid-template-columns: 1.5rem minmax(0, 5fr) minmax(0, 4fr) 8.5rem;
+}
+
+button.desktop-home-file {
+  @apply rounded-lg border border-gray-700 bg-gray-800 py-2.5;
+}
+
+button.desktop-home-file:hover {
+  border-color: var(--color-indigo-500);
+}
+
+.desktop-home-file-head {
+  @apply text-xs text-gray-400;
+}
+
+.desktop-home-file > i {
+  @apply text-xl text-indigo-400;
+}
+
+.desktop-home-file-name {
+  @apply truncate text-sm font-semibold text-white;
+}
+
+.desktop-home-file-meta {
+  @apply truncate text-xs text-gray-400;
+}
+
+/* The column stays put while a long list of recent files scrolls, so
+   "All tools" at its foot stays on screen. */
+.desktop-home-tools {
+  @apply flex w-72 flex-shrink-0 flex-col gap-4 border-l border-gray-700 bg-gray-800 px-5 py-7;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+.desktop-home-search {
+  @apply flex h-10 items-center gap-2 rounded-lg border border-gray-600 bg-gray-700 px-3 text-gray-400;
+}
+
+.desktop-home-search input {
+  @apply min-w-0 flex-1 border-0 bg-transparent text-sm text-white outline-none;
+}
+
+.desktop-home-tools-heading {
+  @apply mt-1 text-sm font-semibold text-gray-400;
+}
+
+.desktop-home-tool-grid {
+  @apply grid grid-cols-2 gap-2;
+}
+
+.desktop-home-tool {
+  @apply flex min-h-11 flex-col gap-2 rounded-lg border border-gray-700 bg-gray-900 p-3 text-sm font-medium text-gray-200 no-underline;
+}
+
+.desktop-home-tool:hover {
+  border-color: var(--color-indigo-500);
+  @apply text-white;
+}
+
+.desktop-home-tool > i {
+  @apply text-xl text-indigo-400;
+}
+
+.desktop-home-tool > span {
+  @apply leading-snug;
+}
+
+/* In a short window the column scrolls; this link stays at its foot. */
+.desktop-home-all {
+  @apply mt-auto flex items-center justify-between rounded-lg bg-gray-700 px-4 py-3 text-sm font-semibold text-white no-underline hover:bg-gray-600;
+  position: sticky;
+  bottom: 0;
+  flex-shrink: 0;
+}
+
+.desktop-home-back {
+  @apply mb-2 inline-flex items-center gap-2 text-sm font-semibold text-indigo-400 no-underline hover:text-indigo-300;
+}
+
+/* Narrow window: the tool column goes under the recent files. */
+@media (max-width: 960px) {
+  body.desktop-home-start .desktop-home {
+    flex-direction: column;
+  }
+
+  .desktop-home-main {
+    @apply px-6 py-8;
+  }
+
+  .desktop-home-tools {
+    @apply w-auto border-t border-l-0;
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+
+  .desktop-home-all {
+    position: static;
+  }
+}
+
 /* Documents read lately: home page and the viewer's empty screen. */
 .desktop-recent-files {
   @apply mt-4 mb-2;
@@ -814,7 +1062,7 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
 }
 
 .desktop-nav-heading {
-  @apply px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-500;
+  @apply px-4 pt-3 pb-1 text-[0.8125rem] font-semibold text-gray-500;
 }
 
 .desktop-nav-item {
@@ -881,8 +1129,8 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
   /* py-3 px-8 */
   border-radius: 0.5rem;
   /* rounded-lg */
-  background-image: linear-gradient(to bottom, #0d9488, #0d9488);
-  /* from-indigo-500 to-indigo-600 */
+  /* #0f766e under white text is 5.5:1; the lighter #0d9488 was 3.7:1. */
+  background-image: linear-gradient(to bottom, #0f766e, #0f766e);
   color: #ffffff;
   /* text-white */
   font-weight: 600;
@@ -893,6 +1141,7 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
 }
 
 .btn-gradient:hover {
+  background-image: linear-gradient(to bottom, #115e59, #115e59);
   box-shadow:
     0 10px 15px -3px rgba(15, 118, 110, 0.3),
     0 4px 6px -4px rgba(15, 118, 110, 0.3);
@@ -902,7 +1151,7 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
   outline: 2px solid transparent;
   outline-offset: 2px;
   box-shadow:
-    0 0 0 2px #222222,
+    0 0 0 2px #1f2328,
     0 0 0 4px #2dd4bf;
   /* focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-400 */
 }
@@ -988,19 +1237,19 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
 
 /* Testimonial Card Styles */
 .testimonial-card {
-  background-color: #2a2a2a;
+  background-color: #272c32;
   /* bg-gray-800 */
   padding: 24px;
   border-radius: 0.75rem;
   /* rounded-xl */
-  border: 1px solid #383838;
+  border: 1px solid #353b42;
   /* border-gray-700 */
   display: flex;
   flex-direction: column;
 }
 
 .pill {
-  background-color: #383838;
+  background-color: #353b42;
   /* bg-gray-700 */
   color: #d1d5db;
   /* text-gray-300 */
@@ -1012,7 +1261,7 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
 }
 
 .pill {
-  background-color: #383838;
+  background-color: #353b42;
   /* bg-gray-700 */
   color: #d1d5db;
   /* text-gray-300 */
@@ -1316,7 +1565,7 @@ input[type='color'] {
   width: 2.5rem;
   height: 2.5rem;
   padding: 0;
-  border: 2px solid #444444;
+  border: 2px solid #424952;
   border-radius: 9999px;
   background: transparent;
   cursor: pointer;
@@ -2183,7 +2432,7 @@ details > summary .icon {
   padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  background: #2a2a2a;
+  background: #272c32;
   box-shadow: 0 18px 44px -12px rgba(0, 0, 0, 0.7);
   transform: translateX(-50%);
 }
@@ -2198,7 +2447,7 @@ details > summary .icon {
 }
 
 .nav-products-menu a:hover {
-  background: #383838;
+  background: #353b42;
 }
 
 .nav-product-text {
@@ -2228,7 +2477,7 @@ details > summary .icon {
 
 .faq-d {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: #2a2a2a;
+  background-color: #272c32;
 }
 
 .faq-d:last-child {
@@ -2272,7 +2521,7 @@ details > summary .icon {
 }
 
 .faq-d-q:hover {
-  background-color: #383838;
+  background-color: #353b42;
 }
 
 .faq-d[open] .faq-d-q {
@@ -2337,4 +2586,341 @@ details > summary .icon {
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.25rem 0;
+}
+
+/* ---- Tool workspace (desktop/workspace.ts): once a file is open in the PDF
+   editor or Sign, one slim bar replaces the tool's card and the working area
+   fills the rest of the window. */
+.desktop-workspace-bar {
+  display: none;
+}
+
+body.desktop-workspace #uploader {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  height: calc(100vh - 2rem);
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body.desktop-workspace:not(:has(#desktop-statusbar)) #uploader {
+  height: 100vh;
+}
+
+body.desktop-workspace .desktop-workspace-bar {
+  @apply flex flex-none items-center gap-2 border-b border-gray-700 bg-gray-800 px-3;
+  height: 3.5rem;
+}
+
+body.desktop-workspace #tool-uploader:not(:has(.desktop-workspace-area)) {
+  display: none;
+}
+
+body.desktop-workspace #tool-uploader:has(.desktop-workspace-area) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+body.desktop-workspace #tool-uploader > :not(.desktop-workspace-area) {
+  display: none;
+}
+
+body.desktop-workspace .desktop-workspace-area {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+/* A viewer: its own content fills the height. */
+body.desktop-workspace .desktop-workspace-area.fill {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Page thumbnails: they scroll under the bar; a grid keeps its columns. */
+body.desktop-workspace .desktop-workspace-area.scroll {
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem 1.5rem;
+  align-content: start;
+}
+
+body.desktop-workspace .desktop-workspace-leftover {
+  display: none;
+}
+
+/* The viewers' web heights (85vh, 75vh) give way to the space left. */
+body.desktop-workspace #canvas-container-sign,
+body.desktop-workspace #embed-pdf-container {
+  flex: 1;
+  min-height: 0;
+  height: auto !important;
+  border: 0;
+  border-radius: 0;
+}
+
+.desktop-workspace-title {
+  @apply truncate text-base font-bold text-white;
+  flex-shrink: 0;
+  max-width: 16rem;
+}
+
+.desktop-workspace-divider {
+  @apply mx-1 h-6 w-px flex-none bg-gray-700;
+}
+
+.desktop-workspace-file {
+  @apply flex min-w-0 items-center gap-2 text-sm text-gray-200;
+}
+
+.desktop-workspace-file > i {
+  @apply flex-none text-lg text-red-400;
+}
+
+.desktop-workspace-file-name {
+  @apply truncate font-medium;
+}
+
+.desktop-workspace-file-meta {
+  @apply flex-none text-xs text-gray-500;
+}
+
+.desktop-workspace-spacer {
+  flex: 1;
+}
+
+.desktop-workspace-controls {
+  @apply flex flex-none items-center gap-3;
+}
+
+.desktop-workspace-controls:empty {
+  display: none;
+}
+
+.desktop-workspace-icon {
+  @apply flex h-9 w-9 flex-none items-center justify-center rounded-lg text-lg text-indigo-400 hover:bg-gray-700;
+}
+
+.desktop-workspace-icon.danger {
+  @apply text-red-400;
+}
+
+.desktop-workspace-button {
+  @apply flex h-9 flex-none items-center gap-2 rounded-lg border border-gray-600 px-3 text-sm font-medium text-gray-200 hover:bg-gray-700;
+}
+
+.desktop-workspace-button.accent {
+  @apply border-indigo-500 text-indigo-300 font-semibold;
+}
+
+.desktop-workspace-caption {
+  @apply flex-none text-sm text-gray-400;
+}
+
+.desktop-workspace-input {
+  @apply h-9 w-36 flex-none rounded-lg border border-gray-600 bg-gray-900 px-3 text-sm text-white;
+}
+
+.desktop-workspace-input[type='number'] {
+  @apply w-20 text-center;
+}
+
+.desktop-workspace-check {
+  @apply flex flex-none cursor-pointer items-center gap-2 text-sm text-gray-300;
+}
+
+.desktop-workspace-check input {
+  @apply h-4 w-4;
+  accent-color: var(--color-indigo-600);
+}
+
+.desktop-workspace-save {
+  @apply ml-1 flex h-9 flex-none items-center gap-2 rounded-lg bg-indigo-600 px-5 text-sm font-semibold hover:bg-indigo-700;
+  color: #ffffff;
+}
+
+.desktop-workspace-save.hidden {
+  display: none;
+}
+
+/* Narrow windows: the file's details give way before the controls do. */
+@media (max-width: 1100px) {
+  .desktop-workspace-file-meta,
+  .desktop-workspace-button > span {
+    display: none;
+  }
+}
+
+/* Markdown preview code (highlight.js "github" theme): its keyword red
+   #d73a49 is 4.4:1 on the light code background; this one is 5.2:1. */
+pre
+  :is(
+    .hljs-doctag,
+    .hljs-keyword,
+    .hljs-meta .hljs-keyword,
+    .hljs-template-tag,
+    .hljs-template-variable,
+    .hljs-type,
+    .hljs-variable.language_
+  ) {
+  color: #cb2431;
+}
+
+/* Every other tool page: once a file is open its main button can sit below
+   long options or page previews. It stays at the bottom of the window. */
+body:has(#desktop-sidebar):not(.desktop-workspace)
+  #uploader
+  :is(
+    #process-btn,
+    #crop-button,
+    div:has(> #preview-btn):has(> #download-btn)
+  ):not(.hidden) {
+  position: sticky;
+  /* Above the fixed status bar (2rem). */
+  bottom: 2.75rem;
+  z-index: 20;
+  box-shadow: 0 10px 28px rgba(12, 22, 30, 0.32);
+}
+
+body:has(#desktop-sidebar):not(:has(#desktop-statusbar)):not(.desktop-workspace)
+  #uploader
+  :is(
+    #process-btn,
+    #crop-button,
+    div:has(> #preview-btn):has(> #download-btn)
+  ):not(.hidden) {
+  bottom: 0.75rem;
+}
+
+/* ---- Craft pass (desktop) ---- */
+
+/* Figures that sit in columns or change while you watch: sizes, page counts,
+   times, zoom, version. */
+:is(
+  .desktop-home-file-meta,
+  .desktop-workspace-file-meta,
+  .desktop-statusbar,
+  .desktop-recent-files,
+  #file-display-area,
+  .desktop-workspace-input
+) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* No lone word on a heading's last line; calmer rag in short paragraphs. */
+:is(h1, h2, h3) {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Large headings sit a little tighter. */
+:is(.desktop-home-title, #tool-uploader > h1) {
+  letter-spacing: -0.015em;
+}
+
+/* Press feedback on the app's own buttons and cards (not inside the PDF
+   editor, which handles its own). */
+body:has(#desktop-sidebar)
+  :is(
+    button,
+    .btn-gradient,
+    .tool-card,
+    .desktop-home-tool,
+    .desktop-home-all,
+    .desktop-nav-item > a
+  ):not(:disabled):not(#embed-pdf-container *) {
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease,
+    transform 120ms ease;
+}
+
+body:has(#desktop-sidebar)
+  :is(
+    button,
+    .btn-gradient,
+    .tool-card,
+    .desktop-home-tool,
+    .desktop-home-all,
+    .desktop-nav-item > a
+  ):not(:disabled):not(#embed-pdf-container *):active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:has(#desktop-sidebar) :is(button, .btn-gradient, .tool-card):active {
+    transform: none;
+  }
+}
+
+/* Solid red, green and blue buttons with white text: Tailwind's 500/600
+   shades are 3.2–3.6:1 under white. Darker red and blue; green becomes the
+   app's one accent. */
+:is(.bg-red-500, .bg-red-600).text-white {
+  background-color: #c81e1e;
+}
+
+:is(.bg-green-500, .bg-green-600).text-white {
+  background-color: #0f766e;
+}
+
+:is(.bg-blue-500, .bg-blue-600).text-white {
+  background-color: #1d4ed8;
+}
+
+:is(.bg-red-500, .bg-red-600).text-white:hover {
+  background-color: #a51818;
+}
+
+:is(.bg-green-500, .bg-green-600).text-white:hover {
+  background-color: #115e59;
+}
+
+:is(.bg-blue-500, .bg-blue-600).text-white:hover {
+  background-color: #1e40af;
+}
+
+/* Placeholders carry the hint (what to type), so they get readable grey
+   rather than the browser's faint default. */
+body:has(#desktop-sidebar) ::placeholder {
+  color: var(--color-gray-400);
+  opacity: 1;
+}
+
+html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
+  color: var(--color-gray-500);
+}
+
+/* Notice text at 80% opacity drops under 4.5:1; full strength instead. */
+.text-blue-400\/80 {
+  color: var(--color-blue-300);
+}
+
+/* Phosphor icons swapped in for the tool pages' Lucide ones (icons.ts):
+   sized by font, laid out like the <svg> they replace. */
+.cit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+  vertical-align: middle;
 }
