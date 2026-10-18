@@ -1137,6 +1137,10 @@ function initViewerActions(
 
   row.classList.remove('hidden');
   rewriteLinks();
+
+  void import('./studio/studio.js').then(({ initStudio }) =>
+    initStudio({ row, currentFile: () => pageFile })
+  );
 }
 
 // A tool's "Success" box and the "Saved" notice say the same thing; the

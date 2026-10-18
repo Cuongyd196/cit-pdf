@@ -2932,3 +2932,202 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
     display: none;
   }
 }
+
+/* Studio (studio.ts): tools applied in place to the document in the viewer.
+   The drawer sits right of the document; Undo, Redo and Save go at the end
+   of the quick-action row once the document has changes. */
+.studio-toggle.active {
+  @apply bg-gray-700 text-white;
+}
+
+.studio-cluster {
+  @apply ml-auto flex flex-shrink-0 items-center gap-0.5 pl-2;
+}
+
+.studio-cluster.hidden,
+.studio-unsaved[hidden] {
+  display: none;
+}
+
+.studio-cluster button:disabled {
+  @apply cursor-default opacity-40 hover:bg-transparent;
+}
+
+.studio-unsaved {
+  @apply mx-1.5 whitespace-nowrap text-xs font-medium text-amber-300;
+}
+
+.studio-save {
+  @apply ml-1 flex flex-shrink-0 items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1 text-sm font-semibold hover:bg-indigo-700;
+  color: #ffffff;
+}
+
+.studio-cluster .studio-save:disabled {
+  @apply opacity-40 hover:bg-indigo-600;
+}
+
+.studio-drawer {
+  @apply flex w-80 flex-none flex-col border-l border-gray-700 bg-gray-800 text-sm text-gray-300;
+}
+
+.studio-drawer.hidden {
+  display: none;
+}
+
+.studio-head {
+  @apply flex items-center justify-between gap-2 border-b border-gray-700 px-4 py-2.5;
+}
+
+.studio-title {
+  @apply text-base font-semibold text-white;
+}
+
+.studio-icon-button {
+  @apply flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-700 hover:text-white;
+}
+
+.studio-body {
+  @apply min-h-0 flex-1 overflow-y-auto p-4;
+}
+
+.studio-search,
+.studio-input {
+  @apply w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm text-white placeholder-gray-400 focus:border-indigo-500 focus:outline-none;
+}
+
+.studio-tools {
+  @apply mt-3 flex flex-col gap-1;
+}
+
+.studio-tool {
+  @apply flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-gray-700;
+}
+
+.studio-tool > i,
+.studio-tool-head > i {
+  @apply mt-0.5 text-lg text-indigo-400;
+}
+
+.studio-tool-name {
+  @apply block font-medium text-white;
+}
+
+.studio-tool-hint {
+  @apply block text-xs text-gray-400;
+}
+
+.studio-empty {
+  @apply px-1 py-2 text-xs text-gray-400;
+}
+
+.studio-back {
+  @apply -ml-1 mb-3 flex items-center gap-1 rounded-md px-1 py-0.5 text-xs font-medium text-gray-400 hover:text-white;
+}
+
+.studio-tool-head {
+  @apply flex items-center gap-2;
+}
+
+.studio-tool-title {
+  @apply text-base font-semibold text-white;
+}
+
+.studio-tool-head + .studio-tool-hint {
+  @apply mt-1;
+}
+
+.studio-form {
+  @apply mt-4 flex flex-col gap-3;
+}
+
+.studio-field {
+  @apply flex flex-col gap-1;
+}
+
+.studio-label {
+  @apply text-xs font-medium text-gray-300;
+}
+
+.studio-color {
+  @apply h-9 w-16 cursor-pointer rounded-md border border-gray-600 bg-gray-900 p-1;
+}
+
+.studio-message {
+  @apply min-h-5 text-xs text-emerald-300;
+}
+
+.studio-message.error {
+  @apply text-red-300;
+}
+
+.studio-apply {
+  @apply w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-60;
+  color: #ffffff;
+}
+
+.studio-history {
+  @apply flex-none overflow-y-auto border-t border-gray-700 px-4 py-3;
+  max-height: 40%;
+}
+
+.studio-history-title {
+  @apply mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400;
+}
+
+.studio-steps {
+  @apply flex flex-col gap-0.5;
+}
+
+.studio-step {
+  @apply relative truncate rounded-md py-1 pl-5 pr-2 text-xs text-gray-300;
+}
+
+.studio-step::before {
+  @apply absolute left-1.5 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-gray-500;
+  content: '';
+}
+
+.studio-step.current {
+  @apply bg-gray-700 font-medium text-white;
+}
+
+.studio-step.current::before {
+  @apply bg-indigo-400;
+}
+
+.studio-step.undone {
+  @apply text-gray-400 line-through;
+}
+
+.studio-revert {
+  @apply mt-2 flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs font-medium text-gray-300 hover:bg-gray-700 hover:text-white disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent;
+}
+
+.studio-drawer.busy .studio-body {
+  cursor: progress;
+}
+
+/* A tab with unsaved changes: "•" before the name, in italics. */
+.pdf-view-tab.dirty > span {
+  @apply italic;
+}
+
+@media (max-width: 1400px) {
+  .studio-save-as > span {
+    display: none;
+  }
+}
+
+/* Save must stay in sight: the cluster sticks to the row's right edge while
+   the quick actions scroll under it. */
+.studio-cluster {
+  @apply sticky right-0 bg-gray-900;
+  box-shadow: -12px 0 12px -6px var(--color-gray-900);
+}
+
+/* With the drawer open the quick actions keep only their icons. */
+body:has(#studio-drawer:not(.hidden))
+  .pdf-view-action:not(.studio-toggle, .studio-save-as)
+  > span {
+  display: none;
+}

@@ -155,7 +155,11 @@
       <div id="viewer-tabs" class="pdf-view-tabs" role="tablist"></div>
       <!-- Desktop: quick actions for the document on screen (shell.ts). -->
       <div id="viewer-actions" class="pdf-view-actions hidden"></div>
-      <div id="pdf-viewer-container" class="relative flex-1 min-h-0"></div>
+      <div class="flex flex-1 min-h-0">
+        <div id="pdf-viewer-container" class="relative flex-1 min-w-0"></div>
+        <!-- Desktop: Studio's tools for the document on screen (studio.ts). -->
+        <aside id="studio-drawer" class="studio-drawer hidden"></aside>
+      </div>
     </div>
 
     <div
