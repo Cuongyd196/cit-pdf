@@ -2586,13 +2586,24 @@ body.desktop-workspace #tool-uploader > :not(.desktop-workspace-area) {
 }
 
 body.desktop-workspace .desktop-workspace-area {
-  display: flex;
-  flex-direction: column;
   flex: 1;
   min-height: 0;
   width: 100%;
   max-width: none;
   margin: 0;
+}
+
+/* A viewer: its own content fills the height. */
+body.desktop-workspace .desktop-workspace-area.fill {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Page thumbnails: they scroll under the bar; a grid keeps its columns. */
+body.desktop-workspace .desktop-workspace-area.scroll {
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem 1.5rem;
+  align-content: start;
 }
 
 body.desktop-workspace .desktop-workspace-leftover {
@@ -2663,6 +2674,18 @@ body.desktop-workspace #embed-pdf-container {
   @apply border-indigo-500 text-indigo-300 font-semibold;
 }
 
+.desktop-workspace-caption {
+  @apply flex-none text-sm text-gray-400;
+}
+
+.desktop-workspace-input {
+  @apply h-9 w-36 flex-none rounded-lg border border-gray-600 bg-gray-900 px-3 text-sm text-white;
+}
+
+.desktop-workspace-input[type='number'] {
+  @apply w-20 text-center;
+}
+
 .desktop-workspace-check {
   @apply flex flex-none cursor-pointer items-center gap-2 text-sm text-gray-300;
 }
@@ -2702,4 +2725,30 @@ pre
     .hljs-variable.language_
   ) {
   color: #cb2431;
+}
+
+/* Every other tool page: once a file is open its main button can sit below
+   long options or page previews. It stays at the bottom of the window. */
+body:has(#desktop-sidebar):not(.desktop-workspace)
+  #uploader
+  :is(
+    #process-btn,
+    #crop-button,
+    div:has(> #preview-btn):has(> #download-btn)
+  ):not(.hidden) {
+  position: sticky;
+  /* Above the fixed status bar (2rem). */
+  bottom: 2.75rem;
+  z-index: 20;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+body:has(#desktop-sidebar):not(:has(#desktop-statusbar)):not(.desktop-workspace)
+  #uploader
+  :is(
+    #process-btn,
+    #crop-button,
+    div:has(> #preview-btn):has(> #download-btn)
+  ):not(.hidden) {
+  bottom: 0.75rem;
 }

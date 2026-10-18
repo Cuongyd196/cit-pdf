@@ -1,8 +1,8 @@
 /**
  * Tool workspace (desktop only). A tool page starts as a card: title,
  * description, drop zone. Once a file is open in a tool that works on the
- * page itself (the PDF editor, Sign), that card only pushes the document
- * down the window. The page then switches to a workspace: one slim bar
+ * page itself (the PDF editor, Sign) or shows every page (Organize, Rotate,
+ * Delete pages), that card only pushes the work down the window. The page then switches to a workspace: one slim bar
  * (back, tool name, the file, the tool's options, Save) above a working
  * area that fills the rest of the window.
  *
@@ -14,12 +14,21 @@ import { ds, type DesktopStringKey } from './strings.js';
 interface WorkspaceTool {
   /** The tool's working area, shown once a file is open. */
   area: string;
+  /**
+   * "fill": the area is a viewer that takes the whole height (default).
+   * "scroll": the area is page thumbnails that scroll under the bar.
+   */
+  layout?: 'fill' | 'scroll';
   /** Show the open file (the first row of #file-display-area) on the bar. */
   file?: boolean;
   /** Controls moved onto the bar, in order. */
   controls?: string[];
   /** New text for a moved label or button, by selector. */
   relabel?: Record<string, DesktopStringKey>;
+  /** A short caption put before a moved control (an input on its own). */
+  captions?: Record<string, DesktopStringKey>;
+  /** Moved buttons drawn in the accent colour (the others are plain). */
+  accent?: string[];
   /** A control's hint text, read from an element that is then hidden. */
   hints?: Array<[control: string, from: string]>;
   /** The tool's save button; it may appear only once the area is ready. */
@@ -42,6 +51,7 @@ const WORKSPACE_TOOLS: Record<string, WorkspaceTool> = {
       'label:has(#flatten-signature-toggle)',
     ],
     relabel: { 'label:has(#flatten-signature-toggle)': 'workspaceFlatten' },
+    accent: ['#sign-image-btn'],
     hints: [
       ['#sign-image-btn', '#signature-editor > div:has(#sign-image-btn) > p'],
     ],
@@ -50,6 +60,47 @@ const WORKSPACE_TOOLS: Record<string, WorkspaceTool> = {
       '#signature-editor > div:has(#sign-image-btn)',
       '#signature-editor > div:has(#flatten-signature-toggle)',
     ],
+  },
+  'organize-pdf': {
+    area: '#page-grid',
+    layout: 'scroll',
+    file: true,
+    controls: ['#page-order-input', '#apply-order-btn'],
+    captions: { '#page-order-input': 'workspacePageOrder' },
+    save: '#process-btn',
+    leftovers: ['#advanced-settings'],
+  },
+  'rotate-pdf': {
+    area: '#tool-options',
+    layout: 'scroll',
+    file: true,
+    controls: ['#rotate-all-left', '#rotate-all-right'],
+    captions: { '#rotate-all-left': 'workspaceRotateAll' },
+    save: '#process-btn',
+    leftovers: ['#tool-options > div:has(#rotate-all-left)'],
+  },
+  'rotate-custom': {
+    area: '#tool-options',
+    layout: 'scroll',
+    file: true,
+    controls: [
+      '#batch-decrement',
+      '#batch-custom-angle',
+      '#batch-increment',
+      '#batch-apply',
+    ],
+    captions: { '#batch-decrement': 'workspaceRotateAll' },
+    save: '#process-btn',
+    leftovers: ['#tool-options > div:has(#batch-apply)'],
+  },
+  'delete-pages': {
+    area: '#delete-options',
+    layout: 'scroll',
+    file: true,
+    controls: ['#pages-to-delete'],
+    captions: { '#pages-to-delete': 'workspaceDeletePages' },
+    save: '#process-btn',
+    leftovers: ['label[for="pages-to-delete"]'],
   },
 };
 
@@ -164,7 +215,17 @@ export function initToolWorkspace(options: WorkspaceOptions): void {
       control.className =
         control.tagName === 'LABEL'
           ? 'desktop-workspace-check'
-          : 'desktop-workspace-button accent';
+          : control.tagName === 'INPUT'
+            ? 'desktop-workspace-input'
+            : 'desktop-workspace-button' +
+              (tool.accent?.includes(selector) ? ' accent' : '');
+      const caption = tool.captions?.[selector];
+      if (caption) {
+        controls.append(make('span', 'desktop-workspace-caption', ds(caption)));
+        if (control.tagName === 'INPUT') {
+          control.setAttribute('aria-label', ds(caption));
+        }
+      }
       const hint = tool.hints?.find(([target]) => target === selector);
       const hintText = hint && document.querySelector(hint[1])?.textContent;
       if (hintText) control.title = hintText.replace(/\s+/g, ' ').trim();
@@ -216,7 +277,7 @@ export function initToolWorkspace(options: WorkspaceOptions): void {
         title,
         document.querySelector('#tool-uploader h1')?.textContent?.trim() ?? ''
       );
-      area.classList.add('desktop-workspace-area');
+      area.classList.add('desktop-workspace-area', tool.layout ?? 'fill');
       for (const leftover of leftovers) {
         leftover.classList.add('desktop-workspace-leftover');
       }

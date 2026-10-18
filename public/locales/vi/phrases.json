@@ -2191,5 +2191,7 @@
   "Save first": "Cần lưu trước",
   "Inserted signature and stamp images are only in the saved file. Save the PDF, then print the saved file.": "Ảnh chữ ký và con dấu đã chèn chỉ có trong tệp sau khi lưu. Hãy lưu PDF rồi in tệp đã lưu.",
   "Saved list is full": "Danh sách đã lưu đã đầy",
-  "Delete a saved signature or stamp image to keep a new one.": "Hãy xoá bớt một ảnh chữ ký hoặc con dấu đã lưu để lưu ảnh mới."
+  "Delete a saved signature or stamp image to keep a new one.": "Hãy xoá bớt một ảnh chữ ký hoặc con dấu đã lưu để lưu ảnh mới.",
+  "e.g., 3,1,4,2": "VD: 3,1,4,2",
+  "e.g., 2, 4-6, 9": "VD: 2, 4-6, 9"
 }
