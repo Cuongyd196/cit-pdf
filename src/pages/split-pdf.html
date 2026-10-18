@@ -157,240 +157,259 @@
 
         <div id="file-display-area" class="mt-4 space-y-2"></div>
 
-        <div id="split-options" class="hidden mt-6">
-          <label
-            for="split-mode"
-            class="block mb-2 text-sm font-medium text-gray-300"
-            >Split Mode</label
-          >
-          <select
-            id="split-mode"
-            class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 mb-4"
-          >
-            <option value="range">Extract by Page Range (Default)</option>
-            <option value="even-odd">Split by Even/Odd Pages</option>
-            <option value="all">Split All Pages into Separate Files</option>
-            <option value="visual">Select Pages Visually</option>
-            <option value="bookmarks">Split by Bookmarks</option>
-            <option value="n-times">Split N Times</option>
-          </select>
-
-          <div id="range-panel">
-            <div class="p-3 bg-gray-900 rounded-lg border border-gray-700 mb-3">
-              <p class="text-sm text-gray-300">
-                <strong class="text-white">How it works:</strong>
-              </p>
-              <ul
-                class="list-disc list-inside text-xs text-gray-400 mt-1 space-y-1"
-              >
-                <li>
-                  Enter page numbers separated by commas (e.g., 2, 8, 14).
-                </li>
-                <li>Enter page ranges using a hyphen (e.g., 5-10).</li>
-                <li>
-                  Combine them for complex selections (e.g., 1-3, 7, 12-15).
-                </li>
-              </ul>
+        <div id="split-options" class="hidden mt-6 ocr-options">
+          <section class="ocr-section">
+            <h3 class="ocr-section-title" data-i18n="tools:splitPdf.howTitle">
+              How to split
+            </h3>
+            <select id="split-mode" class="hidden" aria-hidden="true">
+              <option value="range">By page range</option>
+              <option value="n-times">Every N pages</option>
+              <option value="all">Every page apart</option>
+              <option value="even-odd">Odd / even pages</option>
+              <option value="bookmarks">By bookmarks</option>
+              <option value="visual">Pick visually</option>
+            </select>
+            <div class="split-modes" role="radiogroup">
+              <label class="split-mode-card">
+                <input
+                  type="radio"
+                  name="split-mode-card"
+                  value="range"
+                  checked
+                />
+                <i class="ph ph-brackets-square"></i>
+                <span
+                  class="split-mode-title"
+                  data-i18n="tools:splitPdf.modeRange"
+                  >By page range</span
+                >
+                <span
+                  class="split-mode-desc"
+                  data-i18n="tools:splitPdf.modeRangeDesc"
+                  >One file per range, e.g. 1-3, 4-8</span
+                >
+              </label>
+              <label class="split-mode-card">
+                <input type="radio" name="split-mode-card" value="n-times" />
+                <i class="ph ph-stack"></i>
+                <span
+                  class="split-mode-title"
+                  data-i18n="tools:splitPdf.modeEvery"
+                  >Every N pages</span
+                >
+                <span
+                  class="split-mode-desc"
+                  data-i18n="tools:splitPdf.modeEveryDesc"
+                  >12 pages, N = 5: 3 files</span
+                >
+              </label>
+              <label class="split-mode-card">
+                <input type="radio" name="split-mode-card" value="all" />
+                <i class="ph ph-files"></i>
+                <span
+                  class="split-mode-title"
+                  data-i18n="tools:splitPdf.modeAll"
+                  >Every page apart</span
+                >
+                <span
+                  class="split-mode-desc"
+                  data-i18n="tools:splitPdf.modeAllDesc"
+                  >One file per page</span
+                >
+              </label>
+              <label class="split-mode-card">
+                <input type="radio" name="split-mode-card" value="even-odd" />
+                <i class="ph ph-columns"></i>
+                <span
+                  class="split-mode-title"
+                  data-i18n="tools:splitPdf.modeOddEven"
+                  >Odd / even pages</span
+                >
+                <span
+                  class="split-mode-desc"
+                  data-i18n="tools:splitPdf.modeOddEvenDesc"
+                  >Odd or even pages into one file</span
+                >
+              </label>
+              <label class="split-mode-card">
+                <input type="radio" name="split-mode-card" value="bookmarks" />
+                <i class="ph ph-bookmark-simple"></i>
+                <span
+                  class="split-mode-title"
+                  data-i18n="tools:splitPdf.modeBookmarks"
+                  >By bookmarks</span
+                >
+                <span
+                  class="split-mode-desc"
+                  data-i18n="tools:splitPdf.modeBookmarksDesc"
+                  >One file per bookmark</span
+                >
+              </label>
+              <label class="split-mode-card">
+                <input type="radio" name="split-mode-card" value="visual" />
+                <i class="ph ph-cursor-click"></i>
+                <span
+                  class="split-mode-title"
+                  data-i18n="tools:splitPdf.modeVisual"
+                  >Pick visually</span
+                >
+                <span
+                  class="split-mode-desc"
+                  data-i18n="tools:splitPdf.modeVisualDesc"
+                  >Click the pages you want</span
+                >
+              </label>
             </div>
+          </section>
+
+          <section id="range-panel" class="ocr-section">
             <label
               for="page-range"
-              class="block mb-2 text-sm font-medium text-gray-300"
-              >Page Range</label
+              class="ocr-section-title"
+              data-i18n="tools:splitPdf.rangeLabel"
+              >Page ranges</label
             >
             <input
               type="text"
               id="page-range"
-              class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
-              placeholder="e.g. 1-5, 8, 11-13"
+              class="ocr-input"
+              placeholder="e.g. 1-3, 4-8, 9-end"
+              data-i18n-placeholder="tools:splitPdf.rangePlaceholder"
             />
-          </div>
+            <p id="range-error" class="merge-row-error" hidden></p>
+            <div data-page-range-help="required"></div>
+          </section>
 
-          <div id="even-odd-panel" class="hidden">
-            <div class="p-3 bg-gray-900 rounded-lg border border-gray-700 mb-3">
-              <p class="text-sm text-gray-300">
-                <strong class="text-white">How it works:</strong>
-              </p>
-              <ul
-                class="list-disc list-inside text-xs text-gray-400 mt-1 space-y-1"
-              >
-                <li>
-                  Extract all even pages (2, 4, 6...) or all odd pages (1, 3,
-                  5...) into a new PDF.
-                </li>
-              </ul>
+          <section id="even-odd-panel" class="ocr-section hidden">
+            <div class="ocr-segment split-two">
+              <label>
+                <input
+                  id="split-odd"
+                  type="radio"
+                  value="odd"
+                  name="even-odd-choice"
+                  checked
+                />
+                <span data-i18n="tools:splitPdf.odd">Odd pages (1, 3, 5…)</span>
+              </label>
+              <label>
+                <input
+                  id="split-even"
+                  type="radio"
+                  value="even"
+                  name="even-odd-choice"
+                />
+                <span data-i18n="tools:splitPdf.even"
+                  >Even pages (2, 4, 6…)</span
+                >
+              </label>
             </div>
-            <div class="flex items-center mb-4">
-              <input
-                id="split-even"
-                type="radio"
-                value="even"
-                name="even-odd-choice"
-                class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-600 ring-offset-gray-800 focus:ring-2"
-              />
-              <label
-                for="split-even"
-                class="ml-2 text-sm font-medium text-gray-300"
-                >Even Pages</label
-              >
-            </div>
-            <div class="flex items-center">
-              <input
-                id="split-odd"
-                type="radio"
-                value="odd"
-                name="even-odd-choice"
-                class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-600 ring-offset-gray-800 focus:ring-2"
-              />
-              <label
-                for="split-odd"
-                class="ml-2 text-sm font-medium text-gray-300"
-                >Odd Pages</label
-              >
-            </div>
-          </div>
+          </section>
 
-          <div id="all-pages-panel" class="hidden">
-            <div class="p-3 bg-gray-900 rounded-lg border border-gray-700 mb-3">
-              <p class="text-sm text-gray-300">
-                <strong class="text-white">How it works:</strong>
-              </p>
-              <ul
-                class="list-disc list-inside text-xs text-gray-400 mt-1 space-y-1"
-              >
-                <li>
-                  Every single page of the PDF will be saved as a separate PDF
-                  file.
-                </li>
-                <li>
-                  The result will be downloaded as a ZIP file containing all the
-                  pages.
-                </li>
-              </ul>
-            </div>
-          </div>
+          <div id="all-pages-panel" class="hidden"></div>
 
-          <div id="visual-select-panel" class="hidden">
-            <div class="p-3 bg-gray-900 rounded-lg border border-gray-700 mb-3">
-              <p class="text-sm text-gray-300">
-                <strong class="text-white">How it works:</strong>
-              </p>
-              <ul
-                class="list-disc list-inside text-xs text-gray-400 mt-1 space-y-1"
-              >
-                <li>
-                  Click on the page thumbnails below to select the pages you
-                  want to extract.
-                </li>
-                <li>Selected pages will be highlighted.</li>
-              </ul>
-            </div>
-            <div
-              id="page-selector-grid"
-              class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 max-h-96 overflow-y-auto p-2 border border-gray-700 rounded-lg"
-            >
-              <!-- Thumbnails will be rendered here -->
-            </div>
-          </div>
+          <section id="visual-select-panel" class="ocr-section hidden">
+            <p class="ocr-section-hint" data-i18n="tools:splitPdf.visualHint">
+              Click a page to pick it or leave it out. Shift+click picks a run
+              of pages.
+            </p>
+            <div id="page-selector-grid" class="page-picker"></div>
+          </section>
 
-          <div id="bookmarks-panel" class="hidden">
-            <div class="p-3 bg-gray-900 rounded-lg border border-gray-700 mb-3">
-              <p class="text-sm text-gray-300">
-                <strong class="text-white">How it works:</strong>
-              </p>
-              <ul
-                class="list-disc list-inside text-xs text-gray-400 mt-1 space-y-1"
-              >
-                <li>Split the PDF based on its bookmarks (outline).</li>
-                <li>Select the bookmark level to split at.</li>
-              </ul>
-            </div>
+          <section id="bookmarks-panel" class="ocr-section hidden">
             <label
               for="bookmark-level"
-              class="block mb-2 text-sm font-medium text-gray-300"
-              >Bookmark Level</label
+              class="ocr-section-title"
+              data-i18n="tools:splitPdf.bookmarkLevel"
+              >Bookmark level</label
             >
-            <select
-              id="bookmark-level"
-              class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 mb-4"
-            >
-              <option value="all" selected>All Levels</option>
-              <option value="0">Level 0 (Top Level Only)</option>
-              <option value="1">Level 1</option>
-              <option value="2">Level 2</option>
-              <option value="3">Level 3</option>
+            <select id="bookmark-level" class="ocr-input">
+              <option value="all" selected data-i18n="tools:splitPdf.levelAll">
+                All levels
+              </option>
+              <option value="0" data-i18n="tools:splitPdf.level0">
+                Level 1 (outermost)
+              </option>
+              <option value="1" data-i18n="tools:splitPdf.level1">
+                Level 2
+              </option>
+              <option value="2" data-i18n="tools:splitPdf.level2">
+                Level 3
+              </option>
+              <option value="3" data-i18n="tools:splitPdf.level3">
+                Level 4
+              </option>
             </select>
-          </div>
+            <p class="ocr-section-hint" data-i18n="tools:splitPdf.bookmarkHint">
+              Splits where each bookmark starts. A file without bookmarks cannot
+              be split this way.
+            </p>
+          </section>
 
-          <div id="n-times-panel" class="hidden">
-            <div class="p-3 bg-gray-900 rounded-lg border border-gray-700 mb-3">
-              <p class="text-sm text-gray-300">
-                <strong class="text-white">How it works:</strong>
-              </p>
-              <ul
-                class="list-disc list-inside text-xs text-gray-400 mt-1 space-y-1"
-              >
-                <li>
-                  Split the PDF into multiple files, each containing N pages.
-                </li>
-              </ul>
-            </div>
+          <section id="n-times-panel" class="ocr-section hidden">
             <label
               for="split-n-value"
-              class="block mb-2 text-sm font-medium text-gray-300"
-              >Pages per file (N)</label
+              class="ocr-section-title"
+              data-i18n="tools:splitPdf.everyLabel"
+              >Pages per file</label
             >
             <input
               type="number"
               id="split-n-value"
               min="1"
               value="5"
-              class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+              class="ocr-input split-n"
             />
-            <p id="n-times-warning" class="mt-2 text-sm text-yellow-400 hidden">
-              <i
-                data-lucide="alert-triangle"
-                class="inline-block w-4 h-4 mr-1"
-              ></i>
+            <p id="n-times-warning" class="hidden">
               <span id="n-times-warning-text"></span>
             </p>
-          </div>
+          </section>
 
-          <div id="output-mode-wrapper" class="mt-4">
-            <p class="block mb-2 text-sm font-medium text-gray-300">Output</p>
-            <div class="flex items-center mb-2">
-              <input
-                id="output-combine"
-                type="radio"
-                value="combine"
-                name="split-output-mode"
-                checked
-                class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-600 ring-offset-gray-800 focus:ring-2"
-              />
-              <label
-                for="output-combine"
-                class="ml-2 text-sm font-medium text-gray-300"
-                >Single combined PDF</label
-              >
-            </div>
-            <div class="flex items-center">
+          <section id="output-mode-wrapper" class="ocr-section">
+            <h3
+              class="ocr-section-title"
+              data-i18n="tools:splitPdf.outputTitle"
+            >
+              Result
+            </h3>
+            <label class="tool-toggle">
               <input
                 id="output-separate"
                 type="radio"
                 value="separate"
                 name="split-output-mode"
-                class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-600 ring-offset-gray-800 focus:ring-2"
+                checked
               />
-              <label
-                for="output-separate"
-                id="output-separate-label"
-                class="ml-2 text-sm font-medium text-gray-300"
-                >One PDF per range</label
-              >
-            </div>
-            <p class="mt-2 text-xs text-gray-400">
-              Multiple files are downloaded together as a ZIP.
-            </p>
-          </div>
+              <span>
+                <span id="output-separate-label" class="tool-toggle-title"
+                  >One file per range</span
+                >
+                <span
+                  class="tool-toggle-hint"
+                  data-i18n="tools:splitPdf.outputZipHint"
+                  >Several files are downloaded together as a ZIP.</span
+                >
+              </span>
+            </label>
+            <label class="tool-toggle">
+              <input
+                id="output-combine"
+                type="radio"
+                value="combine"
+                name="split-output-mode"
+              />
+              <span>
+                <span
+                  class="tool-toggle-title"
+                  data-i18n="tools:splitPdf.outputCombine"
+                  >All in one PDF</span
+                >
+              </span>
+            </label>
+          </section>
+
+          <div id="split-plan" class="split-plan" aria-live="polite"></div>
 
           <button id="process-btn" class="btn-gradient w-full mt-6">
             Split PDF

@@ -1,5 +1,6 @@
 import { showLoader, hideLoader, showAlert } from '../ui.js';
-import { downloadFile } from '../utils/helpers.js';
+import { downloadFile, formatBytes } from '../utils/helpers.js';
+import { t } from '../i18n/index.js';
 import { state } from '../state.js';
 import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
 import {
@@ -67,8 +68,141 @@ function initializeFileListSortable() {
     },
     onEnd: function (evt: Sortable.SortableEvent) {
       evt.item.style.opacity = '1';
+      renumberFileList();
     },
   });
+}
+
+/**
+ * A page range as typed, in the merge engine's (cpdf) words: Vietnamese
+ * "cuối", "lẻ", "chẵn" become "end", "odd", "even"; long dashes and ";"
+ * become "-" and ",".
+ */
+function normalizeRange(range: string): string {
+  return range
+    .toLowerCase()
+    .replace(/[\u2013\u2014\u2212]/g, '-')
+    .replace(/;/g, ',')
+    .replace(/cuối/g, 'end')
+    .replace(/lẻ/g, 'odd')
+    .replace(/chẵn/g, 'even')
+    .replace(/\s+/g, '')
+    .replace(/,+$/, '');
+}
+
+/** Pages a range like "1-3, 5" takes from a file, or null if it is not one. */
+function countRangePages(range: string, total: number): number | null {
+  const pages = new Set<number>();
+  for (const piece of normalizeRange(range).split(',')) {
+    if (!piece) continue;
+    if (piece === 'odd' || piece === 'even') {
+      for (let page = piece === 'odd' ? 1 : 2; page <= total; page += 2)
+        pages.add(page);
+      continue;
+    }
+    const match = /^(\d+|end)(?:-(\d+|end))?$/.exec(piece);
+    if (!match) return null;
+    const at = (word: string) => (word === 'end' ? total : Number(word));
+    const from = at(match[1]);
+    const to = match[2] ? at(match[2]) : from;
+    if (from < 1 || to < from || to > total) return null;
+    for (let page = from; page <= to; page++) pages.add(page);
+  }
+  return pages.size || null;
+}
+
+/** Numbers the rows in their current order and updates the totals. */
+function renumberFileList() {
+  const fileList = document.getElementById('file-list');
+  if (!fileList) return;
+  const rows = Array.from(fileList.children) as HTMLElement[];
+  rows.forEach((row, i) => {
+    const number = row.querySelector('.merge-row-number');
+    if (number) number.textContent = String(i + 1);
+    row.querySelector<HTMLButtonElement>('.merge-up')!.disabled = i === 0;
+    row.querySelector<HTMLButtonElement>('.merge-down')!.disabled =
+      i === rows.length - 1;
+  });
+  updateMergeSummary();
+}
+
+/** "3 files · 10 pages", above the list and on the merge button. */
+function updateMergeSummary() {
+  const files = state.files.length;
+  let pages = 0;
+  let invalid = false;
+  for (const [key, doc] of Object.entries(mergeState.pdfDocs)) {
+    const total = doc.numPages;
+    if (mergeState.activeMode === 'page') {
+      pages += total;
+      continue;
+    }
+    const safe = key.replace(/[^a-zA-Z0-9]/g, '_');
+    const input = document.getElementById(
+      `range-${safe}`
+    ) as HTMLInputElement | null;
+    const range = input?.value.trim() ?? '';
+    const counted = range ? countRangePages(range, total) : total;
+    if (counted === null) invalid = true;
+    input?.classList.toggle('invalid', counted === null);
+    const error = input
+      ?.closest('.merge-row')
+      ?.querySelector<HTMLElement>('.merge-row-error');
+    if (error) {
+      error.textContent =
+        counted === null ? t('tools:mergePdf.rangeInvalid', { total }) : '';
+      error.hidden = counted === null ? false : true;
+    }
+    pages += counted ?? 0;
+  }
+  const summary = document.getElementById('merge-summary');
+  if (summary) {
+    summary.textContent = files
+      ? t('tools:mergePdf.summary', { files, pages })
+      : '';
+  }
+  const processBtn = document.getElementById(
+    'process-btn'
+  ) as HTMLButtonElement | null;
+  if (processBtn && files) {
+    processBtn.textContent = t('tools:mergePdf.mergeButton', { files, pages });
+    // A range the engine would not understand would quietly take the
+    // whole file: no merge until it is fixed.
+    processBtn.disabled = invalid;
+    processBtn.title = invalid ? t('tools:mergePdf.rangeFixFirst') : '';
+  }
+}
+
+/** state.files in the order the list shows, so a rebuild keeps it. */
+function syncFileOrderFromList() {
+  const fileList = document.getElementById('file-list');
+  if (!fileList || fileList.children.length !== state.files.length) return;
+  const byKey = new Map(
+    (state.files as File[]).map((f, i) => [`${i}_${f.name}`, f])
+  );
+  const ordered = Array.from(fileList.children)
+    .map((li) => byKey.get((li as HTMLElement).dataset.fileName ?? ''))
+    .filter((f): f is File => Boolean(f));
+  if (ordered.length === state.files.length) state.files = ordered;
+}
+
+/** First page, small, beside the file's name. */
+async function renderRowThumbnail(
+  doc: pdfjsLib.PDFDocumentProxy,
+  canvas: HTMLCanvasElement
+) {
+  try {
+    const page = await doc.getPage(1);
+    const base = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: 96 / base.height });
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    const context = canvas.getContext('2d');
+    if (context)
+      await page.render({ canvasContext: context, viewport, canvas }).promise;
+  } catch (e) {
+    console.warn('[Merge] No thumbnail:', e);
+  }
 }
 
 function initializePageThumbnailsSortable() {
@@ -305,10 +439,15 @@ export async function merge() {
         uniqueFileNames.add(fileKey);
 
         if (rangeInput && rangeInput.value.trim()) {
+          if (rangeInput.classList.contains('invalid')) {
+            hideLoader();
+            showAlert('Error', t('tools:mergePdf.rangeFixFirst'));
+            return;
+          }
           jobs.push({
             fileName: fileKey,
             rangeType: 'specific',
-            rangeString: rangeInput.value.trim(),
+            rangeString: normalizeRange(rangeInput.value),
           });
         } else {
           jobs.push({
@@ -438,6 +577,85 @@ export async function merge() {
   }
 }
 
+/** One file in the list: number, first page, name, pages and size, range. */
+function fileRow(f: File, index: number): HTMLLIElement {
+  const fileKey = `${index}_${f.name}`;
+  const doc = mergeState.pdfDocs[fileKey];
+  const safeFileName = fileKey.replace(/[^a-zA-Z0-9]/g, '_');
+
+  const li = document.createElement('li');
+  li.className = 'merge-row';
+  li.dataset.fileName = fileKey;
+  li.dataset.added = String(index);
+
+  const number = document.createElement('span');
+  number.className = 'merge-row-number';
+
+  const thumb = document.createElement('canvas');
+  thumb.className = 'merge-row-thumb';
+  if (doc) void renderRowThumbnail(doc, thumb);
+
+  const info = document.createElement('div');
+  info.className = 'merge-row-info';
+  const name = document.createElement('span');
+  name.className = 'merge-row-name';
+  name.title = f.name;
+  name.textContent = f.name;
+  const meta = document.createElement('span');
+  meta.className = 'merge-row-meta';
+  meta.textContent = `${doc ? t('tools:mergePdf.pageCount', { count: doc.numPages }) : '?'} · ${formatBytes(f.size)}`;
+  const error = document.createElement('span');
+  error.className = 'merge-row-error';
+  error.hidden = true;
+  info.append(name, meta, error);
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.id = `range-${safeFileName}`;
+  input.className = 'merge-row-range';
+  input.placeholder = t('tools:mergePdf.allPages');
+  input.title = t('tools:mergePdf.rangeTip');
+  input.addEventListener('input', updateMergeSummary);
+
+  const button = (cls: string, iconName: string, title: string) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = `merge-row-btn ${cls}`;
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    const i = document.createElement('i');
+    i.className = `ph ph-${iconName}`;
+    b.append(i);
+    return b;
+  };
+  const up = button('merge-up', 'arrow-up', t('tools:mergePdf.moveUp'));
+  const down = button('merge-down', 'arrow-down', t('tools:mergePdf.moveDown'));
+  const remove = button('merge-remove', 'x', t('tools:mergePdf.removeFile'));
+  up.addEventListener('click', () => {
+    li.previousElementSibling?.before(li);
+    renumberFileList();
+  });
+  down.addEventListener('click', () => {
+    li.nextElementSibling?.after(li);
+    renumberFileList();
+  });
+  remove.addEventListener('click', (e) => {
+    e.stopPropagation();
+    syncFileOrderFromList();
+    state.files = state.files.filter((file) => file !== f);
+    updateUI();
+  });
+
+  const handle = document.createElement('span');
+  handle.className = 'drag-handle merge-row-handle';
+  const grip = document.createElement('i');
+  grip.className = 'ph ph-dots-six-vertical';
+  handle.append(grip);
+
+  li.append(number, thumb, info, input, up, down, remove, handle);
+  return li;
+}
+
 export async function refreshMergeUI() {
   document.getElementById('merge-options')?.classList.remove('hidden');
   const processBtn = document.getElementById(
@@ -489,66 +707,13 @@ export async function refreshMergeUI() {
 
   fileList.textContent = ''; // Clear list safely
   (state.files as File[]).forEach((f, index) => {
-    const fileKey = `${index}_${f.name}`;
-    const doc = mergeState.pdfDocs[fileKey];
-    const pageCount = doc ? doc.numPages : 'N/A';
-    const safeFileName = fileKey.replace(/[^a-zA-Z0-9]/g, '_');
-
-    const li = document.createElement('li');
-    li.className =
-      'bg-gray-700 p-3 rounded-lg border border-gray-600 hover:border-indigo-500 transition-colors';
-    li.dataset.fileName = fileKey;
-
-    const mainDiv = document.createElement('div');
-    mainDiv.className = 'flex items-center justify-between';
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'truncate font-medium text-white flex-1 mr-2';
-    nameSpan.title = f.name;
-    nameSpan.textContent = f.name;
-
-    const dragHandle = document.createElement('div');
-    dragHandle.className =
-      'drag-handle cursor-move text-gray-400 hover:text-white p-1 rounded transition-colors';
-    dragHandle.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="19" r="1"/></svg>`; // Safe: static content
-
-    mainDiv.append(nameSpan, dragHandle);
-
-    const rangeDiv = document.createElement('div');
-    rangeDiv.className = 'mt-2 flex items-center gap-2';
-
-    const inputWrapper = document.createElement('div');
-    inputWrapper.className = 'flex-1';
-
-    const label = document.createElement('label');
-    label.htmlFor = `range-${safeFileName}`;
-    label.className = 'text-xs text-gray-400';
-    label.textContent = `Pages (e.g., 1-3, 5) - Total: ${pageCount}`;
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.id = `range-${safeFileName}`;
-    input.className =
-      'w-full bg-gray-800 border border-gray-600 text-white rounded-md p-2 text-sm mt-1 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors';
-    input.placeholder = 'Leave blank for all pages';
-
-    inputWrapper.append(label, input);
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className =
-      'text-red-400 hover:text-red-300 p-2 flex-shrink-0 self-end';
-    deleteBtn.innerHTML = '<i data-lucide="trash-2" class="w-4 h-4"></i>';
-    deleteBtn.title = 'Remove file';
-    deleteBtn.onclick = (e) => {
-      e.stopPropagation();
-      state.files = state.files.filter((_, i) => i !== index);
-      updateUI();
-    };
-
-    rangeDiv.append(inputWrapper, deleteBtn);
-    li.append(mainDiv, rangeDiv);
-    fileList.appendChild(li);
+    fileList.appendChild(fileRow(f, index));
   });
+  renumberFileList();
+  const sort = document.getElementById(
+    'merge-sort'
+  ) as HTMLSelectElement | null;
+  if (sort) sort.value = 'added';
 
   createIcons({ icons });
   initializeFileListSortable();
@@ -569,6 +734,7 @@ export async function refreshMergeUI() {
     newFileModeBtn.classList.remove('bg-gray-700', 'text-gray-300');
     newPageModeBtn.classList.remove('bg-indigo-600', 'text-white');
     newPageModeBtn.classList.add('bg-gray-700', 'text-gray-300');
+    updateMergeSummary();
   });
 
   newPageModeBtn.addEventListener('click', async () => {
@@ -582,6 +748,7 @@ export async function refreshMergeUI() {
     newPageModeBtn.classList.remove('bg-gray-700', 'text-gray-300');
     newFileModeBtn.classList.remove('bg-indigo-600', 'text-white');
     newFileModeBtn.classList.add('bg-gray-700', 'text-gray-300');
+    updateMergeSummary();
 
     await renderPageMergeThumbnails();
   });
@@ -624,6 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.addEventListener('change', async (e) => {
       const files = (e.target as HTMLInputElement).files;
       if (files && files.length > 0) {
+        syncFileOrderFromList();
         state.files = [...state.files, ...Array.from(files)];
         await updateUI();
       }
@@ -650,6 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
             f.name.toLowerCase().endsWith('.pdf')
         );
         if (pdfFiles.length > 0) {
+          syncFileOrderFromList();
           state.files = [...state.files, ...pdfFiles];
           await updateUI();
         }
@@ -680,4 +849,24 @@ document.addEventListener('DOMContentLoaded', () => {
       await merge();
     });
   }
+
+  // Sort the list by name, or back to the order the files were added.
+  const sort = document.getElementById(
+    'merge-sort'
+  ) as HTMLSelectElement | null;
+  sort?.addEventListener('change', () => {
+    const fileList = document.getElementById('file-list');
+    if (!fileList) return;
+    const rows = Array.from(fileList.children) as HTMLElement[];
+    const nameOf = (row: HTMLElement) =>
+      row.querySelector('.merge-row-name')?.textContent ?? '';
+    rows.sort((a, b) =>
+      sort.value === 'added'
+        ? Number(a.dataset.added) - Number(b.dataset.added)
+        : nameOf(a).localeCompare(nameOf(b), undefined, { numeric: true }) *
+          (sort.value === 'desc' ? -1 : 1)
+    );
+    fileList.append(...rows);
+    renumberFileList();
+  });
 });

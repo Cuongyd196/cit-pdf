@@ -159,23 +159,112 @@
         <div id="file-display-area" class="mt-4 space-y-2"></div>
 
         <!-- Extract Options (shown after file upload) -->
-        <div id="extract-options" class="hidden mt-6">
-          <p class="mb-2 font-medium text-white">
-            Total Pages: <span id="total-pages"></span>
-          </p>
-          <label
-            for="pages-to-extract"
-            class="block mb-2 text-sm font-medium text-gray-300"
-            >Enter pages to extract (e.g., 2, 4-6, 9):</label
-          >
-          <input
-            type="text"
-            id="pages-to-extract"
-            class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 mb-6"
-            placeholder="e.g., 2, 4-6, 9"
-          />
-          <button id="process-btn" class="btn-gradient w-full">
-            Extract & Download ZIP
+        <div id="extract-options" class="hidden mt-6 ocr-options">
+          <section class="ocr-section">
+            <div class="pick-head">
+              <h3
+                class="ocr-section-title"
+                data-i18n="tools:extractPages.pickTitle"
+              >
+                Pages to extract
+              </h3>
+              <span id="pick-count" class="pick-count"></span>
+            </div>
+            <div class="pick-quick">
+              <button
+                type="button"
+                data-pick="all"
+                data-i18n="tools:extractPages.pickAll"
+              >
+                All
+              </button>
+              <button
+                type="button"
+                data-pick="none"
+                data-i18n="tools:extractPages.pickNone"
+              >
+                None
+              </button>
+              <button
+                type="button"
+                data-pick="odd"
+                data-i18n="tools:extractPages.pickOdd"
+              >
+                Odd pages
+              </button>
+              <button
+                type="button"
+                data-pick="even"
+                data-i18n="tools:extractPages.pickEven"
+              >
+                Even pages
+              </button>
+            </div>
+            <input
+              type="text"
+              id="pages-to-extract"
+              class="ocr-input"
+              placeholder="e.g. 2, 4-6, 9"
+              data-i18n-placeholder="tools:extractPages.rangePlaceholder"
+            />
+            <p id="pages-error" class="merge-row-error" hidden></p>
+            <div data-page-range-help="required"></div>
+            <p
+              class="ocr-section-hint"
+              data-i18n="tools:extractPages.clickHint"
+            >
+              Click a page to pick it or leave it out. Shift+click picks a run
+              of pages.
+            </p>
+            <div id="page-picker" class="page-picker"></div>
+          </section>
+
+          <section class="ocr-section">
+            <h3
+              class="ocr-section-title"
+              data-i18n="tools:extractPages.outputTitle"
+            >
+              Result
+            </h3>
+            <label class="tool-toggle">
+              <input
+                type="radio"
+                name="extract-output"
+                value="single"
+                checked
+              />
+              <span>
+                <span
+                  class="tool-toggle-title"
+                  data-i18n="tools:extractPages.outputSingle"
+                  >One PDF with the picked pages</span
+                >
+                <span
+                  class="tool-toggle-hint"
+                  data-i18n="tools:extractPages.outputSingleHint"
+                  >In page order.</span
+                >
+              </span>
+            </label>
+            <label class="tool-toggle">
+              <input type="radio" name="extract-output" value="zip" />
+              <span>
+                <span
+                  class="tool-toggle-title"
+                  data-i18n="tools:extractPages.outputZip"
+                  >One PDF per page</span
+                >
+                <span
+                  class="tool-toggle-hint"
+                  data-i18n="tools:extractPages.outputZipHint"
+                  >Downloaded together as a ZIP file.</span
+                >
+              </span>
+            </label>
+          </section>
+
+          <button id="process-btn" class="btn-gradient w-full" disabled>
+            Extract
           </button>
         </div>
       </div>

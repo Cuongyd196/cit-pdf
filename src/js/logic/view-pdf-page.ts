@@ -16,6 +16,12 @@ import {
   type ViewerSelectDetail,
   type ViewerTabsDetail,
 } from './view-pdf-events.js';
+import {
+  VIEWER_KEYDOWN_EVENT,
+  mayClose,
+  provideViewerDocuments,
+  VIEWER_PAGES_EVENT,
+} from './viewer-document.js';
 
 interface ViewerOptions {
   set(name: string, value: unknown): void;
@@ -28,6 +34,17 @@ interface ViewerWindow extends Window {
       | (PrintSource['pdfDocument'] & { fingerprints?: Array<string | null> })
       | null;
     page?: number;
+    pagesCount?: number;
+    open?: (args: { url: string; originalUrl?: string }) => Promise<void>;
+    eventBus?: {
+      on(
+        name: string,
+        listener: () => void,
+        options?: { once?: boolean }
+      ): void;
+    };
+    pdfViewer?: { currentScaleValue: string };
+    initializedPromise?: Promise<void>;
   };
 }
 
@@ -39,6 +56,8 @@ interface ViewerTab {
   file: File;
   blobUrl: string;
   iframe: HTMLIFrameElement;
+  /** Studio changed the document and the change is not saved yet. */
+  dirty?: boolean;
 }
 
 const tabs: ViewerTab[] = [];
@@ -72,7 +91,10 @@ function renderTabs() {
 
   const items = tabs.map((tab) => {
     const item = document.createElement('div');
-    item.className = 'pdf-view-tab' + (tab === activeTab ? ' active' : '');
+    item.className =
+      'pdf-view-tab' +
+      (tab === activeTab ? ' active' : '') +
+      (tab.dirty ? ' dirty' : '');
     item.setAttribute('role', 'tab');
     item.setAttribute('aria-selected', String(tab === activeTab));
     item.title = tab.file.name;
@@ -80,7 +102,7 @@ function renderTabs() {
 
     const name = document.createElement('span');
     name.className = 'truncate';
-    name.textContent = tab.file.name;
+    name.textContent = (tab.dirty ? '• ' : '') + tab.file.name;
 
     const close = document.createElement('button');
     close.type = 'button';
@@ -90,14 +112,14 @@ function renderTabs() {
     close.innerHTML = '<i class="ph ph-x"></i>';
     close.addEventListener('click', (e) => {
       e.stopPropagation();
-      closeTab(tab);
+      void requestClose(tab);
     });
 
     item.append(name, close);
     item.addEventListener('click', () => selectTab(tab));
     // Middle click closes, as in a browser.
     item.addEventListener('auxclick', (e) => {
-      if (e.button === 1) closeTab(tab);
+      if (e.button === 1) void requestClose(tab);
     });
     return item;
   });
@@ -124,6 +146,12 @@ function selectTab(tab: ViewerTab) {
   }
   renderTabs();
   announceTabs();
+}
+
+/** Closes a tab, after asking when it has unsaved changes. */
+async function requestClose(tab: ViewerTab) {
+  if (tab.dirty && !(await mayClose(tab.file))) return;
+  closeTab(tab);
 }
 
 function closeTab(tab: ViewerTab) {
@@ -190,7 +218,7 @@ function onTabShortcut(e: KeyboardEvent) {
     selectTab(tabs[(tabs.indexOf(activeTab) + step) % tabs.length]);
   } else if (e.key.toLowerCase() === 'w' && !e.shiftKey) {
     e.preventDefault();
-    closeTab(activeTab);
+    void requestClose(activeTab);
   } else {
     return;
   }
@@ -199,6 +227,81 @@ function onTabShortcut(e: KeyboardEvent) {
   // moved right then is lost.
   window.setTimeout(() => activeTab?.iframe.contentWindow?.focus());
 }
+
+/** Keys pressed in a viewer frame go to the page too (Studio's shortcuts). */
+function passKeyOn(e: KeyboardEvent) {
+  const passed = new CustomEvent<KeyboardEvent>(VIEWER_KEYDOWN_EVENT, {
+    detail: e,
+    cancelable: true,
+  });
+  if (!document.dispatchEvent(passed)) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }
+}
+
+/**
+ * Shows new bytes in a file's tab (Studio applied a tool). The viewer opens
+ * them in place, then goes back to the page and zoom the reader was at.
+ */
+async function showBytes(file: File, bytes: Uint8Array): Promise<void> {
+  const tab = tabs.find((t) => t.file === file);
+  if (!tab) return;
+  const viewer = tab.iframe.contentWindow as ViewerWindow | null;
+  const app = viewer?.PDFViewerApplication;
+  const blobUrl = URL.createObjectURL(
+    new Blob([bytes as BlobPart], { type: 'application/pdf' })
+  );
+  const old = tab.blobUrl;
+  tab.blobUrl = blobUrl;
+
+  if (!app?.open || !app.eventBus) {
+    // Not loaded yet: start the frame over on the new bytes.
+    tab.iframe.src = `${import.meta.env.BASE_URL}pdfjs-viewer/viewer.html?file=${encodeURIComponent(blobUrl)}`;
+    URL.revokeObjectURL(old);
+    return;
+  }
+
+  const page = app.page ?? 1;
+  const scale = app.pdfViewer?.currentScaleValue;
+  const bus = app.eventBus;
+  const ready = new Promise<void>((resolve) => {
+    const timer = window.setTimeout(resolve, 15000);
+    bus.on(
+      'pagesinit',
+      () => {
+        window.clearTimeout(timer);
+        if (scale && app.pdfViewer) app.pdfViewer.currentScaleValue = scale;
+        app.page = Math.min(page, app.pagesCount ?? page);
+        resolve();
+      },
+      { once: true }
+    );
+  });
+  await app.open({ url: blobUrl, originalUrl: file.name });
+  await ready;
+  URL.revokeObjectURL(old);
+}
+
+function setDirty(file: File, dirty: boolean) {
+  const tab = tabs.find((t) => t.file === file);
+  if (!tab || Boolean(tab.dirty) === dirty) return;
+  tab.dirty = dirty;
+  renderTabs();
+}
+
+provideViewerDocuments({
+  active: () => activeTab?.file ?? null,
+  show: showBytes,
+  setDirty,
+  pageCount: (file) => {
+    const tab = tabs.find((t) => t.file === file);
+    const app = (tab?.iframe.contentWindow as ViewerWindow | null)
+      ?.PDFViewerApplication;
+    return app?.pdfDocument ? (app.pagesCount ?? null) : null;
+  },
+  print: () => activeTab?.iframe.contentWindow?.print(),
+});
 
 const VIEW_HISTORY_KEY = 'pdfjs.history';
 const VIEW_HISTORY_MAX = 50;
@@ -263,12 +366,20 @@ function openFile(file: File) {
 
   iframe.addEventListener('load', () => {
     if (__DESKTOP__) installDesktopPrint(iframe);
+    const app = (iframe.contentWindow as ViewerWindow | null)
+      ?.PDFViewerApplication;
+    void app?.initializedPromise?.then(() =>
+      app.eventBus?.on('pagesinit', () =>
+        document.dispatchEvent(new CustomEvent(VIEWER_PAGES_EVENT))
+      )
+    );
     iframe.contentWindow?.addEventListener('keydown', onTabShortcut, true);
+    iframe.contentWindow?.addEventListener('keydown', passKeyOn, true);
     void applyViewerChrome(iframe, {
       fileName: file.name,
       closeLabel: t('tools:viewPdf.close'),
       twoPagesLabel: t('tools:viewPdf.twoPages'),
-      onClose: () => closeTab(tab),
+      onClose: () => void requestClose(tab),
     });
   });
 
@@ -350,6 +461,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-window.addEventListener('beforeunload', () => {
+// Unsaved changes hold the page; the desktop app asks the user whether to
+// leave (main.ts, will-prevent-unload).
+window.addEventListener('beforeunload', (e) => {
+  if (!tabs.some((tab) => tab.dirty)) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+
+// Not on beforeunload: the user may still choose to stay.
+window.addEventListener('pagehide', () => {
   for (const tab of tabs) URL.revokeObjectURL(tab.blobUrl);
 });

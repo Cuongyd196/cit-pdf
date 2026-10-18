@@ -51,7 +51,14 @@ export interface SavedDownload {
   name: string;
   isPdf: boolean;
   canOpen: boolean;
+  /** It replaced the file the tool was working on. */
+  overwritten?: boolean;
+  /** Replacing that file failed (locked); saved next to it instead. */
+  overwriteFailed?: boolean;
 }
+
+/** Where the next PDF download of a tool goes: over its file, or Save as. */
+export type SaveMode = 'overwrite' | 'saveAs';
 
 export interface OpenedFile {
   path: string;
@@ -100,6 +107,7 @@ interface DesktopBridge {
   openInNewWindow(path: string): Promise<boolean>;
   checkForUpdate(): Promise<UpdateCheckResult>;
   onDownloadSaved(cb: (saved: SavedDownload) => void): () => void;
+  setSaveTarget(mode: SaveMode, path: string): Promise<boolean>;
   showSavedInFolder(path: string): Promise<boolean>;
   openSavedFile(path: string): Promise<boolean>;
   noteRecentFile(path: string): Promise<boolean>;

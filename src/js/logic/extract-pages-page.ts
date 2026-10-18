@@ -1,25 +1,30 @@
 import { createIcons, icons } from 'lucide';
 import { showAlert, showLoader, hideLoader } from '../ui.js';
-import {
-  formatBytes,
-  downloadFile,
-  parsePageRanges,
-} from '../utils/helpers.js';
+import { formatBytes, downloadFile } from '../utils/helpers.js';
 import { PDFDocument } from 'pdf-lib';
 import { loadPdfWithPasswordPrompt } from '../utils/password-prompt.js';
 import JSZip from 'jszip';
 import { loadPdfDocument } from '../utils/load-pdf-document.js';
+import { t } from '../i18n/index.js';
+import { formatPageRanges, parseRangePages } from '../utils/page-range.js';
+import { mountPageRangeHelp } from '../utils/page-range-help.js';
+import { createPagePicker, type PagePicker } from '../utils/page-picker.js';
 
 interface ExtractState {
   file: File | null;
   pdfDoc: PDFDocument | null;
   totalPages: number;
+  /** Pages to extract, 1-based, sorted. */
+  pages: number[];
+  picker: PagePicker | null;
 }
 
 const extractState: ExtractState = {
   file: null,
   pdfDoc: null,
   totalPages: 0,
+  pages: [],
+  picker: null,
 };
 
 if (document.readyState === 'loading') {
@@ -30,10 +35,14 @@ if (document.readyState === 'loading') {
 
 function initializePage() {
   createIcons({ icons });
+  mountPageRangeHelp();
 
   const fileInput = document.getElementById('file-input') as HTMLInputElement;
   const dropZone = document.getElementById('drop-zone');
   const processBtn = document.getElementById('process-btn');
+  const pagesInput = document.getElementById(
+    'pages-to-extract'
+  ) as HTMLInputElement | null;
 
   if (fileInput) {
     fileInput.addEventListener('change', handleFileUpload);
@@ -68,9 +77,81 @@ function initializePage() {
     processBtn.addEventListener('click', extractPages);
   }
 
+  // Typing a range picks those pages in the grid.
+  pagesInput?.addEventListener('input', () => {
+    const pages = parseRangePages(pagesInput.value, extractState.totalPages);
+    if (pages) {
+      extractState.pages = pages;
+      extractState.picker?.set(pages);
+    }
+    render(pages === null);
+  });
+
+  // Quick picks: all, none, odd, even.
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-pick]')
+    .forEach((button) => {
+      button.addEventListener('click', () => {
+        const total = extractState.totalPages;
+        const all = Array.from({ length: total }, (_, i) => i + 1);
+        const pick = button.dataset.pick;
+        const pages =
+          pick === 'all'
+            ? all
+            : pick === 'odd'
+              ? all.filter((p) => p % 2 === 1)
+              : pick === 'even'
+                ? all.filter((p) => p % 2 === 0)
+                : [];
+        choose(pages);
+      });
+    });
+
   document.getElementById('back-to-tools')?.addEventListener('click', () => {
     window.location.href = import.meta.env.BASE_URL;
   });
+}
+
+/** Picks these pages everywhere: grid, range box, count, button. */
+function choose(pages: number[]) {
+  extractState.pages = pages;
+  extractState.picker?.set(pages);
+  const pagesInput = document.getElementById(
+    'pages-to-extract'
+  ) as HTMLInputElement | null;
+  if (pagesInput) pagesInput.value = formatPageRanges(pages);
+  render(false);
+}
+
+function render(invalid: boolean) {
+  const count = extractState.pages.length;
+  const total = extractState.totalPages;
+  const counter = document.getElementById('pick-count');
+  if (counter)
+    counter.textContent = t('tools:extractPages.countSelected', {
+      count,
+      total,
+    });
+  const error = document.getElementById('pages-error');
+  if (error) {
+    error.hidden = !invalid;
+    error.textContent = invalid
+      ? t('tools:extractPages.invalid', { total })
+      : '';
+  }
+  document
+    .getElementById('pages-to-extract')
+    ?.classList.toggle('invalid', invalid);
+  const processBtn = document.getElementById(
+    'process-btn'
+  ) as HTMLButtonElement | null;
+  if (processBtn) {
+    processBtn.disabled = invalid || count === 0;
+    processBtn.textContent =
+      count === 0
+        ? t('tools:extractPages.buttonNone')
+        : t('tools:extractPages.button', { count });
+  }
 }
 
 function handleFileUpload(e: Event) {
@@ -106,6 +187,16 @@ async function handleFile(file: File) {
     updateFileDisplay();
     showOptions();
     hideLoader();
+
+    extractState.picker?.destroy();
+    const grid = document.getElementById('page-picker');
+    if (grid) {
+      extractState.picker = await createPagePicker(grid, result.bytes, {
+        pageLabel: (page) => t('tools:extractPages.pageLabel', { page }),
+        onChange: (pages) => choose(pages),
+      });
+    }
+    choose([]);
   } catch (error) {
     console.error('Error loading PDF:', error);
     hideLoader();
@@ -146,58 +237,76 @@ function updateFileDisplay() {
 }
 
 function showOptions() {
-  const extractOptions = document.getElementById('extract-options');
-  const totalPagesSpan = document.getElementById('total-pages');
+  document.getElementById('extract-options')?.classList.remove('hidden');
+}
 
-  if (extractOptions) {
-    extractOptions.classList.remove('hidden');
-  }
-  if (totalPagesSpan) {
-    totalPagesSpan.textContent = extractState.totalPages.toString();
-  }
+/** "Bao cao (trang 2, 4-6).pdf"; a long list gives "(5 trang)". */
+function outputName(baseName: string, pages: number[]): string {
+  const ranges = formatPageRanges(pages);
+  const label =
+    ranges.length <= 30
+      ? t('tools:extractPages.namePages', { pages: ranges })
+      : t('tools:extractPages.nameCount', { count: pages.length });
+  return `${baseName} (${label}).pdf`;
 }
 
 async function extractPages() {
-  const pagesInput = document.getElementById(
-    'pages-to-extract'
-  ) as HTMLInputElement;
-  if (!pagesInput || !pagesInput.value.trim()) {
-    showAlert('No Pages', 'Please enter page numbers to extract.');
+  const pages = extractState.pages;
+  if (!extractState.pdfDoc || pages.length === 0) {
+    showAlert(
+      t('tools:extractPages.buttonNone'),
+      t('tools:extractPages.invalid', { total: extractState.totalPages })
+    );
     return;
   }
 
-  const pagesToExtract = parsePageRanges(
-    pagesInput.value,
-    extractState.totalPages
-  ).map((i) => i + 1);
-  if (pagesToExtract.length === 0) {
-    showAlert('Invalid Pages', 'No valid page numbers found.');
-    return;
-  }
+  const asZip =
+    (
+      document.querySelector(
+        'input[name="extract-output"]:checked'
+      ) as HTMLInputElement | null
+    )?.value === 'zip';
 
   showLoader('Extracting pages...');
 
   try {
-    const zip = new JSZip();
-    const baseName = extractState.file?.name.replace('.pdf', '') || 'document';
+    const baseName =
+      extractState.file?.name.replace(/\.pdf$/i, '') || 'document';
 
-    for (const pageNum of pagesToExtract) {
+    if (asZip) {
+      const zip = new JSZip();
+      for (const pageNum of pages) {
+        const newPdf = await PDFDocument.create();
+        const [copiedPage] = await newPdf.copyPages(extractState.pdfDoc, [
+          pageNum - 1,
+        ]);
+        newPdf.addPage(copiedPage);
+        zip.file(outputName(baseName, [pageNum]), await newPdf.save());
+      }
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      downloadFile(
+        zipBlob,
+        `${baseName} (${t('tools:extractPages.nameCount', { count: pages.length })}).zip`
+      );
+    } else {
       const newPdf = await PDFDocument.create();
-      const [copiedPage] = await newPdf.copyPages(extractState.pdfDoc, [
-        pageNum - 1,
-      ]);
-      newPdf.addPage(copiedPage);
-      const pdfBytes = await newPdf.save();
-      zip.file(`${baseName}_page_${pageNum}.pdf`, pdfBytes);
+      const copied = await newPdf.copyPages(
+        extractState.pdfDoc,
+        pages.map((p) => p - 1)
+      );
+      copied.forEach((page) => newPdf.addPage(page));
+      downloadFile(
+        new Blob([(await newPdf.save()) as BlobPart], {
+          type: 'application/pdf',
+        }),
+        outputName(baseName, pages)
+      );
     }
-
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-    downloadFile(zipBlob, `${baseName}_extracted_pages.zip`);
 
     hideLoader();
     showAlert(
       'Success',
-      `Extracted ${pagesToExtract.length} page(s) successfully!`,
+      `Extracted ${pages.length} page(s) successfully!`,
       'success',
       () => {
         resetState();
@@ -214,11 +323,11 @@ function resetState() {
   extractState.file = null;
   extractState.pdfDoc = null;
   extractState.totalPages = 0;
+  extractState.pages = [];
+  extractState.picker?.destroy();
+  extractState.picker = null;
 
-  const extractOptions = document.getElementById('extract-options');
-  if (extractOptions) {
-    extractOptions.classList.add('hidden');
-  }
+  document.getElementById('extract-options')?.classList.add('hidden');
 
   const fileDisplayArea = document.getElementById('file-display-area');
   if (fileDisplayArea) {

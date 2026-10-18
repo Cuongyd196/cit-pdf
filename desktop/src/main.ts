@@ -27,6 +27,7 @@ import {
   type PrinterInfo,
   type PrintRequest,
   type PrintResult,
+  type SaveMode,
   type SavedDownload,
   type UpdateCheckResult,
 } from './types.js';
@@ -169,13 +170,118 @@ const OPENABLE_EXTENSIONS = new Set([
   '.epub',
 ]);
 
+// Where a window's next PDF download goes, set by its page right before a
+// tool saves: over the file the tool opened ("Save"), or through "Save as"
+// starting in that file's folder. Only a PDF the user opened can be named,
+// and the target lapses if no download follows.
+interface SaveTarget {
+  mode: SaveMode;
+  path: string;
+  until: number;
+}
+const saveTargets = new Map<number, SaveTarget>();
+const SAVE_TARGET_MS = 120_000;
+
+ipcMain.handle(
+  IPC_CHANNELS.SET_SAVE_TARGET,
+  (event, mode: unknown, filePath: unknown): boolean => {
+    const id = event.sender.id;
+    if (
+      (mode !== 'overwrite' && mode !== 'saveAs') ||
+      typeof filePath !== 'string' ||
+      !allowedOpenPaths.has(filePath) ||
+      path.extname(filePath).toLowerCase() !== '.pdf'
+    ) {
+      saveTargets.delete(id);
+      return false;
+    }
+    saveTargets.set(id, {
+      mode,
+      path: filePath,
+      until: Date.now() + SAVE_TARGET_MS,
+    });
+    return true;
+  }
+);
+
+/** "name (2).pdf", "name (3).pdf"… next to a file, the first that is free. */
+function freeSibling(filePath: string): string {
+  const dir = path.dirname(filePath);
+  const ext = path.extname(filePath);
+  const stem = path.basename(filePath, ext);
+  for (let n = 2; ; n++) {
+    const candidate = path.join(dir, `${stem} (${n})${ext}`);
+    if (!fs.existsSync(candidate)) return candidate;
+  }
+}
+
 // A tool hands over its result as a download, which Electron saves through
 // its own "Save as" dialog. Tell the page where the file went, so it can
 // offer to show the result instead of leaving the user to go and find it.
 function watchDownloads() {
   session.defaultSession.on('will-download', (_event, item, contents) => {
-    item.once('done', (_done, state) => {
-      const filePath = item.getSavePath();
+    const target = saveTargets.get(contents.id);
+    const isPdfDownload =
+      path.extname(item.getFilename()).toLowerCase() === '.pdf' ||
+      item.getMimeType() === 'application/pdf';
+    let replace: { temp: string; original: string } | null = null;
+    if (target && isPdfDownload) {
+      saveTargets.delete(contents.id);
+      if (target.until > Date.now() && target.mode === 'overwrite') {
+        // Written next to the original first, then moved over it, so an
+        // interrupted save never leaves the original half written.
+        const temp = path.join(
+          path.dirname(target.path),
+          `.${path.basename(target.path)}.cit-saving`
+        );
+        replace = { temp, original: target.path };
+        item.setSavePath(temp);
+      } else if (target.until > Date.now()) {
+        const ext = path.extname(target.path);
+        // A result named on its own (pages taken out, say) keeps its name;
+        // the document itself is offered as "<name> (edited)".
+        const stem = path.basename(target.path, ext);
+        const offered = path.basename(
+          item.getFilename(),
+          path.extname(item.getFilename())
+        );
+        const name = offered.toLowerCase().startsWith(`${stem.toLowerCase()} (`)
+          ? offered
+          : fill(ui().editedCopy, { name: stem });
+        item.setSaveDialogOptions({
+          defaultPath: path.join(path.dirname(target.path), `${name}.pdf`),
+          filters: [{ name: 'PDF', extensions: ['pdf'] }],
+        });
+      }
+    }
+
+    item.once('done', async (_done, state) => {
+      let filePath = item.getSavePath();
+      let overwritten = false;
+      let overwriteFailed = false;
+      if (replace) {
+        if (state !== 'completed') {
+          await fs.promises.rm(replace.temp, { force: true }).catch(() => {});
+          return;
+        }
+        try {
+          await fs.promises.rename(replace.temp, replace.original);
+          filePath = replace.original;
+          overwritten = true;
+        } catch (e) {
+          // Locked by another program (a PDF reader holding it open): keep
+          // the result next to it rather than lose it.
+          console.warn('[Save] Could not replace', replace.original, e);
+          filePath = freeSibling(replace.original);
+          try {
+            await fs.promises.rename(replace.temp, filePath);
+          } catch (e2) {
+            console.error('[Save] Could not keep the result either', e2);
+            return;
+          }
+          overwriteFailed = true;
+        }
+      }
       if (state !== 'completed' || !filePath) return;
       const extension = path.extname(filePath).toLowerCase();
       const isPdf = extension === '.pdf';
@@ -187,6 +293,8 @@ function watchDownloads() {
         name: path.basename(filePath),
         isPdf,
         canOpen: OPENABLE_EXTENSIONS.has(extension),
+        overwritten,
+        overwriteFailed,
       };
       contents.send(IPC_CHANNELS.DOWNLOAD_SAVED, saved);
     });

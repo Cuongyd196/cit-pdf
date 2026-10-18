@@ -134,7 +134,31 @@ async function render(): Promise<void> {
 
   const modules = await bridge.getModulesStatus();
   list.textContent = '';
-  modules.forEach((mod) => list.append(moduleRow(mod)));
+  // What the installer carries needs nothing from the user: one line.
+  // Rows only for engines fetched on first use.
+  modules
+    .filter((mod) => !mod.bundled)
+    .forEach((mod) => list.append(moduleRow(mod)));
+  const shipped = modules.filter((mod) => mod.bundled);
+  if (shipped.length > 0) {
+    const line = el('p', 'desktop-modules-shipped');
+    line.append(
+      el('i', 'ph ph-check-circle'),
+      el('span', 'font-medium', `${ds('bundled')}:`),
+      el(
+        'span',
+        '',
+        shipped
+          .map(
+            (mod) =>
+              splitLabel(mod.label[desktopLang()] || mod.label.en || mod.name)
+                .name
+          )
+          .join(' · ')
+      )
+    );
+    list.append(line);
+  }
 
   actions.textContent = '';
   const missing = modules.filter((m) => !m.installed).map((m) => m.name);

@@ -213,29 +213,28 @@
         <div id="file-display-area" class="mt-4 space-y-2"></div>
 
         <!-- OCR Options -->
-        <div id="tool-options" class="hidden mt-6 space-y-4">
-          <div>
-            <label
-              class="block mb-2 text-sm font-medium text-gray-300"
+        <div id="tool-options" class="hidden mt-6 ocr-options">
+          <section class="ocr-section">
+            <h3
+              class="ocr-section-title"
               data-i18n="tools:ocrPdf.languagesInDocument"
-              >Languages in Document</label
             >
-            <div class="relative">
-              <input
-                type="text"
-                id="lang-search"
-                class="w-full bg-gray-900 border border-gray-600 text-white rounded-lg p-2.5 mb-2"
-                placeholder="Search for languages..."
-                data-i18n-placeholder="tools:ocrPdf.searchLanguagesPlaceholder"
-              />
-              <div
-                id="lang-list"
-                class="max-h-48 overflow-y-auto border border-gray-600 rounded-lg p-2 bg-gray-900"
-              >
-                <!-- Language checkboxes will be populated by JS -->
-              </div>
+              Languages in Document
+            </h3>
+            <p class="ocr-section-hint" data-i18n="tools:ocrPdf.languagesHint">
+              Pick the languages used in the document for better accuracy.
+            </p>
+            <input
+              type="text"
+              id="lang-search"
+              class="ocr-input"
+              placeholder="Search for languages..."
+              data-i18n-placeholder="tools:ocrPdf.searchLanguagesPlaceholder"
+            />
+            <div id="lang-list" class="ocr-lang-list">
+              <!-- Language choices are populated by JS -->
             </div>
-            <p class="text-xs text-gray-500 mt-1">
+            <p id="selected-langs-row" class="ocr-section-hint">
               <span data-i18n="tools:ocrPdf.selectedLabel">Selected:</span>
               <span
                 id="selected-langs-display"
@@ -244,90 +243,84 @@
                 >None</span
               >
             </p>
-            <p
-              id="lang-availability-note"
-              class="hidden text-xs text-amber-300 mt-2"
-            ></p>
-          </div>
+            <p id="lang-availability-note" class="hidden ocr-note"></p>
+          </section>
 
-          <!-- Advanced settings -->
-          <details class="faq-d">
-            <summary class="faq-d-q">
-              <span data-i18n="tools:ocrPdf.advancedSettingsSummary"
-                >Advanced Settings (Recommended to improve accuracy)</span
+          <section class="ocr-section">
+            <h3 class="ocr-section-title" data-i18n="tools:ocrPdf.qualityTitle">
+              Quality
+            </h3>
+            <div class="ocr-segment" role="radiogroup">
+              <label>
+                <input type="radio" name="ocr-quality" value="2.0" />
+                <span data-i18n="tools:ocrPdf.qualityFast">Fast</span>
+                <small>192 DPI</small>
+              </label>
+              <label>
+                <input type="radio" name="ocr-quality" value="3.0" checked />
+                <span data-i18n="tools:ocrPdf.qualityBalanced">Balanced</span>
+                <small>288 DPI</small>
+              </label>
+              <label>
+                <input type="radio" name="ocr-quality" value="4.0" />
+                <span data-i18n="tools:ocrPdf.qualityBest">Sharpest</span>
+                <small>384 DPI</small>
+              </label>
+            </div>
+            <input type="hidden" id="ocr-resolution" value="3.0" />
+            <p class="ocr-section-hint" data-i18n="tools:ocrPdf.qualityHint">
+              Small text or a blurry scan: choose Sharpest (slower).
+            </p>
+          </section>
+
+          <details class="tool-advanced">
+            <summary>
+              <span data-i18n="tools:ocrPdf.advancedTitle"
+                >Advanced options</span
               >
-              <i data-lucide="plus" class="faq-d-icon"></i>
+              <i class="ph ph-caret-down tool-caret"></i>
             </summary>
-            <div class="mt-4 space-y-4">
-              <!-- Resolution -->
-              <div>
-                <label
-                  for="ocr-resolution"
-                  class="block mb-1 text-xs font-medium text-gray-400"
-                  data-i18n="tools:ocrPdf.resolutionLabel"
-                  >Resolution</label
-                >
-                <select
-                  id="ocr-resolution"
-                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm"
-                >
-                  <option
-                    value="2.0"
-                    data-i18n="tools:ocrPdf.resolutionStandard"
+            <div class="tool-advanced-body">
+              <label class="tool-toggle">
+                <input type="checkbox" id="ocr-binarize" />
+                <span>
+                  <span
+                    class="tool-toggle-title"
+                    data-i18n="tools:ocrPdf.binarizeShort"
+                    >Boost contrast</span
                   >
-                    Standard (192 DPI)
-                  </option>
-                  <option
-                    value="3.0"
-                    selected
-                    data-i18n="tools:ocrPdf.resolutionHigh"
+                  <span
+                    class="tool-toggle-hint"
+                    data-i18n="tools:ocrPdf.binarizeHint"
+                    >Suits clean black-on-white scans.</span
                   >
-                    High (288 DPI)
-                  </option>
-                  <option value="4.0" data-i18n="tools:ocrPdf.resolutionUltra">
-                    Ultra (384 DPI)
-                  </option>
-                </select>
-              </div>
-              <!-- Binarization -->
-              <label
-                class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  id="ocr-binarize"
-                  class="w-4 h-4 rounded text-indigo-600 bg-gray-700 border-gray-600"
-                />
-                <span data-i18n="tools:ocrPdf.binarizeLabel"
-                  >Binarize Image (Enhance Contrast for Clean Scans)</span
-                >
+                </span>
               </label>
-              <label
-                class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  id="ocr-embed-full-fonts"
-                  class="w-4 h-4 rounded text-indigo-600 bg-gray-700 border-gray-600"
-                />
-                <span data-i18n="tools:ocrPdf.embedFullFontsLabel"
-                  >Embed Full Fonts (Larger file, better compatibility)</span
-                >
+              <label class="tool-toggle">
+                <input type="checkbox" id="ocr-embed-full-fonts" />
+                <span>
+                  <span
+                    class="tool-toggle-title"
+                    data-i18n="tools:ocrPdf.embedFontsShort"
+                    >Embed full fonts</span
+                  >
+                  <span
+                    class="tool-toggle-hint"
+                    data-i18n="tools:ocrPdf.embedFontsHint"
+                    >Larger file, shows the same everywhere.</span
+                  >
+                </span>
               </label>
-              <!-- Whitelist Presets -->
-              <div>
+              <div class="ocr-field">
                 <label
                   for="whitelist-preset"
-                  class="block mb-1 text-xs font-medium text-gray-400"
-                  data-i18n="tools:ocrPdf.whitelistPresetLabel"
-                  >Character Whitelist Preset</label
+                  class="tool-toggle-title"
+                  data-i18n="tools:ocrPdf.whitelistShort"
+                  >Recognise only</label
                 >
-                <select
-                  id="whitelist-preset"
-                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm mb-2"
-                >
-                  <option value="" data-i18n="tools:ocrPdf.whitelistNone">
-                    None (All characters)
+                <select id="whitelist-preset" class="ocr-input">
+                  <option value="" data-i18n="tools:ocrPdf.whitelistAll">
+                    All characters (recommended)
                   </option>
                   <option
                     value="alphanumeric"
@@ -369,36 +362,13 @@
                     Custom...
                   </option>
                 </select>
-                <p
-                  class="text-xs text-gray-500 mt-1"
-                  data-i18n="tools:ocrPdf.whitelistHelp"
-                >
-                  Only these characters will be recognized. Leave empty for all
-                  characters.
-                </p>
-              </div>
-              <!-- Whitelist Input -->
-              <div>
-                <label
-                  for="ocr-whitelist"
-                  class="block mb-1 text-xs font-medium text-gray-400"
-                  data-i18n="tools:ocrPdf.whitelistInputLabel"
-                  >Character Whitelist (Optional)</label
-                >
                 <input
                   type="text"
                   id="ocr-whitelist"
-                  class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2 text-sm"
+                  class="ocr-input hidden"
                   placeholder="e.g., abcdefghijklmnopqrstuvwxyz0123456789$.,"
                   data-i18n-placeholder="tools:ocrPdf.whitelistInputPlaceholder"
                 />
-                <p
-                  class="text-xs text-gray-500 mt-1"
-                  data-i18n="tools:ocrPdf.whitelistHelp"
-                >
-                  Only these characters will be recognized. Leave empty for all
-                  characters.
-                </p>
               </div>
             </div>
           </details>

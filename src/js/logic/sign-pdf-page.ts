@@ -841,7 +841,13 @@ function routeViewerSave(win: Window, doc: Document): void {
   const save = (e: Event): void => {
     e.stopImmediatePropagation();
     e.preventDefault();
-    void applyAndSaveSignatures();
+    // The desktop app routes saves (over the opened file, or Save as); it
+    // takes the request by cancelling this event.
+    const request = new CustomEvent('cit:save-request', {
+      cancelable: true,
+      detail: { saveAs: e instanceof KeyboardEvent && e.shiftKey },
+    });
+    if (document.dispatchEvent(request)) void applyAndSaveSignatures();
   };
   const print = (e: Event): void => {
     if (!placedImages.length) return;
@@ -864,8 +870,9 @@ function routeViewerSave(win: Window, doc: Document): void {
   win.addEventListener(
     'keydown',
     (e) => {
-      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
       const key = e.key.toLowerCase();
+      if (e.shiftKey && key !== 's') return;
       if (key === 's') save(e);
       else if (key === 'p') print(e);
     },

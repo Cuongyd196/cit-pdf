@@ -10,7 +10,7 @@ import {
   resolveConfiguredTesseractAvailableLanguages,
   UnsupportedOcrLanguageError,
 } from '../utils/tesseract-language-availability.js';
-import { initI18n, t } from '../i18n/index.js';
+import { getLanguageFromUrl, initI18n, t } from '../i18n/index.js';
 
 const pageState: OcrState = {
   file: null,
@@ -68,26 +68,39 @@ function resetState() {
   const fileInput = document.getElementById('file-input') as HTMLInputElement;
   if (fileInput) fileInput.value = '';
 
-  // Reset selected languages
+  // Back to the default languages
   const langCheckboxes = document.querySelectorAll(
     '.lang-checkbox'
   ) as NodeListOf<HTMLInputElement>;
   langCheckboxes.forEach(function (cb) {
     cb.checked = false;
   });
-
-  const selectedLangsDisplay = document.getElementById(
-    'selected-langs-display'
-  );
-  if (selectedLangsDisplay) {
-    selectedLangsDisplay.textContent = t('tools:ocrPdf.none');
-  }
-
-  const processBtn = document.getElementById(
-    'process-btn'
-  ) as HTMLButtonElement;
-  if (processBtn) processBtn.disabled = true;
+  checkDefaultLanguage();
 }
+
+/**
+ * Starts with the language of the app (else English) chosen, so the
+ * button works without a trip through the list.
+ */
+function checkDefaultLanguage() {
+  const ui = getLanguageFromUrl();
+  const preferred = ui === 'vi' ? ['vie', 'eng'] : ['eng'];
+  for (const code of preferred) {
+    const box = document.querySelector<HTMLInputElement>(
+      `.lang-checkbox[value="${code}"]`
+    );
+    if (box) {
+      box.checked = true;
+      break;
+    }
+  }
+  document
+    .getElementById('lang-list')
+    ?.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+// Up to this many languages show as buttons, without search or summary.
+const SHORT_LANGUAGE_LIST = 8;
 
 function updateLanguageAvailabilityNotice() {
   const notice = document.getElementById('lang-availability-note');
@@ -104,6 +117,13 @@ function updateLanguageAvailabilityNotice() {
   if (availableEntries.length === 0) {
     notice.classList.remove('hidden');
     notice.textContent = t('tools:ocrPdf.availabilityInvalidConfig');
+    return;
+  }
+
+  // A short list is shown in full as choices; naming it again is noise.
+  if (availableEntries.length <= SHORT_LANGUAGE_LIST) {
+    notice.classList.add('hidden');
+    notice.textContent = '';
     return;
   }
 
@@ -273,10 +293,18 @@ function populateLanguageList() {
     return;
   }
 
+  const short = availableEntries.length <= SHORT_LANGUAGE_LIST;
+  langList.classList.toggle('chips', short);
+  document.getElementById('lang-search')?.classList.toggle('hidden', short);
+  document
+    .getElementById('selected-langs-row')
+    ?.classList.toggle('hidden', short);
+
   availableEntries.forEach(function ([code, name]) {
     const label = document.createElement('label');
-    label.className =
-      'flex items-center gap-2 p-2 rounded-md hover:bg-gray-700 cursor-pointer';
+    label.className = short
+      ? 'ocr-lang-chip'
+      : 'flex items-center gap-2 p-2 rounded-md hover:bg-gray-700 cursor-pointer';
     label.dataset.search = `${name} ${code}`.toLowerCase();
 
     const checkbox = document.createElement('input');
@@ -316,6 +344,18 @@ document.addEventListener('DOMContentLoaded', async function () {
   await initI18n();
   populateLanguageList();
   updateLanguageAvailabilityNotice();
+
+  // Quality buttons set the resolution the run reads.
+  document
+    .querySelectorAll<HTMLInputElement>('input[name="ocr-quality"]')
+    .forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        const resolution = document.getElementById(
+          'ocr-resolution'
+        ) as HTMLInputElement | null;
+        if (resolution && radio.checked) resolution.value = radio.value;
+      });
+    });
 
   if (backBtn) {
     backBtn.addEventListener('click', function () {
@@ -408,6 +448,9 @@ document.addEventListener('DOMContentLoaded', async function () {
           whitelistInput.value = '';
         }
       }
+      // The characters show only once a limit is chosen.
+      whitelistInput.classList.toggle('hidden', preset === '');
+      if (preset === 'custom') whitelistInput.focus();
     });
   }
 
@@ -427,6 +470,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   if (processBtn) {
     processBtn.addEventListener('click', runOCR);
   }
+  checkDefaultLanguage();
 
   // Copy button
   if (copyBtn) {
