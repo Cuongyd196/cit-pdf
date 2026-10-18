@@ -294,8 +294,8 @@ footer a {
 }
 
 .cta-button {
-  background-color: #0d9488;
-  /* indigo-600 */
+  /* Dark enough for white text (5.5:1). */
+  background-color: #0f766e;
   color: white;
   font-weight: 600;
   padding: 12px 24px;
@@ -305,8 +305,7 @@ footer a {
 }
 
 .cta-button:hover {
-  background-color: #0f766e;
-  /* indigo-700 */
+  background-color: #115e59;
 }
 
 .marker-text {
@@ -1078,8 +1077,8 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
   /* py-3 px-8 */
   border-radius: 0.5rem;
   /* rounded-lg */
-  background-image: linear-gradient(to bottom, #0d9488, #0d9488);
-  /* from-indigo-500 to-indigo-600 */
+  /* #0f766e under white text is 5.5:1; the lighter #0d9488 was 3.7:1. */
+  background-image: linear-gradient(to bottom, #0f766e, #0f766e);
   color: #ffffff;
   /* text-white */
   font-weight: 600;
@@ -1090,6 +1089,7 @@ body:has(#desktop-sidebar) #drop-zone [data-i18n='upload.filesNeverLeave'] {
 }
 
 .btn-gradient:hover {
+  background-image: linear-gradient(to bottom, #115e59, #115e59);
   box-shadow:
     0 10px 15px -3px rgba(15, 118, 110, 0.3),
     0 4px 6px -4px rgba(15, 118, 110, 0.3);
@@ -2687,4 +2687,19 @@ body.desktop-workspace #embed-pdf-container {
   .desktop-workspace-button > span {
     display: none;
   }
+}
+
+/* Markdown preview code (highlight.js "github" theme): its keyword red
+   #d73a49 is 4.4:1 on the light code background; this one is 5.2:1. */
+pre
+  :is(
+    .hljs-doctag,
+    .hljs-keyword,
+    .hljs-meta .hljs-keyword,
+    .hljs-template-tag,
+    .hljs-template-variable,
+    .hljs-type,
+    .hljs-variable.language_
+  ) {
+  color: #cb2431;
 }
