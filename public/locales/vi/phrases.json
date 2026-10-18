@@ -2187,5 +2187,9 @@
   "Remove white background": "Xoá nền trắng",
   "Keeps the colours of a scanned signature or a company seal. Drag to move it, drag the corner to resize. To draw or type a signature, use the signature button in the viewer.": "Giữ nguyên màu của chữ ký scan hoặc con dấu. Kéo để di chuyển, kéo góc để đổi cỡ. Muốn ký tay hoặc gõ tên, dùng nút chữ ký trong khung xem.",
   "Saving signed PDF...": "Đang lưu PDF đã ký...",
-  "Please choose a PNG or JPG image.": "Hãy chọn ảnh PNG hoặc JPG."
+  "Please choose a PNG or JPG image.": "Hãy chọn ảnh PNG hoặc JPG.",
+  "Save first": "Cần lưu trước",
+  "Inserted signature and stamp images are only in the saved file. Save the PDF, then print the saved file.": "Ảnh chữ ký và con dấu đã chèn chỉ có trong tệp sau khi lưu. Hãy lưu PDF rồi in tệp đã lưu.",
+  "Saved list is full": "Danh sách đã lưu đã đầy",
+  "Delete a saved signature or stamp image to keep a new one.": "Hãy xoá bớt một ảnh chữ ký hoặc con dấu đã lưu để lưu ảnh mới."
 }

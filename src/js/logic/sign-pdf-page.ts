@@ -16,6 +16,12 @@ import {
   type PreparedSignImage,
   type SignImagePlacement,
 } from './sign-images.js';
+import {
+  deleteSavedSignImage,
+  listSavedSignImages,
+  saveSignImage,
+  type SavedSignImage,
+} from './sign-library.js';
 import type { SignState, PDFViewerWindow } from '@/types';
 
 interface ViewerOptions {
@@ -47,10 +53,14 @@ const NEW_IMAGE_WIDTH = 0.28;
 
 const OVERLAY_CSS = `
 .cit-sign-layer { position: absolute; inset: 0; z-index: 100; pointer-events: none; }
-.cit-sign-image { position: absolute; pointer-events: auto; cursor: move; touch-action: none; outline: 1px dashed rgba(13, 148, 136, 0.9); }
+.cit-sign-image { position: absolute; pointer-events: auto; cursor: move; touch-action: none; }
+.cit-sign-image.selected { outline: 1px dashed rgba(13, 148, 136, 0.9); }
+.cit-sign-image:not(.selected) .cit-sign-resize, .cit-sign-image:not(.selected) .cit-sign-delete { display: none; }
 .cit-sign-image img { display: block; width: 100%; height: 100%; pointer-events: none; user-select: none; }
 .cit-sign-image .cit-sign-resize { position: absolute; right: -7px; bottom: -7px; width: 14px; height: 14px; border-radius: 3px; background: #0d9488; border: 2px solid #fff; cursor: nwse-resize; }
 .cit-sign-image .cit-sign-delete { position: absolute; right: -11px; top: -11px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: #dc2626; color: #fff; font: 600 14px/22px sans-serif; text-align: center; padding: 0; cursor: pointer; }
+.cit-dialog-preview { position: absolute; inset: 12px; width: calc(100% - 24px); height: calc(100% - 24px); object-fit: contain; pointer-events: none; }
+.cit-saved-sign .toolbarAddSignatureButton > img { display: inline-block; height: 100%; aspect-ratio: 1; object-fit: contain; flex: none; padding: 4px; box-sizing: border-box; border-radius: 4px; background-color: var(--signature-bg); }
 `;
 
 const signState: SignState = {
@@ -268,6 +278,10 @@ async function setupSignTool() {
         const style = doc.createElement('style');
         style.textContent = OVERLAY_CSS;
         doc.head.append(style);
+        routeSignatureImages(doc);
+        routeViewerSave(viewerWindow, doc);
+        trackSelection(doc);
+        void renderSavedSignImages(doc);
         // PDF.js clears a page's own nodes when it redraws it.
         eventBus?._on('pagerendered', () => {
           for (const item of placedImages) showPlacedImage(item);
@@ -452,7 +466,10 @@ function cleanup() {
 function viewerParts() {
   const win = signState.viewerIframe?.contentWindow as
     | (PDFViewerWindow & {
-        PDFViewerApplication?: { page?: number };
+        PDFViewerApplication?: {
+          page?: number;
+          l10n?: { translate(element: Element): Promise<void> };
+        };
       })
     | null;
   const doc = signState.viewerIframe?.contentDocument;
@@ -502,9 +519,7 @@ function buildPlacedImage(doc: Document, item: PlacedImage): HTMLElement {
   remove.title = 'Remove';
   remove.addEventListener('click', (event) => {
     event.stopPropagation();
-    box.remove();
-    placedImages.splice(placedImages.indexOf(item), 1);
-    URL.revokeObjectURL(item.image.url);
+    removePlacedImage(item);
   });
   box.append(img, resize, remove);
 
@@ -513,6 +528,7 @@ function buildPlacedImage(doc: Document, item: PlacedImage): HTMLElement {
     if (event.target === remove) return;
     event.preventDefault();
     event.stopPropagation();
+    selectPlacedImage(item);
     const page = box.closest<HTMLElement>('.page');
     if (!page) return;
     const resizing = event.target === resize;
@@ -546,22 +562,345 @@ function buildPlacedImage(doc: Document, item: PlacedImage): HTMLElement {
   return box;
 }
 
-/** "Insert signature or stamp": a picture, kept in colour. */
-async function insertSignImage(file: File): Promise<void> {
-  const parts = viewerParts();
-  if (!parts) return;
-  const removeWhite =
+/**
+ * PDF.js's "Add signature" dialog turns a picture from its Image tab into a
+ * one-colour outline. Here a picture picked or dropped there is shown in
+ * colour in the dialog instead; "Add" places it like "Insert signature or
+ * stamp" does and, with "Save signature" ticked, keeps it in the saved list.
+ */
+function routeSignatureImages(doc: Document): void {
+  let pending: PreparedSignImage | null = null;
+  const byId = <T extends HTMLElement = HTMLElement>(id: string) =>
+    doc.getElementById(id) as T | null;
+  const imageTabOpen = () =>
+    byId('addSignatureImageButton')?.getAttribute('aria-selected') === 'true';
+  const showPlaceholder = (show: boolean) => {
+    const placeholder = byId('addSignatureImagePlaceholder');
+    if (placeholder) placeholder.hidden = !show;
+  };
+  const enableControls = () => {
+    for (const id of [
+      'addSignatureAddButton',
+      'clearSignatureButton',
+      'addSignatureDescInput',
+      'addSignatureSaveCheckbox',
+    ]) {
+      const control = byId<HTMLButtonElement>(id);
+      if (control) control.disabled = false;
+    }
+  };
+  const dropPending = (revoke: boolean) => {
+    if (pending && revoke) URL.revokeObjectURL(pending.url);
+    pending = null;
+    doc.querySelector('.cit-dialog-preview')?.remove();
+    showPlaceholder(true);
+  };
+  const take = async (file: File | undefined, e: Event): Promise<void> => {
+    if (!file || !file.type.startsWith('image/')) return;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    byId('addSignatureDialog')?.classList.remove('waiting');
+    let image: PreparedSignImage;
+    try {
+      image = await prepareSignImage(file, removeWhiteChecked());
+    } catch (error) {
+      console.error('Could not read the image:', error);
+      showAlert('Invalid File', 'Please choose a PNG or JPG image.');
+      return;
+    }
+    dropPending(true);
+    pending = image;
+    const preview = doc.createElement('img');
+    preview.className = 'cit-dialog-preview';
+    preview.src = image.url;
+    preview.alt = '';
+    byId('addSignatureImageContainer')?.append(preview);
+    showPlaceholder(false);
+    const description = byId<HTMLInputElement>('addSignatureDescInput');
+    if (description && !description.value) {
+      description.value = file.name.replace(/\.[^.]+$/, '');
+    }
+    enableControls();
+  };
+  doc.addEventListener(
+    'change',
+    (e) => {
+      const input = e.target as HTMLInputElement;
+      if (input.id !== 'addSignatureFilePicker') return;
+      void take(input.files?.[0], e);
+      input.value = '';
+    },
+    true
+  );
+  doc.addEventListener(
+    'drop',
+    (e) => {
+      const target = e.target as Element | null;
+      if (!target?.closest?.('#addSignatureImageContainer')) return;
+      const file = [...(e.dataTransfer?.files ?? [])].find((f) =>
+        f.type.startsWith('image/')
+      );
+      void take(file, e);
+    },
+    true
+  );
+  doc.addEventListener(
+    'click',
+    (e) => {
+      const target = e.target as Element | null;
+      if (!pending || !target?.closest) return;
+      if (target.closest('#addSignatureAddButton') && imageTabOpen()) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        const image = pending;
+        const name =
+          byId<HTMLInputElement>('addSignatureDescInput')?.value.trim() || '';
+        const save = byId<HTMLInputElement>('addSignatureSaveCheckbox');
+        const keep = !!save?.checked && !save.disabled;
+        dropPending(false);
+        byId<HTMLButtonElement>('addSignatureCancelButton')?.click();
+        if (keep) {
+          const fallback =
+            getLanguageFromUrl() === 'vi' ? 'Chữ ký' : 'Signature';
+          void keepSignImage(doc, name || fallback, image);
+        }
+        placeSignImage(image);
+      } else if (target.closest('#clearSignatureButton') && imageTabOpen()) {
+        dropPending(true);
+      } else if (target.closest('#addSignatureImageButton')) {
+        // PDF.js greys the buttons out again when the tab is shown.
+        setTimeout(() => {
+          if (!pending) return;
+          showPlaceholder(false);
+          enableControls();
+        }, 0);
+      }
+    },
+    true
+  );
+  byId('addSignatureDialog')?.addEventListener('close', () =>
+    dropPending(true)
+  );
+}
+
+/** Keeps a picture in the saved list and shows it there. */
+async function keepSignImage(
+  doc: Document,
+  name: string,
+  image: PreparedSignImage
+): Promise<void> {
+  try {
+    if (!(await saveSignImage(name, image))) {
+      showAlert(
+        'Saved list is full',
+        'Delete a saved signature or stamp image to keep a new one.'
+      );
+      return;
+    }
+  } catch (e) {
+    console.error('Could not save the signature image:', e);
+    return;
+  }
+  await renderSavedSignImages(doc);
+}
+
+/**
+ * Saved pictures, in PDF.js's saved-signature menu after its own entries,
+ * in the same row style: the picture, its name, a delete button.
+ */
+async function renderSavedSignImages(doc: Document): Promise<void> {
+  const addButton = doc.getElementById('editorSignatureAddSignature');
+  if (!addButton) return;
+  let saved: SavedSignImage[] = [];
+  try {
+    saved = await listSavedSignImages();
+  } catch (e) {
+    console.warn('Could not read the saved signature images:', e);
+  }
+  for (const old of doc.querySelectorAll('.cit-saved-sign')) {
+    const thumb = old.querySelector('img');
+    if (thumb) URL.revokeObjectURL(thumb.src);
+    old.remove();
+  }
+  for (const item of saved) {
+    const row = doc.createElement('div');
+    row.className = 'toolbarAddSignatureButtonContainer cit-saved-sign';
+    const button = doc.createElement('button');
+    button.type = 'button';
+    button.className = 'toolbarAddSignatureButton';
+    button.setAttribute(
+      'data-l10n-id',
+      'pdfjs-editor-add-saved-signature-button'
+    );
+    button.setAttribute(
+      'data-l10n-args',
+      JSON.stringify({ description: item.name })
+    );
+    const thumb = doc.createElement('img');
+    thumb.src = URL.createObjectURL(
+      new Blob([new Uint8Array(item.png)], { type: 'image/png' })
+    );
+    thumb.alt = '';
+    const label = doc.createElement('span');
+    label.ariaHidden = 'true';
+    label.textContent = item.name;
+    button.append(thumb, label);
+    button.addEventListener('click', () => {
+      placeSignImage({
+        png: item.png,
+        width: item.width,
+        height: item.height,
+        url: URL.createObjectURL(
+          new Blob([new Uint8Array(item.png)], { type: 'image/png' })
+        ),
+      });
+      // Leaves signature mode, which closes this menu, as PDF.js does once
+      // one of its own saved signatures is on the page.
+      viewerParts()?.win.PDFViewerApplication?.eventBus?.dispatch(
+        'switchannotationeditormode',
+        { source: null, mode: 0 }
+      );
+    });
+    const remove = doc.createElement('button');
+    remove.type = 'button';
+    remove.className = 'toolbarButton deleteButton';
+    remove.setAttribute(
+      'data-l10n-id',
+      'pdfjs-editor-delete-signature-button1'
+    );
+    const removeLabel = doc.createElement('span');
+    removeLabel.setAttribute(
+      'data-l10n-id',
+      'pdfjs-editor-delete-signature-button-label1'
+    );
+    remove.append(removeLabel);
+    remove.addEventListener('click', async () => {
+      try {
+        await deleteSavedSignImage(item.id);
+      } catch (e) {
+        console.error('Could not delete the saved signature image:', e);
+        return;
+      }
+      URL.revokeObjectURL(thumb.src);
+      row.remove();
+    });
+    row.append(button, remove);
+    addButton.before(row);
+    void viewerParts()?.win.PDFViewerApplication?.l10n?.translate(row);
+  }
+}
+
+/** Only the picture last touched shows its frame, resize and delete. */
+function selectPlacedImage(item: PlacedImage | null): void {
+  for (const other of placedImages) {
+    other.element?.classList.toggle('selected', other === item);
+  }
+}
+
+function removePlacedImage(item: PlacedImage): void {
+  item.element?.remove();
+  const index = placedImages.indexOf(item);
+  if (index >= 0) placedImages.splice(index, 1);
+  URL.revokeObjectURL(item.image.url);
+}
+
+/**
+ * A click anywhere else in the viewer deselects, like PDF.js's own editors;
+ * Delete or Backspace removes the selected picture.
+ */
+function trackSelection(doc: Document): void {
+  doc.addEventListener(
+    'pointerdown',
+    (e) => {
+      const target = e.target as Element | null;
+      if (!target?.closest?.('.cit-sign-image')) selectPlacedImage(null);
+    },
+    true
+  );
+  doc.addEventListener('keydown', (e) => {
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest?.('input, textarea, [contenteditable="true"]')) return;
+    const selected = placedImages.find((item) =>
+      item.element?.classList.contains('selected')
+    );
+    if (!selected) return;
+    e.preventDefault();
+    e.stopPropagation();
+    removePlacedImage(selected);
+  });
+}
+
+/**
+ * The viewer's own download button and Ctrl+S save only what PDF.js drew,
+ * without the pictures the page placed. Both go through the tool's save.
+ * Printing from the viewer would leave the pictures out too, so it waits
+ * until they are saved into a file.
+ */
+function routeViewerSave(win: Window, doc: Document): void {
+  const save = (e: Event): void => {
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    void applyAndSaveSignatures();
+  };
+  const print = (e: Event): void => {
+    if (!placedImages.length) return;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    showAlert(
+      'Save first',
+      'Inserted signature and stamp images are only in the saved file. Save the PDF, then print the saved file.'
+    );
+  };
+  doc.addEventListener(
+    'click',
+    (e) => {
+      const target = e.target as Element | null;
+      if (target?.closest?.('#downloadButton, #secondaryDownload')) save(e);
+      else if (target?.closest?.('#printButton, #secondaryPrint')) print(e);
+    },
+    true
+  );
+  win.addEventListener(
+    'keydown',
+    (e) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+      const key = e.key.toLowerCase();
+      if (key === 's') save(e);
+      else if (key === 'p') print(e);
+    },
+    true
+  );
+}
+
+function removeWhiteChecked(): boolean {
+  return (
     (
       document.getElementById(
         'sign-image-clear-white'
       ) as HTMLInputElement | null
-    )?.checked ?? true;
+    )?.checked ?? true
+  );
+}
+
+/** "Insert signature or stamp": a picture, kept in colour. */
+async function insertSignImage(file: File): Promise<void> {
   let image: PreparedSignImage;
   try {
-    image = await prepareSignImage(file, removeWhite);
+    image = await prepareSignImage(file, removeWhiteChecked());
   } catch (e) {
     console.error('Could not read the image:', e);
     showAlert('Invalid File', 'Please choose a PNG or JPG image.');
+    return;
+  }
+  placeSignImage(image);
+}
+
+/** Puts a prepared picture on the page being read, centred and selected. */
+function placeSignImage(image: PreparedSignImage): void {
+  const parts = viewerParts();
+  if (!parts) {
+    URL.revokeObjectURL(image.url);
     return;
   }
   const pageIndex = Math.max(
@@ -583,4 +922,5 @@ async function insertSignImage(file: File): Promise<void> {
   };
   placedImages.push(item);
   showPlacedImage(item);
+  selectPlacedImage(item);
 }
