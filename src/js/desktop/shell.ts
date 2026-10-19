@@ -53,6 +53,111 @@ interface ShellCategory {
   tools: ShellTool[];
 }
 
+// The app's order of the groups (after Popular Tools), most used first.
+const GROUP_ORDER = [
+  'Organize & Manage',
+  'Convert from PDF',
+  'Convert to PDF',
+  'Edit & Annotate',
+  'Optimize & Repair',
+  'Secure PDF',
+];
+
+// Tools that lead their group, in this order; the rest follow as listed.
+const TOOL_ORDER = [
+  // Organize
+  'merge-pdf',
+  'split-pdf',
+  'extract-pages',
+  'delete-pages',
+  'organize-pdf',
+  'rotate-pdf',
+  'pdf-multi-tool',
+  'add-blank-page',
+  'reverse-pages',
+  // From PDF
+  'pdf-to-word',
+  'pdf-to-jpg',
+  'pdf-to-excel',
+  'ocr-pdf',
+  'pdf-to-png',
+  'pdf-to-text',
+  'extract-images',
+  // To PDF
+  'jpg-to-pdf',
+  'image-to-pdf',
+  'word-to-pdf',
+  'excel-to-pdf',
+  'powerpoint-to-pdf',
+  'png-to-pdf',
+  'heic-to-pdf',
+  'txt-to-pdf',
+  // Edit
+  'edit-pdf-text',
+  'edit-pdf',
+  'sign-pdf',
+  'add-watermark',
+  'page-numbers',
+  'header-footer',
+  'crop-pdf',
+  'form-filler',
+  'add-stamps',
+  // Optimize
+  'compress-pdf',
+  'repair-pdf',
+  'pdf-to-pdfa',
+  'fix-page-size',
+  // Secure
+  'protect-pdf',
+  'unlock-pdf',
+  'digital-sign-pdf',
+  'flatten-pdf',
+  'remove-metadata',
+];
+
+// Tools the app shows in another group than the registry: OCR turns a scan
+// into text, which users look for next to the other conversions.
+const MOVED_TOOLS: Record<string, string> = {
+  'ocr-pdf': 'Convert from PDF',
+};
+
+/** The registry's groups in the app's order, with common tools first. */
+function arrangeCategories<
+  C extends { name: string; tools: Array<{ href?: string }> },
+>(list: C[]): C[] {
+  const slug = (tool: { href?: string }) => slugOf(tool.href ?? '');
+  const moved = new Map<string, C['tools']>();
+  const kept = list.map((category) => ({
+    ...category,
+    tools: category.tools.filter((tool) => {
+      const to = MOVED_TOOLS[slug(tool)];
+      if (!to || to === category.name || category === list[0]) return true;
+      moved.set(to, [...(moved.get(to) ?? []), tool]);
+      return false;
+    }),
+  }));
+  const rank = (tool: { href?: string }) => {
+    const i = TOOL_ORDER.indexOf(slug(tool));
+    return i < 0 ? TOOL_ORDER.length : i;
+  };
+  const groupRank = (name: string) => {
+    const i = GROUP_ORDER.indexOf(name);
+    return i < 0 ? GROUP_ORDER.length : i;
+  };
+  // Popular Tools stays first and as it is.
+  const [popular, ...groups] = kept;
+  const arranged = groups
+    .map((category) => ({
+      ...category,
+      tools: [...category.tools, ...(moved.get(category.name) ?? [])]
+        .map((tool, i) => ({ tool, i }))
+        .sort((a, b) => rank(a.tool) - rank(b.tool) || a.i - b.i)
+        .map(({ tool }) => tool),
+    }))
+    .sort((a, b) => groupRank(a.name) - groupRank(b.name));
+  return popular ? [popular, ...arranged] : arranged;
+}
+
 const SHORT_GROUP_NAMES: Record<string, DesktopStringKey> = {
   'Edit & Annotate': 'groupEdit',
   'Convert to PDF': 'groupToPdf',
@@ -155,26 +260,28 @@ export function initDesktopShell(options: ShellOptions): void {
   applyDesktopStrings();
   initIconFamily();
 
-  const shellCategories: ShellCategory[] = categories.map((category) => {
-    const categoryKey = options.categoryTranslationKeys[category.name];
-    const shortKey = SHORT_GROUP_NAMES[category.name];
-    return {
-      name: categoryKey ? t(categoryKey) : category.name,
-      short: shortKey ? ds(shortKey) : undefined,
-      tools: category.tools
-        .filter((tool) => tool.href)
-        .map((tool) => {
-          const toolKey = options.toolTranslationKeys[tool.name];
-          return {
-            slug: slugOf(tool.href),
-            href: tool.href,
-            name: toolKey ? t(`${toolKey}.name`) : tool.name,
-            subtitle: toolKey ? t(`${toolKey}.subtitle`) : tool.subtitle,
-            icon: tool.icon,
-          };
-        }),
-    };
-  });
+  const shellCategories: ShellCategory[] = arrangeCategories(categories).map(
+    (category) => {
+      const categoryKey = options.categoryTranslationKeys[category.name];
+      const shortKey = SHORT_GROUP_NAMES[category.name];
+      return {
+        name: categoryKey ? t(categoryKey) : category.name,
+        short: shortKey ? ds(shortKey) : undefined,
+        tools: category.tools
+          .filter((tool) => tool.href)
+          .map((tool) => {
+            const toolKey = options.toolTranslationKeys[tool.name];
+            return {
+              slug: slugOf(tool.href),
+              href: tool.href,
+              name: toolKey ? t(`${toolKey}.name`) : tool.name,
+              subtitle: toolKey ? t(`${toolKey}.subtitle`) : tool.subtitle,
+              icon: tool.icon,
+            };
+          }),
+      };
+    }
+  );
 
   const toolsBySlug = new Map<string, ShellTool>();
   for (const category of shellCategories) {
@@ -412,7 +519,7 @@ export function initDesktopShell(options: ShellOptions): void {
     currentFile: () => pageFile,
   });
   // The first group, Popular Tools, repeats tools of the others; the few it
-  // alone has (the workflow builder) lead the next group. The viewer is
+  // alone has (the workflow builder) end the next group. The viewer is
   // what opening a file does, so it is not a tool card.
   const homeSeen = new Set<string>([VIEWER_SLUG]);
   const [popular, ...groups] = shellCategories;
@@ -425,7 +532,7 @@ export function initDesktopShell(options: ShellOptions): void {
       .map((category, i) => ({
         name: category.name,
         short: category.short,
-        tools: [...(i === 0 ? onlyPopular : []), ...category.tools].filter(
+        tools: [...category.tools, ...(i === 0 ? onlyPopular : [])].filter(
           (tool) => !homeSeen.has(tool.slug) && homeSeen.add(tool.slug)
         ),
       }))

@@ -119,18 +119,38 @@ function showBanner(result: StoredResult, before: Element): void {
   before.before(banner);
 }
 
-/** Home page only: shows the notice when a newer release is out. */
-export async function initUpdateBanner(): Promise<void> {
-  const grid = document.getElementById('tool-grid');
-  if (!grid || !autoUpdateEnabled()) return;
+/** Status bar, every page: "Version 1.0.5 available" beside the version. */
+function showStatusLink(result: StoredResult): void {
+  const version = document.getElementById('app-version');
+  if (!version || document.getElementById('desktop-update-status')) return;
+  const link = document.createElement('a');
+  link.id = 'desktop-update-status';
+  link.className = 'desktop-update-status';
+  link.href = result.url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.title = ds('updateStatusHint', { current: result.current });
+  link.dataset.noTranslate = '';
+  const icon = document.createElement('i');
+  icon.className = 'ph ph-arrow-circle-up';
+  const text = document.createElement('span');
+  text.textContent = ds('updateStatus', { latest: result.latest });
+  link.append(icon, text);
+  (version.parentElement ?? version).after(link);
+}
 
+/**
+ * When a newer release is out: a link in the status bar on every page and,
+ * until dismissed for that release, a notice on the home page.
+ */
+export async function initUpdateBanner(): Promise<void> {
+  if (!autoUpdateEnabled()) return;
   const result = await latestResult();
-  if (!result?.newer || getStoredItem(DISMISSED_KEY) === result.latest) return;
-  // Above the recent tools when that row exists, else above the grid.
-  showBanner(
-    result,
-    document.getElementById('home-drop') ??
-      document.getElementById('desktop-recent') ??
-      grid
-  );
+  if (!result?.newer) return;
+  showStatusLink(result);
+
+  const home = document.querySelector('.desktop-home-files-row');
+  if (home && getStoredItem(DISMISSED_KEY) !== result.latest) {
+    showBanner(result, home);
+  }
 }

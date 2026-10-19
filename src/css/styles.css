@@ -491,6 +491,20 @@ body:has(#desktop-statusbar) .pdf-view-panel {
   @apply flex items-center gap-3 mb-6 px-4 py-3 rounded-lg border border-indigo-500 bg-indigo-600/15 text-sm text-white;
 }
 
+/* The home page spaces its rows itself. */
+.desktop-home-main > .desktop-update-banner {
+  @apply mb-0;
+}
+
+/* Status bar: a newer release, beside the version. */
+.desktop-update-status {
+  @apply flex items-center gap-1 rounded px-1.5 font-semibold text-indigo-400 no-underline hover:text-indigo-300;
+}
+
+.desktop-update-status > i {
+  @apply text-sm;
+}
+
 .desktop-update-banner-action {
   @apply flex-shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold no-underline hover:bg-indigo-700;
   color: #ffffff;

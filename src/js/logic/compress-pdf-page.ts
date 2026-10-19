@@ -2,58 +2,24 @@ import { showLoader, hideLoader, showAlert } from '../ui.js';
 import { downloadFile, formatBytes } from '../utils/helpers.js';
 import { loadPdfWithPasswordPrompt } from '../utils/password-prompt.js';
 import {
-  RASTER_START,
-  condenseLadder,
-  nextRasterSettings,
-  type RasterSettings,
-} from '../utils/compress-target.js';
+  compressToTarget,
+  formatMegabytes,
+  splitUnderLimit,
+  type CompressStatus,
+  type CompressToTargetResult,
+} from '../utils/compress-to-target.js';
+import type { CondenseCustomSettings } from '../utils/compress.js';
+import { showChoiceDialog } from '../utils/choice-dialog.js';
+import { t } from '../i18n/i18n.js';
 import { state } from '../state.js';
 import { PDFDocument } from 'pdf-lib';
+import JSZip from 'jszip';
 import { createIcons, icons } from 'lucide';
 import { showWasmRequiredDialog } from '../utils/wasm-provider.js';
-import { loadPyMuPDF, isPyMuPDFAvailable } from '../utils/pymupdf-loader.js';
-import type { PDFDocumentProxy } from 'pdfjs-dist';
+import { isPyMuPDFAvailable } from '../utils/pymupdf-loader.js';
 import '../utils/setup-pdf-worker.js';
 
-const CONDENSE_PRESETS = {
-  light: {
-    images: { quality: 90, dpiTarget: 150, dpiThreshold: 200 },
-    scrub: { metadata: false, thumbnails: true },
-    subsetFonts: true,
-  },
-  balanced: {
-    images: { quality: 75, dpiTarget: 96, dpiThreshold: 150 },
-    scrub: { metadata: true, thumbnails: true },
-    subsetFonts: true,
-  },
-  aggressive: {
-    images: { quality: 50, dpiTarget: 72, dpiThreshold: 100 },
-    scrub: { metadata: true, thumbnails: true, xmlMetadata: true },
-    subsetFonts: true,
-  },
-  extreme: {
-    images: { quality: 30, dpiTarget: 60, dpiThreshold: 96 },
-    scrub: { metadata: true, thumbnails: true, xmlMetadata: true },
-    subsetFonts: true,
-  },
-};
-
-const PHOTON_PRESETS = {
-  light: { scale: 2.0, quality: 0.85 },
-  balanced: { scale: 1.5, quality: 0.65 },
-  aggressive: { scale: 1.2, quality: 0.45 },
-  extreme: { scale: 1.0, quality: 0.25 },
-};
-
-interface CustomSettings {
-  imageQuality?: number;
-  dpiTarget?: number;
-  dpiThreshold?: number;
-  removeMetadata?: boolean;
-  subsetFonts?: boolean;
-  convertToGrayscale?: boolean;
-  removeThumbnails?: boolean;
-}
+type CustomSettings = CondenseCustomSettings;
 
 interface CompressRequest {
   algorithm: string;
@@ -63,218 +29,142 @@ interface CompressRequest {
   targetBytes: number | null;
 }
 
-interface CompressOutcome {
-  blob: Blob;
-  method: string;
-  reachedTarget: boolean;
+interface CompressOutcome extends CompressToTargetResult {
+  /** How it was compressed, for the message. */
+  label: string;
 }
 
-// Each image attempt renders every page again, so keep the number bounded.
-const MAX_RASTER_ATTEMPTS = 5;
-
-async function performCondenseCompression(
-  fileBlob: Blob,
-  level: string,
-  customSettings?: CustomSettings
-) {
-  // Load PyMuPDF dynamically from user-provided URL
-  const pymupdf = await loadPyMuPDF();
-
-  const preset =
-    CONDENSE_PRESETS[level as keyof typeof CONDENSE_PRESETS] ||
-    CONDENSE_PRESETS.balanced;
-
-  const dpiTarget = customSettings?.dpiTarget ?? preset.images.dpiTarget;
-  const userThreshold =
-    customSettings?.dpiThreshold ?? preset.images.dpiThreshold;
-  const dpiThreshold = Math.max(userThreshold, dpiTarget + 10);
-
-  const options = {
-    images: {
-      enabled: true,
-      quality: customSettings?.imageQuality ?? preset.images.quality,
-      dpiTarget,
-      dpiThreshold,
-      convertToGray: customSettings?.convertToGrayscale ?? false,
-    },
-    scrub: {
-      metadata: customSettings?.removeMetadata ?? preset.scrub.metadata,
-      thumbnails: customSettings?.removeThumbnails ?? preset.scrub.thumbnails,
-      xmlMetadata:
-        'xmlMetadata' in preset.scrub
-          ? (preset.scrub as { xmlMetadata: boolean }).xmlMetadata
-          : false,
-    },
-    subsetFonts: customSettings?.subsetFonts ?? preset.subsetFonts,
-    save: {
-      garbage: 4 as const,
-      deflate: true,
-      clean: true,
-      useObjstms: true,
-    },
-  };
-
-  try {
-    const result = await pymupdf.compressPdf(fileBlob, options);
-    return result;
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (
-      errorMessage.includes('PatternType') ||
-      errorMessage.includes('pattern')
-    ) {
-      console.warn(
-        '[CompressPDF] Pattern error detected, retrying without image rewriting:',
-        errorMessage
-      );
-
-      const fallbackOptions = {
-        ...options,
-        images: {
-          ...options.images,
-          enabled: false,
-        },
-      };
-
-      const result = await pymupdf.compressPdf(fileBlob, fallbackOptions);
-      return { ...result, usedFallback: true };
-    }
-
-    throw new Error(`PDF compression failed: ${errorMessage}`, {
-      cause: error,
-    });
-  }
-}
-
-async function renderPagesAsImages(
-  pdfJsDoc: PDFDocumentProxy,
-  settings: RasterSettings,
-  onPage: (page: number, total: number) => void
-) {
-  const newPdfDoc = await PDFDocument.create();
-
-  for (let i = 1; i <= pdfJsDoc.numPages; i++) {
-    onPage(i, pdfJsDoc.numPages);
-    const page = await pdfJsDoc.getPage(i);
-    const viewport = page.getViewport({ scale: settings.scale });
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
-
-    await page.render({ canvasContext: context, viewport, canvas: canvas })
-      .promise;
-
-    const jpegBlob = await new Promise<Blob>((resolve) =>
-      canvas.toBlob(
-        (blob) => resolve(blob as Blob),
-        'image/jpeg',
-        settings.quality
-      )
-    );
-    canvas.width = 0;
-    canvas.height = 0;
-    const jpegBytes = await jpegBlob.arrayBuffer();
-    const jpegImage = await newPdfDoc.embedJpg(jpegBytes);
-    // The page keeps its real size; only the image on it gets coarser.
-    const pageSize = page.getViewport({ scale: 1 });
-    const newPage = newPdfDoc.addPage([pageSize.width, pageSize.height]);
-    newPage.drawImage(jpegImage, {
-      x: 0,
-      y: 0,
-      width: pageSize.width,
-      height: pageSize.height,
-    });
-  }
-  return await newPdfDoc.save();
-}
+const STATUS_TEXT: Record<Exclude<CompressStatus, 'images'>, string> = {
+  loading: 'Loading compression engine...',
+  condense: 'Running Condense compression...',
+  'condense-stronger':
+    'Still above the size limit. Trying stronger compression...',
+};
 
 /**
- * Compresses one file. With a size limit, tries stronger settings until the
- * result fits: first the Condense levels, which keep text selectable, then
- * pages turned into images at ever lower resolution. Returns the smallest
- * result, or null when the user cancelled a password prompt.
+ * Compresses one file, down to the size limit when there is one (see
+ * compressToTarget). Returns null when the user cancelled a password prompt.
  */
 async function compressFile(
   file: File,
   request: CompressRequest,
   status: (text: string) => void
 ): Promise<CompressOutcome | null> {
-  const { algorithm, level, customSettings, targetBytes } = request;
-  const fits = (blob: Blob) => targetBytes === null || blob.size <= targetBytes;
-  const results: Array<{ blob: Blob; method: string }> = [];
-
-  if (algorithm === 'condense') {
-    status('Loading compression engine...');
-    await loadPyMuPDF();
-
-    const levels = targetBytes === null ? [level] : condenseLadder(level);
-    for (let i = 0; i < levels.length; i++) {
+  const photon = request.algorithm === 'photon';
+  const outcome = await compressToTarget(file, {
+    algorithm: photon ? 'photon' : 'condense',
+    level: request.level,
+    targetBytes: request.targetBytes,
+    customSettings: request.customSettings,
+    grayscale: request.customSettings?.convertToGrayscale,
+    loadPdf: async () => {
+      hideLoader();
+      return (await loadPdfWithPasswordPrompt(file))?.pdf ?? null;
+    },
+    status: (key, page, total) =>
       status(
-        i === 0
-          ? 'Running Condense compression...'
-          : 'Still above the size limit. Trying stronger compression...'
-      );
-      // The user's own settings shape the first attempt only; the stronger
-      // attempts use the presets, keeping just the grayscale choice.
-      const grayscaleOnly = customSettings?.convertToGrayscale
-        ? { convertToGrayscale: true }
-        : undefined;
-      const result = await performCondenseCompression(
-        file,
-        levels[i],
-        i === 0 ? customSettings : grayscaleOnly
-      );
-      const usedFallback = (result as { usedFallback?: boolean }).usedFallback;
-      results.push({
-        blob: result.blob,
-        method: usedFallback
-          ? 'Condense (without image optimization due to unsupported patterns)'
-          : 'Condense',
-      });
-      if (fits(result.blob)) break;
-    }
-  }
-
-  const smallest = () =>
-    results.reduce((a, b) => (b.blob.size < a.blob.size ? b : a));
-
-  // Photon, or a size limit Condense could not reach: pages become images.
-  if (results.length === 0 || !fits(smallest().blob)) {
-    hideLoader();
-    const loaded = await loadPdfWithPasswordPrompt(file);
-    if (!loaded) return null;
-
-    const method =
-      algorithm === 'photon'
-        ? 'Photon'
-        : 'Photon (pages turned into images to fit the size limit)';
-    let settings: RasterSettings | null =
-      algorithm === 'photon'
-        ? PHOTON_PRESETS[level as keyof typeof PHOTON_PRESETS] ||
-          PHOTON_PRESETS.balanced
-        : RASTER_START;
-
-    for (let i = 0; settings && i < MAX_RASTER_ATTEMPTS; i++) {
-      const bytes = await renderPagesAsImages(
-        loaded.pdf,
-        settings,
-        (page, total) =>
-          status(`Turning page ${page} of ${total} into an image...`)
-      );
-      const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
-      results.push({ blob, method });
-      if (targetBytes === null || fits(blob)) break;
-      settings = nextRasterSettings(settings, blob.size, targetBytes);
-    }
-  }
-
-  const best = smallest();
-  return { ...best, reachedTarget: fits(best.blob) };
+        key === 'images'
+          ? `Turning page ${page} of ${total} into an image...`
+          : STATUS_TEXT[key]
+      ),
+  });
+  if (!outcome) return null;
+  const label =
+    outcome.method === 'condense'
+      ? 'Condense'
+      : outcome.method === 'condense-plain'
+        ? 'Condense (without image optimization due to unsupported patterns)'
+        : photon
+          ? 'Photon'
+          : 'Photon (pages turned into images to fit the size limit)';
+  return { ...outcome, label };
 }
 
-// Megabytes are counted in decimal here: upload forms that say "under 2 MB"
-// may mean 2,000,000 bytes, and a file that fits that fits either reading.
+/** "Bao cao.pdf" → "Bao cao". */
+const baseName = (name: string) => name.replace(/\.pdf$/i, '');
+
+/**
+ * The result is still above the limit: say why, and let the user cut it
+ * into parts that fit, keep it as it is, or drop it.
+ */
+async function offerOverLimit(
+  original: File,
+  outcome: CompressOutcome,
+  targetBytes: number
+): Promise<void> {
+  showLoader(t('tools:compressPdf.overLimitChecking'));
+  const bytes = new Uint8Array(await outcome.blob.arrayBuffer());
+  let pages = 0;
+  let parts: Uint8Array[] | null = null;
+  try {
+    pages = (
+      await PDFDocument.load(bytes, { ignoreEncryption: true })
+    ).getPageCount();
+    parts = await splitUnderLimit(bytes, targetBytes);
+  } catch (e) {
+    console.warn('[CompressPDF] Could not work out the parts:', e);
+  }
+  hideLoader();
+
+  const limit = formatMegabytes(targetBytes);
+  const size = formatMegabytes(outcome.blob.size);
+  const reasons = [
+    outcome.rasterized || outcome.atFloor
+      ? t('tools:compressPdf.overLimitFloor', { pages })
+      : t('tools:compressPdf.overLimitStrongest'),
+  ];
+  if (!parts) reasons.push(t('tools:compressPdf.overLimitNoSplit', { limit }));
+  const canSplit = Boolean(parts && parts.length > 1);
+
+  const choice = await showChoiceDialog({
+    title: t('tools:compressPdf.overLimitTitle', { limit }),
+    message: t('tools:compressPdf.overLimitBody', {
+      size,
+      original: formatMegabytes(original.size),
+      reason: reasons.join(' '),
+    }),
+    choices: [
+      ...(canSplit
+        ? [
+            {
+              id: 'split',
+              label: t('tools:compressPdf.overLimitSplit', {
+                count: parts!.length,
+                limit,
+              }),
+              primary: true,
+            },
+          ]
+        : []),
+      {
+        id: 'save',
+        label: t('tools:compressPdf.overLimitSave', { size }),
+        primary: !canSplit,
+      },
+      { id: 'cancel', label: t('tools:compressPdf.overLimitCancel') },
+    ],
+  });
+
+  if (choice === 'save') {
+    downloadFile(outcome.blob, original.name);
+  } else if (choice === 'split' && parts) {
+    const zip = new JSZip();
+    const base = baseName(original.name);
+    parts.forEach((part, i) =>
+      zip.file(t('tools:compressPdf.partName', { base, n: i + 1 }), part)
+    );
+    downloadFile(
+      await zip.generateAsync({ type: 'blob' }),
+      t('tools:compressPdf.partsZip', { base, count: parts.length })
+    );
+    showAlert(
+      t('tools:compressPdf.splitDoneTitle'),
+      t('tools:compressPdf.splitDone', { count: parts.length, limit }),
+      'success'
+    );
+  }
+}
+
 const BYTES_PER_MB = 1000 * 1000;
 
 function readTargetBytes(): number | null {
@@ -534,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
         customSettings,
         targetBytes,
       };
-      const limit = targetBytes === null ? '' : formatBytes(targetBytes);
+      const limit = targetBytes === null ? '' : formatMegabytes(targetBytes);
 
       if (state.files.length === 1) {
         const originalFile = state.files[0];
@@ -550,33 +440,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const savingsPercent =
           savings > 0 ? ((savings / originalFile.size) * 100).toFixed(1) : 0;
 
+        if (!outcome.reachedTarget && targetBytes !== null) {
+          await offerOverLimit(originalFile, outcome, targetBytes);
+          return;
+        }
         downloadFile(outcome.blob, originalFile.name);
 
-        if (!outcome.reachedTarget) {
-          showAlert(
-            'Size Limit Not Reached',
-            `Could not get the file below ${limit}. Smallest result: ${compressedSize} (original: ${originalSize}). Try splitting the PDF into parts.`,
-            'warning',
-            () => resetState()
-          );
-        } else if (savings > 0) {
+        if (savings > 0) {
           showAlert(
             'Compression Complete',
-            `Method: ${outcome.method}. File size reduced from ${originalSize} to ${compressedSize} (Saved ${savingsPercent}%).`,
+            `Method: ${outcome.label}. File size reduced from ${originalSize} to ${compressedSize} (Saved ${savingsPercent}%).`,
             'success',
             () => resetState()
           );
         } else {
           showAlert(
             'Compression Finished',
-            `Method: ${outcome.method}. Could not reduce file size further. Original: ${originalSize}, New: ${compressedSize}.`,
+            `Method: ${outcome.label}. Could not reduce file size further. Original: ${originalSize}, New: ${compressedSize}.`,
             'warning',
             () => resetState()
           );
         }
       } else {
         showLoader('Compressing multiple PDFs...');
-        const JSZip = (await import('jszip')).default;
         const zip = new JSZip();
         let totalOriginalSize = 0;
         let totalCompressedSize = 0;

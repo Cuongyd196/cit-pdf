@@ -628,8 +628,9 @@ export async function initStudio(options: StudioOptions): Promise<void> {
       }
       history.push(result.label, result.bytes);
       await show(file, result.bytes);
+      const applied = ds('studioApplied', { step: result.label });
       message = {
-        text: ds('studioApplied', { step: result.label }),
+        text: result.note ? `${applied}. ${result.note}` : applied,
         error: false,
       };
     } catch (e) {
@@ -789,8 +790,12 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     }
     const note = body.querySelector<HTMLElement>('.studio-message');
     if (note) {
-      note.textContent = message?.text ?? '';
+      const text = message?.text ?? '';
+      const changed = note.textContent !== text;
+      note.textContent = text;
       note.classList.toggle('error', Boolean(message?.error));
+      // A long result note can sit below the fold of the fields.
+      if (changed && text) note.scrollIntoView({ block: 'nearest' });
     }
     drawer!.classList.toggle('busy', busy);
     // The row shows which tool the drawer holds.

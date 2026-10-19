@@ -61,6 +61,8 @@ export interface StudioResult {
   label: string;
   /** For a tool that makes a new file: the name offered for it. */
   fileName?: string;
+  /** Something the user should know about the result, shown with it. */
+  note?: string;
 }
 
 export interface StudioTool {
@@ -91,12 +93,6 @@ const fileNameSafe = (text: string) => text.replace(/[\\/:*?"<>|]/g, '-');
 
 /** A problem with what the user asked for, shown beside the fields. */
 export class StudioInputError extends Error {}
-
-function formatSize(size: number): string {
-  return size >= 1024 * 1024
-    ? `${(size / 1024 / 1024).toFixed(1)} MB`
-    : `${Math.max(1, Math.round(size / 1024))} KB`;
-}
 
 async function save(doc: Awaited<ReturnType<typeof loadPdfDocument>>) {
   return new Uint8Array(await doc.save());
@@ -462,23 +458,100 @@ export const STUDIO_TOOLS: StudioTool[] = [
         ],
         value: 'balanced',
       },
+      {
+        kind: 'select',
+        id: 'target',
+        label: 'studioCompressTarget',
+        options: [
+          ['', 'studioTargetNone'],
+          ['1', 'studioTarget1'],
+          ['2', 'studioTarget2'],
+          ['5', 'studioTarget5'],
+          ['10', 'studioTarget10'],
+          ['custom', 'studioTargetCustom'],
+        ],
+        value: '',
+      },
+      {
+        kind: 'number',
+        id: 'targetCustom',
+        label: 'studioTargetCustomMb',
+        min: 1,
+        max: 500,
+        value: 3,
+        shownWhen: { field: 'target', value: 'custom' },
+      },
+      {
+        kind: 'select',
+        id: 'color',
+        label: 'studioCompressColor',
+        options: [
+          ['keep', 'studioColorKeep'],
+          ['gray', 'studioColorGray'],
+        ],
+        value: 'keep',
+      },
+      {
+        kind: 'select',
+        id: 'images',
+        label: 'studioCompressText',
+        options: [
+          ['allow', 'studioTextAllow'],
+          ['keep', 'studioTextKeep'],
+        ],
+        value: 'allow',
+      },
     ],
     async apply(bytes, values) {
+      const megabytes =
+        values.target === 'custom'
+          ? parseFloat(values.targetCustom)
+          : parseFloat(values.target);
+      // MB as file portals count them: 1 MB = 1,000,000 bytes.
+      const targetBytes =
+        megabytes > 0 ? Math.floor(megabytes * 1000 * 1000) : null;
+      const limit = targetBytes === null ? '' : `${megabytes} MB`;
+      if (targetBytes !== null && bytes.length <= targetBytes) {
+        throw new StudioInputError(ds('studioCompressAlready', { limit }));
+      }
+
       // PyMuPDF is a module downloaded on first use; load it only here.
-      const { performCondenseCompression } =
-        await import('../../utils/compress.js');
-      const result = await performCondenseCompression(
+      const [{ compressToTarget, formatMegabytes }, { getPDFDocument }] =
+        await Promise.all([
+          import('../../utils/compress-to-target.js'),
+          import('../../utils/helpers.js'),
+          import('../../utils/setup-pdf-worker.js'),
+        ]);
+      const result = await compressToTarget(
         new Blob([bytes as BlobPart], { type: 'application/pdf' }),
-        values.level
+        {
+          level: values.level,
+          targetBytes,
+          grayscale: values.color === 'gray',
+          keepText: values.images === 'keep',
+          loadPdf: () => getPDFDocument({ data: bytes.slice() }).promise,
+        }
       );
+      if (!result) throw new StudioInputError(ds('studioFailed'));
       const out = new Uint8Array(await result.blob.arrayBuffer());
       // Not worth a step when it saves next to nothing.
       if (out.length >= bytes.length * 0.97) {
         throw new StudioInputError(ds('studioCompressNoGain'));
       }
+      const notes = [
+        result.reachedTarget
+          ? ''
+          : ds('studioCompressOver', {
+              limit,
+              size: formatMegabytes(out.length),
+            }),
+        result.rasterized ? ds('studioCompressImages') : '',
+      ].filter(Boolean);
       return {
         bytes: out,
-        label: `${ds('studioCompress')} ${formatSize(bytes.length)} → ${formatSize(out.length)}`,
+        // In the same units as the limit, so "→ 2.07 MB" compares with it.
+        label: `${ds('studioCompress')} ${formatMegabytes(bytes.length)} → ${formatMegabytes(out.length)}`,
+        note: notes.join(' ') || undefined,
       };
     },
   },
