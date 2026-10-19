@@ -1,0 +1,113 @@
+/**
+ * Short descriptions for the home page's tool cards, at most 40 characters
+ * so a card shows them whole. A tool's own page keeps its full subtitle.
+ * Vietnamese only; other languages show the subtitle as it is.
+ */
+const VI: Record<string, string> = {
+  'edit-pdf-text': 'Sửa chữ ngay trên trang PDF',
+  'pdf-workflow': 'Ghép nhiều bước xử lý thành quy trình',
+  'pdf-multi-tool': 'Gộp, chia, xoay, xóa trang ở một chỗ',
+  'merge-pdf': 'Ghép nhiều tệp PDF thành một',
+  'split-pdf': 'Tách một PDF thành nhiều tệp',
+  'compress-pdf': 'Giảm dung lượng tệp PDF',
+  'edit-pdf': 'Ghi chú, tô sáng, vẽ, chèn ảnh',
+  'jpg-to-pdf': 'Ghép ảnh JPG thành tệp PDF',
+  'sign-pdf': 'Vẽ, gõ hoặc chèn ảnh chữ ký',
+  'crop-pdf': 'Cắt bớt lề các trang',
+  'extract-pages': 'Lấy các trang cần dùng ra tệp mới',
+  'organize-pdf': 'Kéo thả đổi thứ tự, nhân bản trang',
+  'delete-pages': 'Bỏ những trang không cần',
+  bookmark: 'Thêm, sửa, xóa dấu trang của tệp',
+  'add-watermark': 'Đóng dấu chữ hoặc logo mờ lên trang',
+  'header-footer': 'Thêm chữ ở đầu và cuối trang',
+  'add-page-labels': 'Đặt nhãn trang kiểu i, ii, A-1…',
+  'adjust-colors': 'Chỉnh độ sáng, tương phản, bão hòa',
+  'invert-colors': 'Tạo bản nền tối cho PDF',
+  'add-stamps': 'Đóng tem hình ảnh lên trang',
+  'form-filler': 'Điền các ô trong biểu mẫu PDF',
+  'form-creator': 'Tạo biểu mẫu có ô để điền',
+  'image-to-pdf': 'Ảnh JPG, PNG, HEIC… thành PDF',
+  'markdown-to-pdf': 'Viết Markdown, xuất ra PDF đẹp',
+  'word-to-pdf': 'Tệp DOC, DOCX thành PDF',
+  'excel-to-pdf': 'Tệp XLS, XLSX thành PDF',
+  'powerpoint-to-pdf': 'Tệp PPT, PPTX thành PDF',
+  'email-to-pdf': 'Tệp email EML, MSG thành PDF',
+  'pdf-to-word': 'PDF thành tệp Word sửa được',
+  'pdf-to-excel': 'Lấy bảng trong PDF ra Excel',
+  'pdf-to-jpg': 'Mỗi trang thành một ảnh JPG',
+  'pdf-to-svg': 'Mỗi trang thành ảnh vector SVG',
+  'pdf-to-cbz': 'PDF thành tệp truyện tranh CBZ',
+  'pdf-to-text': 'Lấy toàn bộ chữ ra tệp .txt',
+  'prepare-pdf-for-ai': 'Xuất nội dung JSON cho RAG/LLM',
+  'ocr-pdf': 'Nhận dạng chữ trên bản scan',
+  'alternate-merge': 'Gộp xen kẽ trang từ nhiều PDF',
+  'duplex-collate': 'Xếp bản scan hai mặt đúng thứ tự',
+  'extract-tables': 'Lấy bảng ra CSV, JSON, Markdown',
+  'rotate-pdf': 'Xoay trang 90°, 180°, 270°',
+  'pdf-booklet': 'Xếp trang để in, gấp thành sách nhỏ',
+  'remove-restrictions': 'Gỡ giới hạn in, sao chép, sửa',
+  'rasterize-pdf': 'Biến trang thành ảnh, bỏ lớp chữ',
+  'deskew-pdf': 'Tự làm thẳng trang scan bị nghiêng',
+  'font-to-outline': 'Đổi phông chữ thành nét vẽ vector',
+  'protect-pdf': 'Cần mật khẩu mới mở được tệp',
+  'unlock-pdf': 'Bỏ mật khẩu đã biết khỏi tệp',
+  'flatten-pdf': 'Khóa ô biểu mẫu và ghi chú vào trang',
+  'digital-sign-pdf': 'Ký bằng chứng thư số .pfx, .p12',
+  'validate-signature-pdf': 'Kiểm tra chữ ký số trong PDF',
+  'timestamp-pdf': 'Thêm dấu thời gian RFC 3161',
+  'bates-numbering': 'Đánh số Bates liên tục qua nhiều tệp',
+  'scanner-effect': 'Làm PDF trông như bản scan',
+  'txt-to-pdf': 'Tệp văn bản .txt thành PDF',
+  'odt-to-pdf': 'Tệp OpenDocument (ODT) thành PDF',
+  'rtf-to-pdf': 'Tệp RTF thành PDF',
+  'fb2-to-pdf': 'Sách điện tử FB2 thành PDF',
+  'cbz-to-pdf': 'Truyện tranh CBZ, CBR thành PDF',
+  'wpd-to-pdf': 'Tệp WordPerfect (WPD) thành PDF',
+  'pages-to-pdf': 'Tệp Apple Pages thành PDF',
+  'odg-to-pdf': 'Hình vẽ OpenDocument (ODG) thành PDF',
+  'ods-to-pdf': 'Bảng tính OpenDocument (ODS) thành PDF',
+  'odp-to-pdf': 'Trình chiếu OpenDocument (ODP) thành PDF',
+  'pub-to-pdf': 'Tệp Publisher (PUB) thành PDF',
+  'vsd-to-pdf': 'Tệp Visio (VSD, VSDX) thành PDF',
+  'psd-to-pdf': 'Tệp Photoshop (PSD) thành PDF',
+  'pdf-to-png': 'Mỗi trang thành một ảnh PNG',
+  'pdf-to-webp': 'Mỗi trang thành một ảnh WebP',
+  'pdf-to-bmp': 'Mỗi trang thành một ảnh BMP',
+  'pdf-to-tiff': 'Mỗi trang thành một ảnh TIFF',
+  'pdf-to-csv': 'Lấy bảng trong PDF ra tệp CSV',
+  'pdf-to-greyscale': 'Đổi mọi màu sang đen trắng',
+  'extract-images': 'Lưu các hình ảnh có trong PDF',
+  'pdf-to-markdown': 'Chữ và bảng trong PDF ra Markdown',
+  'overlay-pdf': 'Chồng trang của PDF này lên PDF khác',
+  'extract-attachments': 'Lấy tệp đính kèm ra thành ZIP',
+  'pdf-layers': 'Xem, bật tắt, thêm, xóa lớp OCG',
+  'divide-pages': 'Cắt đôi trang theo chiều ngang, dọc',
+  'reverse-pages': 'Đảo thứ tự trang, cuối lên đầu',
+  'rotate-custom': 'Xoay trang theo góc bất kỳ',
+  'combine-single-page': 'Nối mọi trang thành một trang dài',
+  'edit-metadata': 'Sửa tác giả, tiêu đề, thuộc tính',
+  'pdf-to-zip': 'Nén nhiều tệp PDF vào một tệp ZIP',
+  'posterize-pdf': 'Chia trang lớn thành nhiều trang nhỏ',
+  'pdf-to-pdfa': 'Đổi sang PDF/A để lưu trữ lâu dài',
+  'fix-page-size': 'Đưa mọi trang về cùng kích thước',
+  'page-dimensions': 'Xem kích thước, hướng của từng trang',
+  'repair-pdf': 'Cứu dữ liệu từ tệp PDF bị hỏng',
+  'sanitize-pdf': 'Xóa thông tin ẩn, ghi chú, script',
+  'change-permissions': 'Đặt quyền in, sao chép, sửa tệp',
+};
+
+export function homeBlurb(
+  slug: string,
+  subtitle: string,
+  lang: 'vi' | 'en'
+): string {
+  if (lang !== 'vi') return subtitle;
+  return (
+    VI[slug] ??
+    subtitle
+      .replace(/\s*Hỗ trợ nhiều tệp\.?$/, '')
+      .replace(' sang định dạng PDF', ' sang PDF')
+      .replace(/ của bạn/g, '')
+      .replace(/\.$/, '')
+  );
+}

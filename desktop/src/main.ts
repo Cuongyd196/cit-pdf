@@ -809,6 +809,17 @@ function buildMenu(): void {
             void showOpenFileDialog();
           },
         },
+        {
+          label: text.findTool,
+          accelerator: 'CmdOrCtrl+K',
+          click: (_item, window) => {
+            const target =
+              window instanceof BrowserWindow
+                ? window
+                : BrowserWindow.getFocusedWindow();
+            target?.webContents.send(IPC_CHANNELS.FIND_TOOL);
+          },
+        },
         { type: 'separator' as const },
         isMac
           ? { role: 'close' as const, label: text.closeWindow }

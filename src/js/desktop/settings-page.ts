@@ -8,11 +8,11 @@ import { applyDesktopStrings, desktopLang, ds } from './strings.js';
 import { THEME_EVENT, setThemePreference, themePreference } from './theme.js';
 import { autoUpdateEnabled, setAutoUpdate } from './update-check.js';
 import {
+  DESKTOP_LANGUAGES,
   changeLanguage,
   getLanguageFromUrl,
   languageNames,
 } from '../i18n/i18n.js';
-import { orderedLanguages } from '../i18n/language-switcher.js';
 
 function formatSize(bytes: number): string {
   return bytes > 0 ? `~${(bytes / (1024 * 1024)).toFixed(0)} MB` : '';
@@ -207,7 +207,7 @@ function initLanguageSelect(): void {
   ) as HTMLSelectElement | null;
   if (!select) return;
 
-  orderedLanguages.forEach((lang) => {
+  DESKTOP_LANGUAGES.forEach((lang) => {
     const option = document.createElement('option');
     option.value = lang;
     option.textContent = languageNames[lang];
@@ -215,7 +215,7 @@ function initLanguageSelect(): void {
   });
   select.value = getLanguageFromUrl();
   select.addEventListener('change', () => {
-    changeLanguage(select.value as (typeof orderedLanguages)[number]);
+    changeLanguage(select.value as (typeof DESKTOP_LANGUAGES)[number]);
   });
 }
 

@@ -10,6 +10,8 @@
  * is a no-op.
  */
 
+import { desktopLang, ds } from './strings.js';
+
 export type DesktopModuleName =
   | 'pymupdf'
   | 'ghostscript'
@@ -98,6 +100,8 @@ interface DesktopBridge {
   getModulesStatus(): Promise<ModuleStatus[]>;
   removeModule(name: DesktopModuleName): Promise<boolean>;
   onFileOpened(cb: () => void): () => void;
+  /** File > Find a tool… in the menu bar. */
+  onFindTool?(cb: () => void): () => void;
   takeOpenedFile(): Promise<OpenedFile | null>;
   readOpenedFile(path: string): Promise<Uint8Array>;
   listPrinters(): Promise<PrinterInfo[]>;
@@ -184,6 +188,34 @@ function hideProgress(): void {
 }
 
 /**
+ * The status bar names the components this tool still lacks, after the
+ * user cancelled their download or it failed; otherwise it says nothing.
+ */
+async function showMissingModules(names: DesktopModuleName[]): Promise<void> {
+  const target = document.getElementById('desktop-modules-status');
+  const bridge = getBridge();
+  if (!target || !bridge) return;
+  let missing: string[] = [];
+  if (names.length > 0) {
+    try {
+      const lang = desktopLang();
+      missing = (await bridge.getModulesStatus())
+        .filter((mod) => names.includes(mod.name) && !mod.installed)
+        .map((mod) =>
+          (mod.label[lang] || mod.label.en || mod.name).split('(')[0].trim()
+        );
+    } catch {
+      missing = [...names];
+    }
+  }
+  target.textContent =
+    missing.length > 0
+      ? ds('modulesMissing', { names: missing.join(', ') })
+      : '';
+  target.classList.toggle('hidden', missing.length === 0);
+}
+
+/**
  * Make sure the given engine modules are installed locally (desktop only).
  * Prompts the user and downloads them if needed. Throws if the user cancels
  * or the download/verification fails. Resolves immediately on the web.
@@ -197,6 +229,7 @@ export async function ensureDesktopModules(
   const off = bridge.onModuleProgress(showProgress);
   try {
     const result = await bridge.ensureModules(names);
+    void showMissingModules(result.ok ? [] : names);
     if (!result.ok) {
       throw new Error(
         result.cancelled

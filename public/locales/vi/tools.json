@@ -5,8 +5,8 @@
     "convertToPdf": "Chuyển đổi sang PDF",
     "convertFromPdf": "Chuyển đổi từ PDF",
     "organizeManage": "Sắp xếp & Quản lý",
-    "optimizeRepair": "Tối ưu hóa & Sửa chữa",
-    "securePdf": "Bảo mật PDF",
+    "optimizeRepair": "Tối ưu & Sửa lỗi",
+    "securePdf": "Bảo mật",
     "input": "Đầu vào",
     "output": "Đầu ra"
   },
@@ -17,7 +17,7 @@
   },
   "mergePdf": {
     "name": "Gộp PDF",
-    "subtitle": "Kết hợp nhiều PDF thành một tệp. Giữ nguyên Bookmark.",
+    "subtitle": "Kết hợp nhiều PDF thành một tệp. Giữ nguyên dấu trang.",
     "modeFiles": "Theo tệp",
     "modePages": "Theo trang",
     "modeFilesHint": "Xếp thứ tự tệp, chọn trang cần lấy của từng tệp (để trống là lấy tất cả).",
@@ -35,7 +35,7 @@
     "moveDown": "Xuống",
     "removeFile": "Bỏ tệp này",
     "mergeButton": "Gộp {{files}} tệp · {{pages}} trang",
-    "optionsTitle": "Tuỳ chọn",
+    "optionsTitle": "Tùy chọn",
     "retainShort": "Giữ số trang gốc của từng tệp",
     "retainShortHint": "Mặc định đánh số lại từ 1 đến hết.",
     "dedupeFonts": "Gọn phông chữ trùng",
@@ -69,7 +69,7 @@
     "modeOddEven": "Trang lẻ / chẵn",
     "modeOddEvenDesc": "Lấy riêng trang lẻ hoặc chẵn vào một tệp",
     "modeBookmarks": "Theo mục lục",
-    "modeBookmarksDesc": "Mỗi mục (bookmark) một tệp",
+    "modeBookmarksDesc": "Mỗi mục trong mục lục một tệp",
     "modeVisual": "Chọn bằng hình",
     "modeVisualDesc": "Bấm vào những trang cần lấy",
     "rangeLabel": "Khoảng trang",
@@ -107,6 +107,19 @@
     "subtitle": "Tách một PDF thành nhiều tệp: theo khoảng trang, cứ N trang, từng trang hoặc theo mục lục."
   },
   "compressPdf": {
+    "overLimitChecking": "Đang tính cách chia tệp...",
+    "overLimitTitle": "Chưa xuống dưới {{limit}}",
+    "overLimitBody": "Nhỏ nhất đạt được: {{size}} (ban đầu {{original}}).\n{{reason}}",
+    "overLimitFloor": "Tệp có {{pages}} trang và đã giảm tới mức thấp nhất mà chữ còn đọc được. Nén thêm thì chữ sẽ nhòe không đọc nổi.",
+    "overLimitStrongest": "Đã dùng mức nén mạnh nhất mà vẫn giữ chữ chọn được.",
+    "overLimitNoSplit": "Có trang riêng lẻ đã lớn hơn {{limit}}, nên không chia được.",
+    "overLimitSplit": "Chia thành {{count}} tệp, mỗi tệp dưới {{limit}}",
+    "overLimitSave": "Vẫn lưu bản {{size}}",
+    "overLimitCancel": "Hủy",
+    "partName": "{{base}} (phần {{n}}).pdf",
+    "partsZip": "{{base}} ({{count}} phần).zip",
+    "splitDoneTitle": "Đã chia tệp",
+    "splitDone": "Đã chia thành {{count}} tệp, mỗi tệp dưới {{limit}}, gói trong một tệp ZIP.",
     "name": "Nén PDF",
     "subtitle": "Giảm kích thước tệp PDF của bạn.",
     "algorithmLabel": "Thuật toán nén",
@@ -263,7 +276,7 @@
     "subtitle": "Vẽ, gõ hoặc tải lên chữ ký của bạn."
   },
   "cropPdf": {
-    "name": "Cắt PDF",
+    "name": "Cắt lề PDF",
     "subtitle": "Cắt lề của mọi trang trong PDF của bạn."
   },
   "pageRange": {
@@ -302,7 +315,7 @@
     "subtitle": "Chọn các trang cần lấy và lưu thành một tệp PDF mới."
   },
   "duplicateOrganize": {
-    "name": "Nhân đôi & Sắp xếp",
+    "name": "Sắp xếp trang",
     "subtitle": "Nhân đôi, sắp xếp lại và xóa trang.",
     "saveChanges": "Lưu thay đổi"
   },
@@ -311,8 +324,8 @@
     "subtitle": "Xóa các trang cụ thể khỏi tài liệu của bạn."
   },
   "editBookmarks": {
-    "name": "Chỉnh sửa Bookmark",
-    "subtitle": "Thêm, chỉnh sửa, nhập, xóa và trích xuất bookmark PDF.",
+    "name": "Sửa dấu trang",
+    "subtitle": "Thêm, chỉnh sửa, nhập, xóa và trích xuất dấu trang PDF.",
     "autoExtractExisting": "Tự động trích xuất dấu trang hiện có",
     "importSectionTitle": "Hoặc nhập dấu trang",
     "csvFormat": "Định dạng CSV: tiêu đề,trang,cấp",
@@ -323,7 +336,7 @@
   },
   "tableOfContents": {
     "name": "Mục lục",
-    "subtitle": "Tạo trang mục lục từ bookmark PDF.",
+    "subtitle": "Tạo trang mục lục từ dấu trang PDF.",
     "titleLabel": "Tiêu đề Mục lục",
     "fontSize": "Cỡ chữ",
     "fontFamily": "Họ phông chữ",
@@ -338,7 +351,7 @@
     "workerErrorOccurred": "Đã xảy ra lỗi worker. Kiểm tra console để biết chi tiết."
   },
   "pageNumbers": {
-    "name": "Số trang",
+    "name": "Đánh số trang",
     "subtitle": "Chèn số trang vào tài liệu của bạn."
   },
   "addPageLabels": {
@@ -405,7 +418,7 @@
     "subtitle": "Thêm số Bates tuần tự trên một hoặc nhiều tệp PDF."
   },
   "addWatermark": {
-    "name": "Thêm Watermark",
+    "name": "Đóng dấu mờ",
     "subtitle": "Đóng dấu văn bản hoặc hình ảnh lên các trang PDF của bạn.",
     "applyToAllPages": "Áp dụng cho tất cả các trang"
   },
@@ -414,7 +427,7 @@
     "subtitle": "Thêm văn bản vào đầu và cuối trang."
   },
   "invertColors": {
-    "name": "Đảo ngược màu",
+    "name": "Đảo màu",
     "subtitle": "Tạo phiên bản \"chế độ tối\" cho PDF của bạn."
   },
   "scannerEffect": {
@@ -435,7 +448,7 @@
     "processButton": "Áp dụng hiệu ứng máy quét"
   },
   "adjustColors": {
-    "name": "Điều chỉnh màu sắc",
+    "name": "Chỉnh màu",
     "subtitle": "Tinh chỉnh độ sáng, tương phản, độ bão hòa và nhiều hơn nữa.",
     "colorSettings": "Cài đặt màu sắc",
     "brightness": "Độ sáng",
@@ -449,15 +462,15 @@
     "processButton": "Áp dụng điều chỉnh màu"
   },
   "backgroundColor": {
-    "name": "Màu nền",
+    "name": "Đổi màu nền",
     "subtitle": "Thay đổi màu nền của PDF của bạn."
   },
   "changeTextColor": {
-    "name": "Thay đổi màu văn bản",
+    "name": "Đổi màu chữ",
     "subtitle": "Thay đổi màu văn bản trong PDF của bạn."
   },
   "addStamps": {
-    "name": "Thêm tem",
+    "name": "Đóng tem",
     "subtitle": "Thêm tem hình ảnh vào PDF của bạn bằng thanh công cụ ghi chú.",
     "usernameLabel": "Tên người dùng tem",
     "usernamePlaceholder": "Nhập tên của bạn (cho tem)",
@@ -469,14 +482,14 @@
     "subtitle": "Loại bỏ bình luận, tô sáng và liên kết."
   },
   "pdfFormFiller": {
-    "name": "Điền form PDF",
+    "name": "Điền biểu mẫu PDF",
     "subtitle": "Điền form trực tiếp trong trình duyệt. Cũng hỗ trợ form XFA.",
     "uploadHint": "Tải lên PDF có trường biểu mẫu. Điền trực tiếp vào trình xem bên dưới, sau đó nhấp vào nút để lưu và tải xuống biểu mẫu đã điền. Cũng hỗ trợ biểu mẫu XFA.",
     "xfaNoteTitle": "Lưu ý về biểu mẫu XFA:",
     "xfaNoteDescription": "XFA (XML Forms Architecture) là định dạng cũ chỉ được hỗ trợ bởi một số trình xem PDF nhất định như BentoPDF và Firefox. Nếu bạn mở PDF XFA trong phần mềm khác và thấy trang trống hoặc không có trường biểu mẫu, có nghĩa là trình xem đó không hỗ trợ XFA. Để xem và điền biểu mẫu XFA đúng cách, hãy sử dụng Firefox hoặc Form Filler của BentoPDF."
   },
   "createPdfForm": {
-    "name": "Tạo form PDF",
+    "name": "Tạo biểu mẫu PDF",
     "subtitle": "Tạo form PDF có thể điền với các trường văn bản kéo và thả.",
     "orSeparator": "HOẶC",
     "createBlankPdf": "Tạo PDF trống"
@@ -487,7 +500,7 @@
     "sensitivityHint": "Cao hơn = nghiêm ngặt hơn, chỉ các trang hoàn toàn trống. Thấp hơn = cho phép trang có một số nội dung."
   },
   "imageToPdf": {
-    "name": "Hình ảnh sang PDF",
+    "name": "Ảnh sang PDF",
     "subtitle": "Chuyển đổi JPG, PNG, BMP, GIF, TIFF, PNM, PGM, PBM, PPM, PAM, JXR, JPX, JP2, PSD, SVG, HEIC, WebP sang PDF."
   },
   "pngToPdf": {
@@ -663,7 +676,7 @@
     }
   },
   "pdfToGreyscale": {
-    "name": "PDF sang thang xám",
+    "name": "PDF sang đen trắng",
     "subtitle": "Chuyển đổi tất cả màu sắc sang đen trắng."
   },
   "pdfToJson": {
@@ -693,7 +706,7 @@
     "qualityBalanced": "Cân bằng",
     "qualityBest": "Nét nhất",
     "qualityHint": "Chữ nhỏ hoặc bản quét mờ: chọn Nét nhất (chậm hơn).",
-    "advancedTitle": "Tuỳ chọn nâng cao",
+    "advancedTitle": "Tùy chọn nâng cao",
     "binarizeShort": "Tăng tương phản",
     "binarizeHint": "Hợp với bản quét nền trắng, chữ đen.",
     "embedFontsShort": "Nhúng đủ phông chữ",
@@ -752,8 +765,8 @@
     "multiLanguageSupportDescription": "Chọn nhiều ngôn ngữ cho tài liệu chứa nội dung ngôn ngữ hỗn hợp."
   },
   "alternateMerge": {
-    "name": "Xen kẽ & Trộn trang",
-    "subtitle": "Gộp PDF bằng cách xen kẽ trang từ mỗi PDF. Giữ nguyên Bookmark.",
+    "name": "Gộp xen kẽ trang",
+    "subtitle": "Gộp PDF bằng cách xen kẽ trang từ mỗi PDF. Giữ nguyên dấu trang.",
     "retainPageLabels": "Giữ nhãn trang gốc từ mỗi tệp",
     "retainPageLabelsHint": "Tắt (mặc định): PDF đã hợp nhất sử dụng đánh số trang tự nhiên 1–N. Bật: nhãn trang gốc của từng tệp được giữ lại (có thể tạo ra nhãn trùng lặp)."
   },
@@ -815,7 +828,7 @@
     "subtitle": "Xem hoặc xóa tệp đính kèm trong PDF của bạn."
   },
   "dividePages": {
-    "name": "Chia trang",
+    "name": "Cắt đôi trang",
     "subtitle": "Chia trang theo chiều ngang hoặc chiều dọc."
   },
   "addBlankPage": {
@@ -823,7 +836,7 @@
     "subtitle": "Chèn trang trống ở bất kỳ đâu trong PDF của bạn."
   },
   "reversePages": {
-    "name": "Đảo ngược trang",
+    "name": "Đảo thứ tự trang",
     "subtitle": "Lật ngược thứ tự tất cả các trang trong tài liệu của bạn."
   },
   "rotatePdf": {
@@ -831,15 +844,15 @@
     "subtitle": "Xoay trang theo bội số 90 độ."
   },
   "rotateCustom": {
-    "name": "Xoay theo độ tùy chỉnh",
+    "name": "Xoay góc tùy ý",
     "subtitle": "Xoay trang theo bất kỳ góc độ tùy chỉnh nào."
   },
   "nUpPdf": {
-    "name": "N-Up PDF",
+    "name": "Nhiều trang trên một tờ",
     "subtitle": "Sắp xếp nhiều trang lên một tờ."
   },
   "combineToSinglePage": {
-    "name": "Kết hợp thành một trang",
+    "name": "Nối thành một trang dài",
     "subtitle": "Ghép tất cả các trang thành một cuộn liên tục."
   },
   "viewPdf": {
@@ -852,11 +865,11 @@
     "invalidFile": "Vui lòng chọn một tệp PDF hợp lệ."
   },
   "viewMetadata": {
-    "name": "Xem Metadata",
+    "name": "Xem thông tin tệp",
     "subtitle": "Kiểm tra các thuộc tính ẩn của PDF của bạn."
   },
   "editMetadata": {
-    "name": "Chỉnh sửa Metadata",
+    "name": "Sửa thông tin tệp",
     "subtitle": "Thay đổi tác giả, tiêu đề và các thuộc tính khác."
   },
   "pdfsToZip": {
@@ -908,7 +921,7 @@
     "loadError": "Không thể tải PDF. Có thể tệp bị hỏng hoặc được bảo vệ bằng mật khẩu."
   },
   "posterizePdf": {
-    "name": "Posterize PDF",
+    "name": "Chia áp phích PDF",
     "subtitle": "Chia một trang lớn thành nhiều trang nhỏ hơn."
   },
   "fixPageSize": {
@@ -924,11 +937,11 @@
     "subtitle": "Phân tích kích thước trang, hướng và đơn vị."
   },
   "removeRestrictions": {
-    "name": "Xóa hạn chế",
+    "name": "Gỡ hạn chế",
     "subtitle": "Xóa bảo vệ mật khẩu và hạn chế bảo mật liên quan đến tệp PDF được ký số."
   },
   "repairPdf": {
-    "name": "Sửa chữa PDF",
+    "name": "Sửa PDF lỗi",
     "subtitle": "Khôi phục dữ liệu từ tệp PDF bị hỏng hoặc hư hỏng."
   },
   "encryptPdf": {
@@ -937,7 +950,7 @@
   },
   "sanitizePdf": {
     "name": "Làm sạch PDF",
-    "subtitle": "Xóa metadata, ghi chú, script và nhiều hơn nữa."
+    "subtitle": "Xóa thông tin tệp, ghi chú, script và nhiều hơn nữa."
   },
   "decryptPdf": {
     "name": "Giải mã PDF",
@@ -948,7 +961,7 @@
     "subtitle": "Làm cho trường form và ghi chú không thể chỉnh sửa."
   },
   "removeMetadata": {
-    "name": "Xóa Metadata",
+    "name": "Xóa thông tin tệp",
     "subtitle": "Loại bỏ dữ liệu ẩn khỏi PDF của bạn."
   },
   "changePermissions": {
@@ -1134,7 +1147,7 @@
     "subtitle": "Trích xuất bảng từ PDF và chuyển đổi sang định dạng Excel (XLSX)."
   },
   "pdfToText": {
-    "name": "PDF sang Văn bản",
+    "name": "PDF sang văn bản",
     "subtitle": "Trích xuất văn bản từ tệp PDF và lưu dưới dạng tệp văn bản (.txt). Hỗ trợ nhiều tệp.",
     "noteLabel": "Lưu ý:",
     "noteText": "Công cụ này CHỈ hoạt động với PDF được tạo kỹ thuật số. Đối với tài liệu quét hoặc PDF dựa trên hình ảnh, hãy sử dụng công cụ OCR PDF của chúng tôi thay thế.",
@@ -1248,7 +1261,7 @@
     "convertButton": "Chuyển đổi sang PDF"
   },
   "fontToOutline": {
-    "name": "Phông chữ thành đường viền",
+    "name": "Phông chữ thành nét vẽ",
     "subtitle": "Chuyển đổi tất cả phông chữ thành đường viền vector để hiển thị nhất quán trên mọi thiết bị."
   },
   "deskewPdf": {
@@ -1260,7 +1273,7 @@
     "subtitle": "Chuyển đổi tệp PDF thành tài liệu Word có thể chỉnh sửa."
   },
   "extractImages": {
-    "name": "Trích xuất hình ảnh",
+    "name": "Trích xuất ảnh",
     "subtitle": "Trích xuất tất cả hình ảnh nhúng từ tệp PDF của bạn."
   },
   "pdfToMarkdown": {
@@ -1280,7 +1293,7 @@
     "subtitle": "Chuyển đổi PDF sang PDF/A để lưu trữ lâu dài."
   },
   "rasterizePdf": {
-    "name": "Rasterize PDF",
+    "name": "Chuyển PDF thành ảnh",
     "subtitle": "Chuyển đổi PDF thành PDF dựa trên hình ảnh. Làm phẳng các lớp và xóa văn bản có thể chọn."
   },
   "pdfWorkflow": {
@@ -1423,7 +1436,7 @@
     "licenseDescription": "Các mô-đun bên ngoài (PyMuPDF, Ghostscript, CoherentPDF) được cấp phép theo AGPL-3.0 hoặc các giấy phép copyleft tương tự. Bằng cách cấu hình và sử dụng các mô-đun này, bạn đồng ý với các điều khoản giấy phép tương ứng. BentoPDF tương thích với bất kỳ triển khai Ghostscript WASM và PyMuPDF WASM nào tuân theo giao diện mong đợi."
   },
   "pdfOverlay": {
-    "name": "Chồng PDF",
+    "name": "Chồng trang PDF",
     "subtitle": "Chồng hoặc lót các trang từ một PDF lên PDF khác.",
     "basePdfLabel": "PDF gốc",
     "uploadBasePdf": "Tải lên PDF gốc",

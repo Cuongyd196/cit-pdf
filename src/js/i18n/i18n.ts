@@ -57,6 +57,22 @@ export const languageNames: Record<SupportedLanguage, string> = {
   sk: 'Slovenčina',
 };
 
+// The desktop app's own text (menus, sidebar, settings) exists in these
+// two only, so it offers no others.
+export const DESKTOP_LANGUAGES = ['vi', 'en'] as const;
+
+const isDesktopBuild = typeof __DESKTOP__ !== 'undefined' && __DESKTOP__;
+
+/** Supported here: on the desktop, one of its two languages. */
+function usable(lang: string | null | undefined): lang is SupportedLanguage {
+  if (!lang || !supportedLanguages.includes(lang as SupportedLanguage)) {
+    return false;
+  }
+  return (
+    !isDesktopBuild || (DESKTOP_LANGUAGES as readonly string[]).includes(lang)
+  );
+}
+
 export const getLanguageFromUrl = (): SupportedLanguage => {
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
   let path = window.location.pathname;
@@ -72,19 +88,13 @@ export const getLanguageFromUrl = (): SupportedLanguage => {
   const langMatch = path.match(
     /^\/(en|ar|fr|es|de|zh|zh-TW|vi|tr|id|it|pt|nl|be|da|ko|sv|ru|ja|uk|sk)(?:\/|$)/
   );
-  if (
-    langMatch &&
-    supportedLanguages.includes(langMatch[1] as SupportedLanguage)
-  ) {
-    return langMatch[1] as SupportedLanguage;
+  if (langMatch && usable(langMatch[1])) {
+    return langMatch[1];
   }
 
   const storedLang = getStoredItem('i18nextLng');
-  if (
-    storedLang &&
-    supportedLanguages.includes(storedLang as SupportedLanguage)
-  ) {
-    return storedLang as SupportedLanguage;
+  if (usable(storedLang)) {
+    return storedLang;
   }
 
   const envLang = import.meta.env?.VITE_DEFAULT_LANGUAGE;
@@ -95,8 +105,8 @@ export const getLanguageFromUrl = (): SupportedLanguage => {
 
   // The desktop app ships with a fixed default language instead of following
   // the OS locale; the user can still switch via the language switcher.
-  if (defaultLang && typeof __DESKTOP__ !== 'undefined' && __DESKTOP__) {
-    return defaultLang;
+  if (isDesktopBuild) {
+    return usable(defaultLang) ? defaultLang : 'vi';
   }
 
   // Check browser language preferences
