@@ -51,6 +51,14 @@ const bridge = {
     };
   },
 
+  onFindTool: (cb: () => void): (() => void) => {
+    const handler = () => cb();
+    ipcRenderer.on(IPC_CHANNELS.FIND_TOOL, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.FIND_TOOL, handler);
+    };
+  },
+
   takeOpenedFile: (): Promise<OpenedFile | null> => {
     return ipcRenderer.invoke(IPC_CHANNELS.TAKE_OPENED_FILE);
   },

@@ -611,6 +611,31 @@ body.desktop-reading:has(#desktop-sidebar) {
   @apply text-lg;
 }
 
+/* The rail: home, the viewer, every tool, then up to six pinned tools.
+   Recent tools stay in the full sidebar and on the home page. */
+.desktop-reading
+  .desktop-sidebar
+  :is(
+    .desktop-nav-recent,
+    .desktop-nav-favorites > .desktop-nav-item:nth-of-type(n + 7)
+  ) {
+  display: none;
+}
+
+.desktop-reading .desktop-sidebar .desktop-nav-fixed {
+  @apply mx-3 mb-2 border-b border-gray-700 pb-2;
+}
+
+.desktop-nav-fixed {
+  @apply mb-3;
+}
+
+/* A rail icon's name, shown beside it on hover. */
+.desktop-rail-tip {
+  @apply pointer-events-none fixed z-[80] rounded-md bg-gray-700 px-2.5 py-1 text-sm font-medium whitespace-nowrap text-white shadow-lg;
+  transform: translateY(-50%);
+}
+
 /* A result was saved: bottom right, above the status bar. It sits over
    the tool's own "done" dialog, whose backdrop covers the whole window. */
 .desktop-saved-toast {
@@ -769,8 +794,7 @@ body:has(#desktop-sidebar) .category-header {
   @apply mb-2 py-2 text-base font-bold text-white;
 }
 
-/* Home page start view: open a file or a recent one, tools in a column on
-   the right. At index.html#tools the page shows the full grid instead. */
+/* Home page: files on top, then every tool, grouped and searchable. */
 .desktop-home {
   display: none;
 }
@@ -782,20 +806,23 @@ body.desktop-home-start #app {
   min-height: 0;
 }
 
-body.desktop-home-start :is(#tools-header, #grid-view, .desktop-home-back) {
+body.desktop-home-start :is(#tools-header, #grid-view) {
   display: none;
 }
 
 body.desktop-home-start .desktop-home {
-  display: flex;
-  min-height: calc(100vh - 2rem);
+  display: block;
 }
 
 .desktop-home-main {
-  @apply flex min-w-0 flex-1 flex-col gap-7;
-  padding: 2.5rem 3rem;
-  max-width: 64rem;
+  @apply flex min-w-0 flex-col gap-8;
+  padding: 2.5rem 2rem 3.5rem;
+  max-width: 80rem;
   margin: 0 auto;
+}
+
+.desktop-home-header {
+  @apply flex flex-wrap items-end justify-between gap-5;
 }
 
 .desktop-home-title {
@@ -806,8 +833,41 @@ body.desktop-home-start .desktop-home {
   @apply text-gray-400;
 }
 
+.desktop-home-search {
+  @apply flex h-12 items-center gap-2.5 rounded-xl border border-gray-600 bg-gray-800 px-3.5 text-gray-400;
+  flex: 0 1 30rem;
+  min-width: 16rem;
+}
+
+.desktop-home-search:focus-within {
+  border-color: var(--color-indigo-500);
+}
+
+.desktop-home-search > i {
+  @apply text-xl;
+}
+
+.desktop-home-search input {
+  @apply min-w-0 flex-1 border-0 bg-transparent text-[15px] text-white outline-none;
+}
+
+.desktop-home-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.desktop-home-search kbd {
+  @apply flex-shrink-0 rounded-md border border-gray-600 bg-gray-700 px-2 py-0.5 font-sans text-xs text-gray-300;
+}
+
+/* Drop box and the latest files, side by side. */
+.desktop-home-files-row {
+  @apply flex flex-wrap gap-5;
+}
+
 .desktop-home-drop {
-  @apply flex items-center gap-5 rounded-2xl border-2 border-dashed border-gray-600 bg-gray-800 px-6 py-5 transition-colors;
+  @apply flex items-center gap-4 rounded-2xl border-2 border-dashed border-gray-600 bg-gray-800 px-6 py-5 transition-colors;
+  flex: 1 1 22rem;
+  min-width: 0;
 }
 
 .desktop-home-drop.is-dragging {
@@ -842,121 +902,196 @@ body.desktop-home-start .desktop-home {
 }
 
 .desktop-home-recent {
-  @apply flex flex-col gap-2;
+  @apply flex flex-col rounded-2xl border border-gray-700 bg-gray-800 px-3 pt-3 pb-2;
+  flex: 1 1 26rem;
+  min-width: 0;
+}
+
+.desktop-home-recent .desktop-recent-heading {
+  @apply mb-1 px-2 py-0 text-sm;
+}
+
+.desktop-home-recent .desktop-recent-files-clear {
+  @apply px-2;
 }
 
 .desktop-home-empty {
-  @apply rounded-xl border border-gray-700 px-4 py-6 text-center text-sm text-gray-400;
+  @apply px-2 py-3 text-sm text-gray-400;
 }
 
 .desktop-home-files {
-  @apply flex flex-col gap-1.5;
+  @apply flex flex-col;
 }
 
 .desktop-home-file {
-  @apply grid w-full items-center gap-x-4 px-4 text-left;
-  grid-template-columns: 1.5rem minmax(0, 5fr) minmax(0, 4fr) 8.5rem;
+  @apply flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left;
 }
 
-button.desktop-home-file {
-  @apply rounded-lg border border-gray-700 bg-gray-800 py-2.5;
-}
-
-button.desktop-home-file:hover {
-  border-color: var(--color-indigo-500);
-}
-
-.desktop-home-file-head {
-  @apply text-xs text-gray-400;
+.desktop-home-file:hover {
+  @apply bg-gray-700;
 }
 
 .desktop-home-file > i {
-  @apply text-xl text-indigo-400;
+  @apply flex-shrink-0 text-xl text-indigo-400;
 }
 
+/* Cut in the middle: the start shrinks, the end stays. */
 .desktop-home-file-name {
-  @apply truncate text-sm font-semibold text-white;
+  @apply flex min-w-0 flex-1 text-sm font-medium whitespace-nowrap text-white;
+}
+
+.desktop-home-file-head {
+  @apply min-w-0 truncate;
 }
 
 .desktop-home-file-meta {
-  @apply truncate text-xs text-gray-400;
+  @apply flex-shrink-0 text-xs text-gray-400;
 }
 
-/* The column stays put while a long list of recent files scrolls, so
-   "All tools" at its foot stays on screen. */
-.desktop-home-tools {
-  @apply flex w-72 flex-shrink-0 flex-col gap-4 border-l border-gray-700 bg-gray-800 px-5 py-7;
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
-  height: calc(100vh - 2rem);
-  overflow-y: auto;
+.desktop-home-section {
+  @apply flex flex-col gap-3;
 }
 
-.desktop-home-search {
-  @apply flex h-10 items-center gap-2 rounded-lg border border-gray-600 bg-gray-700 px-3 text-gray-400;
+.desktop-home-section-head {
+  @apply flex flex-wrap items-baseline gap-x-3 gap-y-1;
 }
 
-.desktop-home-search input {
-  @apply min-w-0 flex-1 border-0 bg-transparent text-sm text-white outline-none;
+.desktop-home-h2 {
+  @apply text-base font-semibold text-white;
 }
 
-.desktop-home-tools-heading {
-  @apply mt-1 text-sm font-semibold text-gray-400;
+.desktop-home-hint {
+  @apply text-xs text-gray-400;
 }
 
-.desktop-home-tool-grid {
-  @apply grid grid-cols-2 gap-2;
+.desktop-home-chips {
+  @apply flex flex-wrap gap-2.5;
 }
 
-.desktop-home-tool {
-  @apply flex min-h-11 flex-col gap-2 rounded-lg border border-gray-700 bg-gray-900 p-3 text-sm font-medium text-gray-200 no-underline;
+.desktop-home-chip {
+  @apply inline-flex h-11 items-center gap-2 rounded-full border border-gray-700 bg-gray-800 pr-4 pl-3 text-sm font-medium text-gray-200 no-underline;
 }
 
-.desktop-home-tool:hover {
+.desktop-home-chip:hover {
   border-color: var(--color-indigo-500);
   @apply text-white;
 }
 
-.desktop-home-tool > i {
-  @apply text-xl text-indigo-400;
+.desktop-home-chip > i {
+  @apply text-lg text-indigo-400;
 }
 
-.desktop-home-tool > span {
-  @apply leading-snug;
-}
-
-/* In a short window the column scrolls; this link stays at its foot. */
+/* Every tool. */
 .desktop-home-all {
-  @apply mt-auto flex items-center justify-between rounded-lg bg-gray-700 px-4 py-3 text-sm font-semibold text-white no-underline hover:bg-gray-600;
-  position: sticky;
-  bottom: 0;
-  flex-shrink: 0;
+  @apply gap-4 border-t border-gray-700 pt-6;
+  scroll-margin-top: 1rem;
 }
 
-.desktop-home-back {
-  @apply mb-2 inline-flex items-center gap-2 text-sm font-semibold text-indigo-400 no-underline hover:text-indigo-300;
+.desktop-home-all-title {
+  @apply flex items-baseline gap-2 text-xl font-bold text-white;
 }
 
-/* Narrow window: the tool column goes under the recent files. */
+.desktop-home-count {
+  @apply text-sm font-medium text-gray-400;
+}
+
+.desktop-home-filters {
+  @apply flex flex-wrap gap-2;
+}
+
+.desktop-home-filter {
+  @apply inline-flex h-9 items-center gap-1.5 rounded-full border border-gray-600 bg-gray-800 px-3.5 text-sm font-medium text-gray-200;
+}
+
+.desktop-home-filter:hover {
+  border-color: var(--color-indigo-500);
+}
+
+.desktop-home-filter[aria-pressed='true'] {
+  @apply border-indigo-600 bg-indigo-600 font-semibold;
+  color: #ffffff;
+}
+
+.desktop-home-filter-count {
+  @apply text-xs opacity-75;
+}
+
+.desktop-home-groups {
+  @apply flex flex-col gap-7;
+}
+
+.desktop-home-group {
+  @apply flex flex-col gap-3;
+}
+
+.desktop-home-group-title {
+  @apply flex items-baseline gap-2 text-sm font-semibold tracking-wide text-gray-300 uppercase;
+}
+
+.desktop-home-card-grid {
+  @apply grid gap-3;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+}
+
+.desktop-home-card {
+  @apply relative rounded-xl border border-gray-700 bg-gray-800;
+}
+
+.desktop-home-card:hover {
+  border-color: var(--color-indigo-500);
+}
+
+.desktop-home-card-link {
+  @apply flex h-full items-center gap-3 py-3 pr-11 pl-3 no-underline;
+}
+
+.desktop-home-card-icon {
+  @apply flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-xl text-indigo-400;
+  background-color: color-mix(
+    in srgb,
+    var(--color-indigo-500) 14%,
+    transparent
+  );
+}
+
+.desktop-home-card-text {
+  @apply flex min-w-0 flex-col gap-0.5;
+}
+
+/* Names up to two lines; descriptions are short enough for one or two. */
+.desktop-home-card-name {
+  @apply line-clamp-2 text-[15px] leading-snug font-semibold text-white;
+}
+
+.desktop-home-card-sub {
+  @apply line-clamp-2 text-xs leading-snug text-gray-400;
+}
+
+.desktop-home-card-star {
+  @apply absolute top-1/2 right-2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-lg text-gray-500 opacity-0;
+}
+
+.desktop-home-card:hover .desktop-home-card-star,
+.desktop-home-card-star:focus-visible,
+.desktop-home-card-star.is-favorite {
+  opacity: 1;
+}
+
+.desktop-home-card-star:hover {
+  @apply bg-gray-700 text-gray-200;
+}
+
+.desktop-home-card-star.is-favorite {
+  color: #d97706;
+}
+
+.desktop-home-more {
+  @apply self-start rounded-lg px-2 py-1 text-sm font-semibold text-indigo-400 hover:text-indigo-300;
+}
+
 @media (max-width: 960px) {
-  body.desktop-home-start .desktop-home {
-    flex-direction: column;
-  }
-
   .desktop-home-main {
     @apply px-6 py-8;
-  }
-
-  .desktop-home-tools {
-    @apply w-auto border-t border-l-0;
-    position: static;
-    height: auto;
-    overflow: visible;
-  }
-
-  .desktop-home-all {
-    position: static;
   }
 }
 
@@ -2843,8 +2978,8 @@ body:has(#desktop-sidebar)
     button,
     .btn-gradient,
     .tool-card,
-    .desktop-home-tool,
-    .desktop-home-all,
+    .desktop-home-card,
+    .desktop-home-chip,
     .desktop-nav-item > a
   ):not(:disabled):not(#embed-pdf-container *) {
   transition:
@@ -2860,8 +2995,8 @@ body:has(#desktop-sidebar)
     button,
     .btn-gradient,
     .tool-card,
-    .desktop-home-tool,
-    .desktop-home-all,
+    .desktop-home-card,
+    .desktop-home-chip,
     .desktop-nav-item > a
   ):not(:disabled):not(#embed-pdf-container *):active {
   transform: scale(0.98);
