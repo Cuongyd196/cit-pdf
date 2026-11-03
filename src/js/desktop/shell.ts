@@ -32,6 +32,7 @@ import {
   type ViewerTabsDetail,
 } from '../logic/view-pdf-events.js';
 import { whenViewerDocuments } from '../logic/viewer-document.js';
+import { FIND_TOOL_EVENT } from './studio/commands.js';
 
 interface ShellOptions {
   categoryTranslationKeys: Record<string, string>;
@@ -1156,6 +1157,14 @@ function scrollToAllTools(): void {
  * list of tools.
  */
 function findTool(): void {
+  // The viewer's ribbon answers with its All tools panel.
+  if (
+    !document.dispatchEvent(
+      new CustomEvent(FIND_TOOL_EVENT, { cancelable: true })
+    )
+  ) {
+    return;
+  }
   const boxes = ['home-tool-search', 'desktop-search'].map(
     (id) => document.getElementById(id) as HTMLInputElement | null
   );

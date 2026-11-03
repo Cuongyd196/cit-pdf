@@ -8,6 +8,7 @@ import { rewriteLinks } from '../../i18n/i18n.js';
 import { getStoredItem, setStoredItem } from '../../utils/safe-storage.js';
 import { ds } from '../strings.js';
 import {
+  FIND_TOOL_EVENT,
   RIBBON_COMMANDS,
   RIBBON_TABS,
   commandStandingFor,
@@ -16,6 +17,7 @@ import {
 } from './commands.js';
 import { initPageGrid, type PageGrid } from './page-grid.js';
 import type { StudioApi } from './studio.js';
+import { VIEWER_KEYDOWN_EVENT } from '../../logic/viewer-document.js';
 
 const TAB_KEY = 'cit:ribbon-tab';
 
@@ -304,6 +306,24 @@ export function createRibbon(options: RibbonOptions): Ribbon {
   }
 
   render();
+
+  // Ctrl+K (the shell asks first), also pressed inside a viewer frame.
+  const findTool = () => {
+    if (tab !== 'all') setTab('all');
+    search.focus();
+    search.select();
+  };
+  document.addEventListener(FIND_TOOL_EVENT, (event) => {
+    event.preventDefault();
+    findTool();
+  });
+  document.addEventListener(VIEWER_KEYDOWN_EVENT, (event) => {
+    const key = (event as CustomEvent<KeyboardEvent>).detail;
+    if ((key.ctrlKey || key.metaKey) && key.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      findTool();
+    }
+  });
 
   return {
     clusterHost: top,

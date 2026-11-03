@@ -8,6 +8,13 @@ import type { DesktopStringKey } from '../strings.js';
 
 export type RibbonTab = 'read' | 'pages' | 'edit' | 'convert' | 'secure';
 
+/**
+ * Ctrl+K / File > Find a tool…: dispatched (cancelable) on the document
+ * before the shell's own search; the viewer's ribbon cancels it and opens
+ * its All tools panel.
+ */
+export const FIND_TOOL_EVENT = 'cit:find-tool';
+
 export type GridOp =
   | 'rotate-left'
   | 'rotate-right'
