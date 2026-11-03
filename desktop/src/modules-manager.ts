@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { once } from 'node:events';
 import { pipeline } from 'node:stream/promises';
 import { app, dialog, BrowserWindow } from 'electron';
 import * as tar from 'tar';
@@ -14,10 +15,13 @@ import type {
 } from './types.js';
 import { getUiLanguage, ui } from './ui-strings.js';
 
+const DOWNLOAD_STALL_MS = 60_000;
+
 export class ModulesManager {
   private manifest: ModulesManifest;
   private userModulesDir: string;
   private bundledModulesDir: string;
+  private installing = new Map<DesktopModuleName, Promise<void>>();
 
   constructor(manifestPath: string) {
     const raw = fs.readFileSync(manifestPath, 'utf8');
@@ -175,7 +179,17 @@ export class ModulesManager {
 
     for (const name of needed) {
       try {
-        await this.downloadAndInstallModule(name, onProgress);
+        if (this.isInstalled(name)) continue;
+        // Two windows asking for one module share its download: both would
+        // otherwise write the same staging directory.
+        let install = this.installing.get(name);
+        if (!install) {
+          install = this.downloadAndInstallModule(name, onProgress).finally(
+            () => this.installing.delete(name)
+          );
+          this.installing.set(name, install);
+        }
+        await install;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         return { ok: false, error: msg };
@@ -197,7 +211,12 @@ export class ModulesManager {
     const label = item.label?.vi || item.label?.en || name;
     const destDir = path.join(this.userModulesDir, name);
     const tmpDir = path.join(this.userModulesDir, '.tmp', name);
-    fs.mkdirSync(tmpDir, { recursive: true });
+    // Built here and moved into place whole, so an install cut short (app
+    // closed, download failed) never leaves a module that passes the probe
+    // but lacks files.
+    const stageDir = path.join(tmpDir, 'module');
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+    fs.mkdirSync(stageDir, { recursive: true });
 
     try {
       if (item.kind === 'npm-tarball') {
@@ -229,19 +248,17 @@ export class ModulesManager {
         }
 
         // Extract tarball (npm packages are wrapped inside a "package/" root directory)
-        fs.mkdirSync(destDir, { recursive: true });
         await tar.x({
           file: tarPath,
-          cwd: destDir,
+          cwd: stageDir,
           strip: 1,
         });
       } else if (item.kind === 'files' && item.files) {
-        fs.mkdirSync(destDir, { recursive: true });
         let totalReceivedSoFar = 0;
         const totalSize = item.size || 0;
 
         for (const f of item.files) {
-          const filePath = path.join(destDir, f.path);
+          const filePath = path.join(stageDir, f.path);
           fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
           let currentFileReceived = 0;
@@ -272,11 +289,14 @@ export class ModulesManager {
       }
 
       // Verify probe exists
-      if (!fs.existsSync(path.join(destDir, item.probe))) {
+      if (!fs.existsSync(path.join(stageDir, item.probe))) {
         throw new Error(
           `Installation verification failed: probe file "${item.probe}" not found after extracting ${name}`
         );
       }
+
+      fs.rmSync(destDir, { recursive: true, force: true });
+      fs.renameSync(stageDir, destDir);
     } finally {
       // Clean up tmp dir
       try {
@@ -287,30 +307,59 @@ export class ModulesManager {
     }
   }
 
+  /**
+   * A connection that stops sending data never ends a plain fetch, which
+   * left the tool spinning forever. Abort once no data has arrived for
+   * DOWNLOAD_STALL_MS, so the user gets an error and can try again.
+   */
   private async downloadFile(
     url: string,
     destPath: string,
     onProgress: (received: number, total: number) => void
   ): Promise<void> {
-    const response = await fetch(url);
-    if (!response.ok || !response.body) {
-      throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
-    }
-
-    const contentLength = Number(response.headers.get('content-length') || '0');
-    let received = 0;
+    const controller = new AbortController();
+    let timer: NodeJS.Timeout | undefined;
+    const armStallTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => controller.abort(), DOWNLOAD_STALL_MS);
+    };
 
     const fileStream = fs.createWriteStream(destPath);
-    const reader = response.body.getReader();
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value) {
-        received += value.length;
-        fileStream.write(Buffer.from(value));
-        onProgress(received, contentLength);
+    try {
+      armStallTimer();
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok || !response.body) {
+        throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
       }
+
+      const contentLength = Number(
+        response.headers.get('content-length') || '0'
+      );
+      let received = 0;
+      const reader = response.body.getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          armStallTimer();
+          received += value.length;
+          if (!fileStream.write(Buffer.from(value))) {
+            await once(fileStream, 'drain');
+          }
+          onProgress(received, contentLength);
+        }
+      }
+    } catch (err: unknown) {
+      fileStream.destroy();
+      if (controller.signal.aborted) {
+        throw new Error(
+          `Download stalled: no data for ${DOWNLOAD_STALL_MS / 1000}s from ${new URL(url).host}. Check the network connection and try again.`
+        );
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
     }
 
     await new Promise<void>((resolve, reject) => {
