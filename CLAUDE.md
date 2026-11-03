@@ -68,6 +68,7 @@ Adding a tool touches several places that are not linked by the type system:
 Light operations use `pdf-lib` / `pdfjs-dist` directly. Heavy engines are AGPL WASM packages loaded at runtime, never bundled:
 
 - `loadPyMuPDF()` runs PyMuPDF in a worker (`utils/pymupdf.worker.ts`) behind a proxy, so conversions don't freeze the page; `open()` and its document objects need `loadPyMuPDFMainThread()`.
+- PDF/A and fonts-to-outlines run Ghostscript in a worker per task (`utils/ghostscript.worker.ts` via `offThread` in `ghostscript-loader.ts`). That module is loaded in the worker too, so it must not import anything that touches the page at load (helpers, i18n, the desktop bridge are imported lazily).
 - **PyMuPDF**, **Ghostscript**, **CoherentPDF (cpdf)** — base URLs resolved by `src/js/utils/wasm-provider.ts` (user override in localStorage → `VITE_WASM_*_URL` → jsDelivr defaults; URLs are host-allowlisted). Loaded through `utils/pymupdf-loader.ts`, `ghostscript-loader.ts`, `ghostscript-dynamic-loader.ts`, `cpdf-helper.ts`.
 - **LibreOffice** (`utils/libreoffice-loader.ts`, assets in `public/libreoffice-wasm/`) for Office → PDF.
 - **PDFium edit engine** — `bentopdf-pdfium` and `bentopdf-viewer` are installed from tarballs in `vendor/`; `src/js/editcore/` (plain JS, relaxed lint rules) drives in-place text editing.
