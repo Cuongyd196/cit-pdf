@@ -2,7 +2,7 @@ import { showLoader, hideLoader, showAlert } from '../ui.js';
 import { downloadFile, formatBytes } from '../utils/helpers.js';
 import { createIcons, icons } from 'lucide';
 import JSZip from 'jszip';
-import { loadPyMuPDF, isPyMuPDFAvailable } from '../utils/pymupdf-loader.js';
+import { loadPyMuPDFMainThread, isPyMuPDFAvailable } from '../utils/pymupdf-loader.js';
 import type { PyMuPDFInstance } from '@/types';
 import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
 import { showWasmRequiredDialog } from '../utils/wasm-provider.js';
@@ -85,7 +85,7 @@ async function convert() {
   try {
     // Load PyMuPDF dynamically if not already loaded
     if (!pymupdf) {
-      pymupdf = await loadPyMuPDF();
+      pymupdf = await loadPyMuPDFMainThread();
     }
 
     hideLoader();

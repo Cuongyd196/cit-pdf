@@ -22,7 +22,7 @@ vi.mock('../js/utils/cpdf-helper', () => ({
 }));
 
 vi.mock('../js/utils/pymupdf-loader', () => ({
-  loadPyMuPDF: mockLoadPyMuPDF,
+  loadPyMuPDFMainThread: mockLoadPyMuPDF,
   isPyMuPDFAvailable: mockIsPyMuPDFAvailable,
 }));
 

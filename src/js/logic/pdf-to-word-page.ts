@@ -8,7 +8,8 @@ import {
 } from '../utils/helpers.js';
 import { state } from '../state.js';
 import { createIcons, icons } from 'lucide';
-import { loadPyMuPDF } from '../utils/pymupdf-loader.js';
+import { loadPyMuPDF, onPyMuPDFLog } from '../utils/pymupdf-loader.js';
+import type { PyMuPDFInstance } from '@/types';
 import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
 import { deduplicateFileName } from '../utils/deduplicate-filename.js';
 import { performOcr } from '../utils/ocr.js';
@@ -81,10 +82,36 @@ async function recognizeIfScanned(
   };
 }
 
-// The conversion runs on the page's own thread, so the spinner freezes
-// while it works; without a warning a long document looks like a hang.
-const SLOW_NOTE =
-  ' Long documents can take several minutes, and the window may not respond until it is done.';
+// Without a warning, a long document looks like a hang.
+const SLOW_NOTE = ' Long documents can take several minutes.';
+
+/**
+ * Converts one file, showing the page pdf2docx is on: it reads every page
+ * ("[3/4] Parsing pages"), then writes every page ("[4/4] Creating pages").
+ */
+async function convertToDocx(
+  pymupdf: PyMuPDFInstance,
+  file: File,
+  name: string
+): Promise<Blob> {
+  let writing = false;
+  const stop = onPyMuPDFLog((text) => {
+    if (text.includes('[4/4]')) writing = true;
+    const page = /\((\d+)\/(\d+)\) Page/.exec(text);
+    if (!page) return;
+    const [, at, total] = page;
+    showLoader(
+      writing
+        ? `Converting ${name}: writing page ${at} of ${total}...`
+        : `Converting ${name}: reading page ${at} of ${total}...`
+    );
+  });
+  try {
+    return await pymupdf.pdfToDocx(file);
+  } finally {
+    stop();
+  }
+}
 
 const OCR_NOTE =
   ' The PDF was a scan, so its text was recognized with OCR: please check it against the original.';
@@ -191,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const source = await recognizeIfScanned(file);
         showLoader(`Converting ${file.name}...${SLOW_NOTE}`);
-        const docxBlob = await pymupdf.pdfToDocx(source.file);
+        const docxBlob = await convertToDocx(pymupdf, source.file, file.name);
         const outName = file.name.replace(/\.pdf$/i, '') + '.docx';
 
         downloadFile(docxBlob, outName);
@@ -220,7 +247,11 @@ document.addEventListener('DOMContentLoaded', () => {
           showLoader(
             `Converting ${i + 1}/${state.files.length}: ${file.name}...${SLOW_NOTE}`
           );
-          const docxBlob = await pymupdf.pdfToDocx(source.file);
+          const docxBlob = await convertToDocx(
+            pymupdf,
+            source.file,
+            `${i + 1}/${state.files.length}: ${file.name}`
+          );
           const baseName = file.name.replace(/\.pdf$/i, '');
           const arrayBuffer = await docxBlob.arrayBuffer();
           const zipEntryName = deduplicateFileName(

@@ -2,7 +2,7 @@ import { showLoader, hideLoader, showAlert } from '../ui.js';
 import { downloadFile, formatBytes } from '../utils/helpers.js';
 import { createIcons, icons } from 'lucide';
 import JSZip from 'jszip';
-import { loadPyMuPDF } from '../utils/pymupdf-loader.js';
+import { loadPyMuPDFMainThread } from '../utils/pymupdf-loader.js';
 import { loadPdfWithPasswordPrompt } from '../utils/password-prompt.js';
 let file: File | null = null;
 
@@ -91,7 +91,7 @@ async function extract() {
 
   try {
     showLoader('Loading Engine...');
-    const pymupdf = await loadPyMuPDF();
+    const pymupdf = await loadPyMuPDFMainThread();
 
     hideLoader();
     const pwResult = await loadPdfWithPasswordPrompt(file);

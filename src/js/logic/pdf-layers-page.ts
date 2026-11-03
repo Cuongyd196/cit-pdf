@@ -8,7 +8,7 @@ import {
   getPDFDocument,
 } from '../utils/helpers.js';
 import { createIcons, icons } from 'lucide';
-import { loadPyMuPDF } from '../utils/pymupdf-loader.js';
+import { loadPyMuPDFMainThread } from '../utils/pymupdf-loader.js';
 import { loadPdfWithPasswordPrompt } from '../utils/password-prompt.js';
 
 interface LayerData {
@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       showLoader('Loading engine...');
-      const pymupdf = await loadPyMuPDF();
+      const pymupdf = await loadPyMuPDFMainThread();
 
       showLoader(`Loading layers from ${currentFile.name}...`);
       currentDoc = await (

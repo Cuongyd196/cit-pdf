@@ -3,7 +3,7 @@ import { BaseWorkflowNode } from './base-node';
 import { pdfSocket } from '../sockets';
 import type { SocketData } from '../types';
 import { requirePdfInput, processBatch } from '../types';
-import { loadPyMuPDF } from '../../utils/pymupdf-loader.js';
+import { loadPyMuPDFMainThread } from '../../utils/pymupdf-loader.js';
 import { hexToRgb } from '../../utils/helpers.js';
 import { loadPdfDocument } from '../../utils/load-pdf-document.js';
 import { wfError } from '../errors';
@@ -85,7 +85,7 @@ export class RedactNode extends BaseWorkflowNode {
 
     return {
       pdf: await processBatch(pdfInputs, async (input) => {
-        const pymupdf = await loadPyMuPDF();
+        const pymupdf = await loadPyMuPDFMainThread();
         const blob = new Blob([new Uint8Array(input.bytes)], {
           type: 'application/pdf',
         });
