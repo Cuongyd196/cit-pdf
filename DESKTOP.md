@@ -72,6 +72,12 @@ Bộ cài chỉ chứa phần lõi. Các bộ xử lý nặng và gói OCR đư�
 
 Danh sách, phiên bản và mã băm khai báo trong [desktop/app/modules-manifest.json](desktop/app/modules-manifest.json). Bộ xử lý đã tải nằm trong thư mục `modules` thuộc thư mục dữ liệu người dùng của ứng dụng.
 
+Một lần tải không nhận thêm dữ liệu trong 60 giây thì dừng và báo lỗi. Bộ xử lý được giải nén vào thư mục tạm rồi mới chuyển vào chỗ, nên lần cài dở không bao giờ bị coi là đã cài.
+
+**Mạng chặn nguồn tải (gói offline).** `npm run desktop:modules-pack` tải mọi bộ xử lý không có trong bộ cài vào `release/cit-pdf-modules/` (khoảng 125 MB, kèm `DOC-TOI.txt`), kiểm tra mã băm. Chép thư mục đó sang máy khách rồi chọn **Cài đặt › Bộ xử lý › Cài từ thư mục…**. Khi một lần tải thất bại, hộp thoại lỗi cũng đưa ra lựa chọn này. Tệp trong gói được kiểm tra bằng đúng mã băm như khi tải.
+
+PyMuPDF chạy trong một worker ([src/js/utils/pymupdf.worker.ts](src/js/utils/pymupdf.worker.ts)) nên chuyển đổi dài không làm đứng cửa sổ. Riêng `open()` (trả về đối tượng tài liệu có phương thức đồng bộ) chạy trên trang qua `loadPyMuPDFMainThread()`.
+
 ---
 
 ## 2. Lệnh phát triển và đóng gói

@@ -99,6 +99,12 @@ interface DesktopBridge {
   onModuleProgress(cb: (p: ModuleProgress) => void): () => void;
   getModulesStatus(): Promise<ModuleStatus[]>;
   removeModule(name: DesktopModuleName): Promise<boolean>;
+  /** Folder picker, then installs the missing engines found in it. */
+  installModulesFromFolder?(): Promise<{
+    picked: boolean;
+    installed: DesktopModuleName[];
+    failed: Array<{ name: DesktopModuleName; error: string }>;
+  }>;
   onFileOpened(cb: () => void): () => void;
   /** File > Find a tool… in the menu bar. */
   onFindTool?(cb: () => void): () => void;

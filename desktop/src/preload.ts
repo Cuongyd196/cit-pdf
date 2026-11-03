@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import {
   IPC_CHANNELS,
   type DesktopModuleName,
+  type FolderInstallResult,
   type ModuleProgress,
   type ModuleStatus,
   type OpenedFile,
@@ -40,6 +41,10 @@ const bridge = {
 
   removeModule: (name: DesktopModuleName): Promise<boolean> => {
     return ipcRenderer.invoke(IPC_CHANNELS.REMOVE_MODULE, name);
+  },
+
+  installModulesFromFolder: (): Promise<FolderInstallResult> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.INSTALL_MODULES_FROM_FOLDER);
   },
 
   // Files handed to the app by the OS ("Open with") or the File menu.

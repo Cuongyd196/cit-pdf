@@ -26,6 +26,7 @@ npm run desktop             # build desktop bundle and launch Electron
 npm run desktop:build       # build only (dist/ -> desktop/dist-web, desktop/src -> desktop/dist)
 npm run desktop:dist        # + electron-builder --win  -> release/
 npm run desktop:dist:all    # + electron-builder -mwl
+npm run desktop:modules-pack  # offline engine pack -> release/cit-pdf-modules/
 ```
 
 - This fork has no CI (`.github/` is not in the repo; upstream runs `npx tsc --noEmit` then `npm run test:run` on Node 20), so run both by hand. Lint runs via husky `lint-staged` on commit (eslint --fix + prettier).
@@ -66,6 +67,7 @@ Adding a tool touches several places that are not linked by the type system:
 
 Light operations use `pdf-lib` / `pdfjs-dist` directly. Heavy engines are AGPL WASM packages loaded at runtime, never bundled:
 
+- `loadPyMuPDF()` runs PyMuPDF in a worker (`utils/pymupdf.worker.ts`) behind a proxy, so conversions don't freeze the page; `open()` and its document objects need `loadPyMuPDFMainThread()`.
 - **PyMuPDF**, **Ghostscript**, **CoherentPDF (cpdf)** — base URLs resolved by `src/js/utils/wasm-provider.ts` (user override in localStorage → `VITE_WASM_*_URL` → jsDelivr defaults; URLs are host-allowlisted). Loaded through `utils/pymupdf-loader.ts`, `ghostscript-loader.ts`, `ghostscript-dynamic-loader.ts`, `cpdf-helper.ts`.
 - **LibreOffice** (`utils/libreoffice-loader.ts`, assets in `public/libreoffice-wasm/`) for Office → PDF.
 - **PDFium edit engine** — `bentopdf-pdfium` and `bentopdf-viewer` are installed from tarballs in `vendor/`; `src/js/editcore/` (plain JS, relaxed lint rules) drives in-place text editing.

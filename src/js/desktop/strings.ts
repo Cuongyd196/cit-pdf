@@ -67,6 +67,10 @@ const STRINGS = {
     notInstalled: 'Chưa tải',
     download: 'Tải về',
     downloadAll: 'Tải tất cả',
+    installFromFolder: 'Cài từ thư mục…',
+    installFromFolderHint:
+      'Mạng chặn nguồn tải? Chép gói offline (thư mục cit-pdf-modules) từ máy khác vào USB rồi chọn thư mục đó.',
+    folderInstalled: 'Đã cài từ thư mục: {names}.',
     remove: 'Xóa',
     version: 'Phiên bản',
     source: 'Nguồn',
@@ -338,6 +342,10 @@ const STRINGS = {
     notInstalled: 'Not downloaded',
     download: 'Download',
     downloadAll: 'Download all',
+    installFromFolder: 'Install from folder…',
+    installFromFolderHint:
+      'Network blocks the source? Copy the offline pack (the cit-pdf-modules folder) from another computer, then choose that folder.',
+    folderInstalled: 'Installed from the folder: {names}.',
     remove: 'Remove',
     version: 'Version',
     source: 'Source',

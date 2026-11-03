@@ -22,6 +22,8 @@ import {
   PRINT_PAPER_SIZES,
   type DesktopModuleName,
   type EnsureResult,
+  type FolderInstallResult,
+  type ModuleProgress,
   type ModuleStatus,
   type OpenedFile,
   type PrinterInfo,
@@ -421,21 +423,92 @@ function windowOf(event: Electron.IpcMainInvokeEvent): BrowserWindow | null {
 }
 
 // IPC Handlers
+function progressTo(
+  event: Electron.IpcMainInvokeEvent
+): (progress: ModuleProgress) => void {
+  return (progress) => {
+    if (!event.sender.isDestroyed()) {
+      event.sender.send(IPC_CHANNELS.MODULE_PROGRESS, progress);
+    }
+  };
+}
+
+/** Asks for a folder and installs the missing engines found in it. */
+async function installFromPickedFolder(
+  win: BrowserWindow,
+  manager: ModulesManager,
+  onProgress: (progress: ModuleProgress) => void
+): Promise<FolderInstallResult> {
+  const text = ui();
+  const picked = await dialog.showOpenDialog(win, {
+    title: text.pickModulesFolder,
+    properties: ['openDirectory'],
+  });
+  const dir = picked.filePaths[0];
+  if (picked.canceled || !dir) {
+    return { picked: false, installed: [], failed: [] };
+  }
+  const result = await manager.installFromFolder(dir, onProgress);
+  if (result.failed.length > 0) {
+    await dialog.showMessageBox(win, {
+      type: 'error',
+      title: text.downloadFailedTitle,
+      message: result.failed
+        .map(({ name, error }) => fill(text.folderFailed, { name, error }))
+        .join('\n'),
+    });
+  } else if (result.installed.length === 0) {
+    const examples = (['pymupdf', 'libreoffice'] as DesktopModuleName[])
+      .flatMap((name) => manager.packFiles(name))
+      .join(', ');
+    await dialog.showMessageBox(win, {
+      type: 'info',
+      title: text.installFromFolder.replace('…', ''),
+      message: text.folderNothing,
+      detail: fill(text.folderNothingDetail, { files: examples }),
+    });
+  }
+  return { picked: true, ...result };
+}
+
 ipcMain.handle(
   IPC_CHANNELS.ENSURE_MODULES,
   async (event, names: DesktopModuleName[]): Promise<EnsureResult> => {
     if (!modulesManager) {
       return { ok: false, error: 'Modules manager not initialized' };
     }
-    return modulesManager.ensureModules(
-      names,
-      (progress) => {
-        if (!event.sender.isDestroyed()) {
-          event.sender.send(IPC_CHANNELS.MODULE_PROGRESS, progress);
-        }
-      },
-      windowOf(event)
-    );
+    const win = windowOf(event);
+    const onProgress = progressTo(event);
+    const result = await modulesManager.ensureModules(names, onProgress, win);
+    if (result.ok || result.cancelled || !win || !result.error) return result;
+
+    // A download that failed (often a network blocking the source) can be
+    // replaced by an offline pack copied from another computer.
+    const text = ui();
+    const choice = await dialog.showMessageBox(win, {
+      type: 'warning',
+      buttons: [text.installFromFolder, text.close],
+      defaultId: 0,
+      cancelId: 1,
+      title: text.downloadFailedTitle,
+      message: text.downloadFailedMessage,
+      detail: fill(text.downloadFailedDetail, { error: result.error }),
+    });
+    if (choice.response !== 0) return result;
+    await installFromPickedFolder(win, modulesManager, onProgress);
+    const missing = names.filter((name) => !modulesManager?.isInstalled(name));
+    return missing.length === 0 ? { ok: true } : result;
+  }
+);
+
+ipcMain.handle(
+  IPC_CHANNELS.INSTALL_MODULES_FROM_FOLDER,
+  async (event): Promise<FolderInstallResult> => {
+    const win = windowOf(event);
+    if (!modulesManager || !win) {
+      return { picked: false, installed: [], failed: [] };
+    }
+    return installFromPickedFolder(win, modulesManager, progressTo(event));
   }
 );
 

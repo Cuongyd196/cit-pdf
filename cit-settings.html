@@ -172,12 +172,20 @@
           <h2 class="settings-card-title mb-0" data-desktop-i18n="modulesTitle">
             Engines
           </h2>
-          <div id="desktop-modules-actions"></div>
+          <div
+            id="desktop-modules-actions"
+            class="flex flex-wrap items-center justify-end gap-2"
+          ></div>
         </div>
         <p class="text-sm text-gray-400 mb-4" data-desktop-i18n="modulesIntro">
           Heavy engines are downloaded on demand and kept on this computer for
           offline use.
         </p>
+        <p
+          id="desktop-modules-note"
+          class="hidden mb-3 text-sm text-emerald-300"
+          role="status"
+        ></p>
         <div id="desktop-modules-list" class="shortcut-group"></div>
       </section>
 

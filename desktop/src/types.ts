@@ -39,6 +39,13 @@ export interface ModuleProgress {
   total: number;
 }
 
+export interface FolderInstallResult {
+  /** False when the user closed the folder picker. */
+  picked: boolean;
+  installed: DesktopModuleName[];
+  failed: Array<{ name: DesktopModuleName; error: string }>;
+}
+
 export interface EnsureResult {
   ok: boolean;
   cancelled?: boolean;
@@ -138,4 +145,5 @@ export const IPC_CHANNELS = {
   LIST_RECENT_FILES: 'bento:list-recent-files',
   CLEAR_RECENT_FILES: 'bento:clear-recent-files',
   SET_SAVE_TARGET: 'bento:set-save-target',
+  INSTALL_MODULES_FROM_FOLDER: 'bento:install-modules-from-folder',
 } as const;

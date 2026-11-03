@@ -51,6 +51,18 @@ const vi = {
     'Tính năng này cần tải thêm module xử lý từ nguồn chính thống:',
   downloadModulesDetail:
     'Sau khi tải xong, ứng dụng sẽ hoạt động offline hoàn toàn.',
+  close: 'Đóng',
+  installFromFolder: 'Cài từ thư mục…',
+  pickModulesFolder: 'Chọn thư mục chứa gói bộ xử lý',
+  downloadFailedTitle: 'Không tải được bộ xử lý',
+  downloadFailedMessage:
+    'Không tải được thành phần xử lý cần cho tính năng này.',
+  downloadFailedDetail:
+    'Lỗi: {error}\n\nMạng cơ quan có thể đang chặn nguồn tải. Bạn có thể thử lại sau, hoặc cài từ gói offline chép từ máy khác (USB, ổ mạng): chọn "Cài từ thư mục…" rồi chọn thư mục chứa gói.',
+  folderNothing: 'Thư mục này không có tệp nào của bộ xử lý còn thiếu.',
+  folderNothingDetail:
+    'Gói offline gồm các tệp như {files}. Hãy chọn đúng thư mục chứa các tệp đó.',
+  folderFailed: 'Không cài được {name}: {error}',
 };
 
 export type UiStrings = typeof vi;
@@ -102,6 +114,18 @@ const en: UiStrings = {
     'This feature needs processing modules downloaded from their official source:',
   downloadModulesDetail:
     'Once downloaded, the application works fully offline.',
+  close: 'Close',
+  installFromFolder: 'Install from folder…',
+  pickModulesFolder: 'Choose the folder holding the engine pack',
+  downloadFailedTitle: 'Engine download failed',
+  downloadFailedMessage:
+    'A component this feature needs could not be downloaded.',
+  downloadFailedDetail:
+    'Error: {error}\n\nThe network may block the download source. Try again later, or install from an offline pack copied from another computer (USB stick, network drive): choose "Install from folder…" and pick the folder holding it.',
+  folderNothing: 'This folder holds no files of a missing engine.',
+  folderNothingDetail:
+    'An offline pack holds files such as {files}. Choose the folder they are in.',
+  folderFailed: 'Could not install {name}: {error}',
 };
 
 let language = 'vi';

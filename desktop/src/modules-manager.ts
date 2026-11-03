@@ -17,6 +17,13 @@ import { getUiLanguage, ui } from './ui-strings.js';
 
 const DOWNLOAD_STALL_MS = 60_000;
 
+/** Puts a module's source file at destPath: downloaded, or copied. */
+type FileSource = (
+  url: string,
+  destPath: string,
+  onProgress: (received: number, total: number) => void
+) => Promise<void>;
+
 export class ModulesManager {
   private manifest: ModulesManifest;
   private userModulesDir: string;
@@ -199,9 +206,71 @@ export class ModulesManager {
     return { ok: true };
   }
 
+  /** The names an offline pack gives a module's files: each URL's last part. */
+  packFiles(name: DesktopModuleName): string[] {
+    const item = this.getManifestItem(name);
+    if (!item) return [];
+    const urls =
+      item.kind === 'npm-tarball'
+        ? [item.url ?? '']
+        : (item.files ?? []).map((f) => f.url);
+    return urls
+      .filter(Boolean)
+      .map((url) => decodeURIComponent(path.posix.basename(new URL(url).pathname)));
+  }
+
+  /**
+   * Installs from a folder each missing module whose files are all there:
+   * an offline pack (`npm run desktop:modules-pack`) copied from a machine
+   * with access to the sources, for networks that block them. The files
+   * are checked against the same hashes as a download.
+   */
+  async installFromFolder(
+    dir: string,
+    onProgress?: (p: ModuleProgress) => void
+  ): Promise<{
+    installed: DesktopModuleName[];
+    failed: Array<{ name: DesktopModuleName; error: string }>;
+  }> {
+    const installed: DesktopModuleName[] = [];
+    const failed: Array<{ name: DesktopModuleName; error: string }> = [];
+    const copyFromDir: FileSource = async (url, destPath, progress) => {
+      const name = decodeURIComponent(
+        path.posix.basename(new URL(url).pathname)
+      );
+      const from = path.join(dir, name);
+      await fs.promises.copyFile(from, destPath);
+      const { size } = fs.statSync(destPath);
+      progress(size, size);
+    };
+    for (const key of Object.keys(this.manifest.modules)) {
+      const name = key as DesktopModuleName;
+      if (this.isInstalled(name) || this.installing.has(name)) continue;
+      const files = this.packFiles(name);
+      if (
+        files.length === 0 ||
+        !files.every((file) => fs.existsSync(path.join(dir, file)))
+      ) {
+        continue;
+      }
+      try {
+        await this.downloadAndInstallModule(name, onProgress, copyFromDir);
+        installed.push(name);
+      } catch (err: unknown) {
+        failed.push({
+          name,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+    return { installed, failed };
+  }
+
   private async downloadAndInstallModule(
     name: DesktopModuleName,
-    onProgress?: (p: ModuleProgress) => void
+    onProgress?: (p: ModuleProgress) => void,
+    fetchFile: FileSource = (url, destPath, progress) =>
+      this.downloadFile(url, destPath, progress)
   ): Promise<void> {
     const item = this.getManifestItem(name);
     if (!item) {
@@ -223,7 +292,7 @@ export class ModulesManager {
         if (!item.url) throw new Error(`Missing url for module ${name}`);
         const tarPath = path.join(tmpDir, `${name}.tgz`);
 
-        await this.downloadFile(item.url, tarPath, (received, total) => {
+        await fetchFile(item.url, tarPath, (received, total) => {
           onProgress?.({
             name,
             label,
@@ -262,7 +331,7 @@ export class ModulesManager {
           fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
           let currentFileReceived = 0;
-          await this.downloadFile(f.url, filePath, (rec) => {
+          await fetchFile(f.url, filePath, (rec) => {
             currentFileReceived = rec;
             onProgress?.({
               name,

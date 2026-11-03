@@ -58,6 +58,26 @@ async function download(names: DesktopModuleName[]): Promise<void> {
   await render();
 }
 
+/** Engines from an offline pack, for networks that block the sources. */
+async function installFromFolder(): Promise<void> {
+  const bridge = getBridge();
+  if (!bridge?.installModulesFromFolder) return;
+  const { installed } = await bridge.installModulesFromFolder();
+  await render();
+  if (installed.length === 0) return;
+  const lang = desktopLang();
+  const names = (await bridge.getModulesStatus())
+    .filter((mod) => installed.includes(mod.name))
+    .map(
+      (mod) => splitLabel(mod.label[lang] || mod.label.en || mod.name).name
+    );
+  const note = document.getElementById('desktop-modules-note');
+  if (note) {
+    note.textContent = ds('folderInstalled', { names: names.join(', ') });
+    note.classList.remove('hidden');
+  }
+}
+
 /** "Name (what it is for)" -> the two parts, for a title and a subtitle. */
 function splitLabel(label: string): { name: string; purpose: string } {
   const match = /^([^(]+)\((.+)\)\s*$/.exec(label);
@@ -163,7 +183,15 @@ async function render(): Promise<void> {
   actions.textContent = '';
   const missing = modules.filter((m) => !m.installed).map((m) => m.name);
   if (missing.length > 0) {
+    const fromFolder = button(
+      ds('installFromFolder'),
+      'ph-folder-open',
+      'is-quiet',
+      () => void installFromFolder()
+    );
+    fromFolder.title = ds('installFromFolderHint');
     actions.append(
+      fromFolder,
       button(ds('downloadAll'), 'ph-download-simple', 'is-outline', () => {
         void download(missing);
       })
