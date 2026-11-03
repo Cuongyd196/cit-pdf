@@ -25,13 +25,13 @@ import {
 import { initUpdateBanner } from './update-check.js';
 import { initIconFamily } from './icons.js';
 import { initToolWorkspace } from './workspace.js';
-import { menuButton, type MenuChoice, type MenuEntry } from './menu.js';
 import {
   VIEWER_SELECT_EVENT,
   VIEWER_TABS_EVENT,
   type ViewerSelectDetail,
   type ViewerTabsDetail,
 } from '../logic/view-pdf-events.js';
+import { whenViewerDocuments } from '../logic/viewer-document.js';
 
 interface ShellOptions {
   categoryTranslationKeys: Record<string, string>;
@@ -176,13 +176,6 @@ const BACK_TO_DOCUMENT = '#exitEditor';
 const READING_SIDEBAR_KEY = 'cit:reading-sidebar';
 const SAVED_TOAST_MS = 15000;
 
-// Viewer: the picker of tools that open the document on their own page,
-// by purpose. What Studio does to the document in place is not offered.
-const VIEWER_PICKER_GROUPS: Array<[DesktopStringKey, string[]]> = [
-  ['pickConvert', ['pdf-to-word', 'pdf-to-jpg', 'pdf-to-excel', 'ocr-pdf']],
-  ['pickPages', ['merge-pdf', 'split-pdf', 'organize-pdf', 'edit-pdf-text']],
-  ['pickSecure', ['sign-pdf', 'protect-pdf', 'unlock-pdf']],
-];
 const MAX_RECENT = 5;
 
 // Home page: tools offered beside the recent files, after the user's
@@ -510,7 +503,8 @@ export function initDesktopShell(options: ShellOptions): void {
     toolsBySlug.get(VIEWER_SLUG),
     (slug) => toolsBySlug.has(slug)
   );
-  initViewerActions(toolsBySlug);
+  // Popular Tools repeats the others.
+  initViewerActions(toolsBySlug, shellCategories.slice(1));
   initToolWorkspace({
     back:
       opened?.backFromTool ??
@@ -771,111 +765,6 @@ function showOpenFilePicker(
   overlay.append(dialog);
   document.body.append(overlay);
   rewriteLinks();
-}
-
-/** Viewer: open the document on screen in another tool's page. */
-function showViewerToolPicker(
-  file: OpenedFile,
-  toolsBySlug: Map<string, ShellTool>
-): void {
-  document.getElementById('desktop-open-file')?.remove();
-  const all = [...toolsBySlug.values()].filter((t) => t.slug !== VIEWER_SLUG);
-
-  const overlay = el('div', 'desktop-picker-overlay');
-  overlay.id = 'desktop-open-file';
-  const dialog = el('div', 'desktop-picker');
-  dialog.setAttribute('role', 'dialog');
-  const search = el('input', 'desktop-picker-search');
-  search.type = 'search';
-  search.placeholder = ds('pickSearch');
-  const body = el('div', 'desktop-picker-body');
-  const closeButton = el('button', 'desktop-picker-close');
-  closeButton.type = 'button';
-  closeButton.title = ds('cancel');
-  closeButton.setAttribute('aria-label', ds('cancel'));
-  closeButton.append(el('i', 'ph ph-x'));
-  const head = el('div', 'desktop-picker-head');
-  head.append(
-    el('h2', 'desktop-picker-title', ds('openFileTitle')),
-    closeButton
-  );
-  dialog.append(head, el('p', 'desktop-picker-file', file.name), search, body);
-
-  const close = () => {
-    overlay.remove();
-    document.removeEventListener('keydown', onKey, true);
-  };
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key !== 'Escape') return;
-    e.stopPropagation();
-    if (search.value) {
-      search.value = '';
-      render(false);
-    } else close();
-  };
-
-  const card = (tool: ShellTool) => {
-    const link = el('a', 'desktop-picker-tool');
-    link.href = tool.href;
-    link.title = tool.subtitle;
-    link.dataset.slug = tool.slug;
-    link.append(iconEl(tool.icon), el('span', '', tool.name));
-    link.addEventListener('click', () => rememberPendingFile(file));
-    return link;
-  };
-  const group = (title: string | null, tools: ShellTool[]) => {
-    const wrap = el('div', 'desktop-picker-group');
-    if (title) wrap.append(el('p', 'desktop-picker-heading', title));
-    const grid = el('div', 'desktop-picker-grid');
-    grid.append(...tools.map(card));
-    wrap.append(grid);
-    return wrap;
-  };
-
-  function render(showAll: boolean): void {
-    body.textContent = '';
-    const term = search.value.toLowerCase().trim();
-    if (term) {
-      const found = all.filter((t) =>
-        `${t.name} ${t.subtitle}`.toLowerCase().includes(term)
-      );
-      body.append(
-        found.length
-          ? group(null, found)
-          : el('p', 'desktop-picker-empty', ds('pickNone'))
-      );
-    } else if (showAll) {
-      body.append(group(null, all));
-    } else {
-      for (const [title, slugs] of VIEWER_PICKER_GROUPS) {
-        const tools = slugs
-          .map((slug) => toolsBySlug.get(slug))
-          .filter((tool): tool is ShellTool => Boolean(tool));
-        if (tools.length) body.append(group(ds(title), tools));
-      }
-      const more = el('button', 'desktop-picker-all', ds('pickAll'));
-      more.type = 'button';
-      more.addEventListener('click', () => render(true));
-      body.append(more);
-    }
-    rewriteLinks();
-  }
-
-  search.addEventListener('input', () => render(false));
-  search.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      body.querySelector<HTMLAnchorElement>('.desktop-picker-tool')?.click();
-    }
-  });
-  closeButton.addEventListener('click', () => close());
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) close();
-  });
-  document.addEventListener('keydown', onKey, true);
-  overlay.append(dialog);
-  document.body.append(overlay);
-  render(false);
-  search.focus();
 }
 
 function initOpenedFiles(
@@ -1567,11 +1456,14 @@ function setReading(value: boolean): void {
 }
 
 /**
- * Viewer page: the row above the document. Studio puts what changes the
- * document in place there; the menu at its end opens the document in
- * another tool's page (a link, so the page's file follows the click).
+ * Viewer page: the ribbon above the document (studio/ribbon.ts). Its tabs
+ * group what Studio and the page grid do to the document in place, and
+ * link the tools that open on their own page (the document goes along).
  */
-function initViewerActions(toolsBySlug: Map<string, ShellTool>): void {
+function initViewerActions(
+  toolsBySlug: Map<string, ShellTool>,
+  groups: ShellCategory[]
+): void {
   const row = document.getElementById('viewer-actions');
   if (!row || !getBridge()) return;
 
@@ -1585,51 +1477,32 @@ function initViewerActions(toolsBySlug: Map<string, ShellTool>): void {
     setStoredItem(READING_SIDEBAR_KEY, collapsed ? 'open' : 'rail');
     applyReading();
   });
-  row.append(toggle, el('span', 'pdf-view-actions-divider'));
-
-  // One menu for every tool not on the row: first those Studio applies to
-  // this document in place, then those that open on their own page.
-  let inPlace: () => MenuChoice[] = () => [];
-  const openWith = menuButton({
-    icon: 'ph-squares-four',
-    label: ds('quickOtherTools'),
-    title: ds('quickOtherToolsHint'),
-    className: 'pdf-view-action pdf-view-open-with studio-more',
-    choices: () => {
-      const here = inPlace();
-      const choices: MenuEntry[] = here.length
-        ? [{ heading: ds('quickInPlace') }, ...here]
-        : [];
-      if (choices.length) choices.push({ separator: true });
-      choices.push({
-        icon: 'ph-magnifying-glass',
-        label: ds('quickOpenWith'),
-        title: ds('quickOpenWithHint'),
-        id: 'all',
-        external: true,
-        run: () => {
-          if (pageFile) showViewerToolPicker(pageFile, toolsBySlug);
-        },
-      });
-      return choices;
-    },
-  });
-  // Links in the menu get the language prefix like every other link.
-  openWith.addEventListener('click', () => rewriteLinks());
-  row.append(el('span', 'pdf-view-actions-divider'), openWith);
-
   row.classList.remove('hidden');
-  rewriteLinks();
 
-  void import('./studio/studio.js').then(({ initStudio }) =>
-    initStudio({
-      row,
-      currentFile: () => pageFile,
-      inPlaceChoices: (list) => {
-        inPlace = list;
+  void Promise.all([
+    import('./studio/ribbon.js'),
+    import('./studio/studio.js'),
+    whenViewerDocuments(),
+  ]).then(async ([{ createRibbon }, { initStudio }, docs]) => {
+    const ribbon = createRibbon({
+      host: row,
+      lead: [toggle],
+      tool: (slug) => toolsBySlug.get(slug),
+      groups: groups.map((group) => ({
+        name: group.name,
+        tools: group.tools.filter((tool) => tool.slug !== VIEWER_SLUG),
+      })),
+      beforeLeaving: () => {
+        if (pageFile) rememberPendingFile(pageFile);
       },
-    })
-  );
+      goToPage: (page) => docs.goToPage(page),
+    });
+    const studio = await initStudio({
+      row: ribbon.clusterHost,
+      currentFile: () => pageFile,
+    });
+    if (studio) ribbon.attach(studio);
+  });
 }
 
 // A tool's "Success" box and the "Saved" notice say the same thing; the

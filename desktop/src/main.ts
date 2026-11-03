@@ -255,6 +255,17 @@ function watchDownloads() {
           filters: [{ name: 'PDF', extensions: ['pdf'] }],
         });
       }
+    } else if (target && target.mode === 'saveAs') {
+      // Another format made from the document (Word, text): offered under
+      // its own name in the document's folder.
+      saveTargets.delete(contents.id);
+      if (target.until > Date.now()) {
+        const ext = path.extname(item.getFilename()).slice(1).toLowerCase();
+        item.setSaveDialogOptions({
+          defaultPath: path.join(path.dirname(target.path), item.getFilename()),
+          filters: ext ? [{ name: ext.toUpperCase(), extensions: [ext] }] : [],
+        });
+      }
     }
 
     item.once('done', async (_done, state) => {

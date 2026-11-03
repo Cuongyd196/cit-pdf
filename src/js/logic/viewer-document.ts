@@ -16,6 +16,8 @@ export interface ViewerDocuments {
   pageCount(file: File): number | null;
   /** Prints the tab on screen, as the viewer's own print button does. */
   print(): void;
+  /** Shows this page (1-based) of the tab on screen. */
+  goToPage(page: number): void;
 }
 
 /** A tab finished laying out its pages (opened, or shown new bytes). */

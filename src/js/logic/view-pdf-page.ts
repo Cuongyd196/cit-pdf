@@ -301,6 +301,11 @@ provideViewerDocuments({
     return app?.pdfDocument ? (app.pagesCount ?? null) : null;
   },
   print: () => activeTab?.iframe.contentWindow?.print(),
+  goToPage: (page) => {
+    const app = (activeTab?.iframe.contentWindow as ViewerWindow | null)
+      ?.PDFViewerApplication;
+    if (app?.pdfDocument) app.page = page;
+  },
 });
 
 const VIEW_HISTORY_KEY = 'pdfjs.history';

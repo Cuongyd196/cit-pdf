@@ -53,6 +53,8 @@ export interface StudioContext {
   files: Record<string, File | undefined>;
   /** Name of the document the tool works on. */
   fileName: string;
+  /** Shows how a long piece of work is getting on, beside its fields. */
+  progress?: (text: string) => void;
 }
 
 export interface StudioResult {
@@ -61,6 +63,8 @@ export interface StudioResult {
   label: string;
   /** For a tool that makes a new file: the name offered for it. */
   fileName?: string;
+  /** Its media type, when it is not a PDF. */
+  type?: string;
   /** Something the user should know about the result, shown with it. */
   note?: string;
 }
@@ -131,7 +135,91 @@ const pageNumberPosition: StudioField = {
   value: 'bottom-center',
 };
 
+const stemOf = (fileName: string) => fileName.replace(/\.pdf$/i, '');
+
 export const STUDIO_TOOLS: StudioTool[] = [
+  {
+    id: 'to-word',
+    icon: 'microsoft-word-logo',
+    name: 'studioToWord',
+    hint: 'studioToWordHint',
+    makesFile: true,
+    fields: [
+      {
+        kind: 'select',
+        id: 'scan',
+        label: 'studioScanLabel',
+        options: [
+          ['ocr', 'studioScanOcr'],
+          ['keep', 'studioScanKeep'],
+        ],
+        value: 'ocr',
+      },
+    ],
+    async apply(bytes, values, { fileName, progress }) {
+      progress?.(ds('studioConvertStarting'));
+      // Heavy: PyMuPDF and OCR load only when used.
+      const [{ loadPyMuPDF }, docx] = await Promise.all([
+        import('../../utils/pymupdf-loader.js'),
+        import('../../utils/pdf-to-docx.js'),
+        import('../../utils/setup-pdf-worker.js'),
+      ]);
+      let source = new File([bytes as BlobPart], fileName, {
+        type: 'application/pdf',
+      });
+      let recognized = false;
+      if (values.scan === 'ocr') {
+        const result = await docx.recognizeIfScanned(source, {
+          onPage: (at, total) => progress?.(ds('studioOcrPage', { at, total })),
+        });
+        source = result.file;
+        recognized = result.recognized;
+      }
+      const pymupdf = await loadPyMuPDF();
+      const blob = await docx.convertToDocx(
+        pymupdf,
+        source,
+        (writing, at, total) =>
+          progress?.(
+            ds(writing ? 'studioWordWriting' : 'studioWordReading', {
+              at,
+              total,
+            })
+          )
+      );
+      return {
+        bytes: new Uint8Array(await blob.arrayBuffer()),
+        label: ds('studioToWord'),
+        fileName: `${stemOf(fileName)}.docx`,
+        type: docx.DOCX_TYPE,
+        note: recognized ? ds('studioOcrNote') : undefined,
+      };
+    },
+  },
+  {
+    id: 'to-text',
+    icon: 'text-t',
+    name: 'studioToText',
+    hint: 'studioToTextHint',
+    makesFile: true,
+    fields: [],
+    async apply(bytes, _values, { fileName, progress }) {
+      progress?.(ds('studioConvertStarting'));
+      const { loadPyMuPDF } = await import('../../utils/pymupdf-loader.js');
+      const pymupdf = await loadPyMuPDF();
+      const text = await pymupdf.pdfToText(
+        new Blob([bytes as BlobPart], { type: 'application/pdf' })
+      );
+      if (!text.trim()) throw new StudioInputError(ds('studioTextEmpty'));
+      return {
+        // With a BOM, Notepad and Word read Vietnamese as UTF-8.
+        bytes: new TextEncoder().encode(`﻿${text}`),
+        label: ds('studioToText'),
+        fileName: `${stemOf(fileName)}.txt`,
+        type: 'text/plain;charset=utf-8',
+      };
+    },
+  },
   {
     id: 'edit',
     icon: 'pencil-simple-line',

@@ -3340,112 +3340,155 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
   @apply flex items-center justify-center text-sm text-gray-400;
 }
 
-/* Drop-down list of a menu button (menu.ts), placed on the page. */
-.desktop-menu {
-  @apply fixed z-50 flex min-w-56 flex-col rounded-lg border border-gray-700 bg-gray-800 py-1 shadow-2xl;
+/* Ribbon (studio/ribbon.ts): tabs over the document, Studio's Undo/Redo/
+   Save at the end of their row, the chosen tab's toolbar under it. */
+.pdf-view-actions.ribbon {
+  @apply flex-col items-stretch gap-0 p-0;
+  overflow: visible;
 }
 
-.desktop-menu-item {
-  @apply flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-gray-200 no-underline hover:bg-gray-700 hover:text-white focus:bg-gray-700 focus:outline-none;
+.ribbon-top {
+  @apply flex min-w-0 items-center gap-0.5 px-2;
 }
 
-.desktop-menu-item > i {
-  @apply text-base text-indigo-400;
+.ribbon-tabs {
+  @apply flex min-w-0 items-stretch overflow-x-auto;
+  scrollbar-width: none;
 }
 
-.desktop-menu-heading {
-  @apply px-3 pt-2 pb-1 text-xs font-semibold tracking-wide text-gray-400 uppercase;
+.ribbon-tab {
+  @apply flex flex-shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 py-2 text-sm font-medium whitespace-nowrap text-gray-400 transition-colors hover:text-white;
 }
 
-.desktop-menu-heading:not(:first-child) {
-  @apply mt-1 border-t border-gray-700 pt-3;
+.ribbon-tab.active {
+  @apply border-indigo-400 font-semibold text-white;
 }
 
-.desktop-menu-item > i.desktop-menu-external {
-  @apply ml-auto text-sm text-gray-500;
+.ribbon-tab > i {
+  @apply text-base;
 }
 
-.desktop-menu-caret {
-  @apply text-xs text-gray-400;
+/* Wraps to a second line in a narrow window rather than scrolling. */
+.ribbon-bar {
+  @apply flex min-h-10 flex-wrap items-center gap-0.5 border-t border-gray-700 bg-gray-800 px-2 py-1;
 }
 
-.desktop-menu-separator {
-  @apply my-1 border-t border-gray-700;
+.ribbon-bar.hidden {
+  display: none;
 }
 
-/* Viewer: picker of tools that open the document on their own page. */
-.desktop-picker-overlay {
-  @apply fixed inset-0 z-50 flex items-start justify-center bg-black/70 p-4 pt-[10vh];
+.ribbon-spacer {
+  @apply ml-auto;
 }
 
-.desktop-picker {
-  @apply flex max-h-[80vh] w-full max-w-2xl flex-col rounded-xl border border-gray-700 bg-gray-800 p-5 shadow-2xl;
+.ribbon-command:disabled {
+  @apply cursor-default opacity-40 hover:bg-transparent;
 }
 
-.desktop-picker-head {
-  @apply flex flex-none items-start justify-between gap-3;
-}
-
-.desktop-picker-title {
-  @apply text-lg font-bold text-white;
-}
-
-.desktop-picker-close {
-  @apply -mt-1 -mr-1 flex h-8 w-8 flex-none items-center justify-center rounded-md text-lg text-gray-400 hover:bg-gray-700 hover:text-white;
-}
-
-.desktop-picker-file {
-  @apply mt-0.5 mb-3 flex-none truncate text-sm text-gray-400;
-}
-
-.desktop-picker-search {
-  @apply mb-3 w-full flex-none rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none;
-}
-
-.desktop-picker-body {
-  @apply min-h-0 overflow-y-auto;
-}
-
-.desktop-picker-group + .desktop-picker-group {
-  @apply mt-3;
-}
-
-.desktop-picker-heading {
-  @apply mb-1.5 text-xs font-semibold tracking-wide text-gray-400 uppercase;
-}
-
-.desktop-picker-grid {
-  @apply grid grid-cols-2 gap-1.5 sm:grid-cols-3;
-}
-
-.desktop-picker-tool {
-  @apply flex min-w-0 items-center gap-2 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-200 no-underline hover:border-indigo-500 hover:text-white;
-}
-
-.desktop-picker-tool > i {
-  @apply flex-none text-lg text-indigo-400;
-}
-
-.desktop-picker-tool > span {
-  @apply truncate;
-}
-
-.desktop-picker-all {
-  @apply mt-3 text-sm font-medium text-indigo-400 hover:text-indigo-300;
-}
-
-.desktop-picker-empty {
-  @apply py-6 text-center text-sm text-gray-400;
-}
-
-.pdf-view-action > i.desktop-menu-caret {
-  @apply text-xs text-gray-400;
-}
-
-/* Studio's tool on the row whose options the drawer shows. */
-.studio-row-tool.active,
-.studio-more.active {
+.ribbon-command.active {
   @apply bg-gray-700 text-white;
+}
+
+.pdf-view-action > i.ribbon-external,
+.ribbon-all-item > i.ribbon-external {
+  @apply text-xs text-gray-500;
+}
+
+/* Toolbar labels stay: the bar scrolls instead of dropping them. */
+@media (max-width: 1150px) {
+  .ribbon-bar .pdf-view-action > span {
+    display: inline;
+  }
+}
+
+/* "All tools": every tool, left of the document. */
+.ribbon-all {
+  @apply flex w-72 flex-none flex-col gap-3 overflow-y-auto border-r border-gray-700 bg-gray-800 p-3;
+}
+
+.ribbon-all.hidden {
+  display: none;
+}
+
+.ribbon-all-title {
+  @apply px-1 text-base font-semibold text-white;
+}
+
+.ribbon-all-list {
+  @apply flex flex-col gap-3;
+}
+
+.ribbon-all-heading {
+  @apply mb-1 px-2 text-xs font-semibold tracking-wide text-gray-400 uppercase;
+}
+
+.ribbon-all-item {
+  @apply flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-gray-200 no-underline hover:bg-gray-700 hover:text-white;
+}
+
+.ribbon-all-item > i:first-child {
+  @apply flex-none text-base text-indigo-400;
+}
+
+/* Page grid (studio/page-grid.ts): the Trang tab, over the reader. */
+.page-grid {
+  @apply absolute inset-0 z-10 overflow-y-auto bg-gray-900 px-6 pt-4 pb-10 outline-none;
+}
+
+.page-grid.hidden {
+  display: none;
+}
+
+.page-grid-status {
+  @apply mb-4 text-sm text-gray-400;
+}
+
+.page-grid-status.error {
+  @apply text-red-400;
+}
+
+.page-grid-cells {
+  @apply grid gap-4;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+}
+
+.page-cell {
+  @apply relative flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-transparent p-2.5 text-sm text-gray-400 select-none hover:bg-gray-800;
+}
+
+.page-cell.selected {
+  @apply border-indigo-400 bg-indigo-500/10 text-white;
+}
+
+.page-thumb {
+  @apply overflow-hidden rounded-sm bg-white shadow-lg;
+}
+
+.page-thumb.loading {
+  @apply animate-pulse bg-gray-200;
+}
+
+.page-thumb > canvas {
+  @apply block h-full w-full;
+}
+
+.page-num {
+  @apply tabular-nums;
+}
+
+/* Where dragged pages will land. */
+.page-cell.drop-before::before,
+.page-cell.drop-after::after {
+  @apply absolute top-2 bottom-2 w-1 rounded-full bg-indigo-400;
+  content: '';
+}
+
+.page-cell.drop-before::before {
+  left: -0.6rem;
+}
+
+.page-cell.drop-after::after {
+  right: -0.6rem;
 }
 
 /* Studio: a file field (Insert another PDF). */

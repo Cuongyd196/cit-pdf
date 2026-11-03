@@ -216,7 +216,9 @@ export class ModulesManager {
         : (item.files ?? []).map((f) => f.url);
     return urls
       .filter(Boolean)
-      .map((url) => decodeURIComponent(path.posix.basename(new URL(url).pathname)));
+      .map((url) =>
+        decodeURIComponent(path.posix.basename(new URL(url).pathname))
+      );
   }
 
   /**
