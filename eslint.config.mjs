@@ -10,6 +10,11 @@ export default [
   {
     ignores: [
       'dist/**',
+      // Desktop build output and the offline engine pack.
+      'desktop/dist/**',
+      'desktop/dist-web/**',
+      'release/**',
+      'desktop/bundled-modules/**',
       'coverage/**',
       'node_modules/**',
       '**/.vitepress/cache/**',

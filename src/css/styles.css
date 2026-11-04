@@ -585,22 +585,24 @@ body:has(#desktop-statusbar) .pdf-view-panel {
   }
 }
 
-/* Reading: the sidebar becomes a rail of icons and the page gets the room.
-   The selector repeats :has(#desktop-sidebar) to outweigh the default. */
-body.desktop-reading:has(#desktop-sidebar) {
+/* The sidebar is a rail of icons on every page, leaving the width to the
+   page; its toolbox (or Ctrl+K) opens the full list over the page, as
+   .is-open. The selector repeats :has(#desktop-sidebar) to outweigh the
+   default. */
+body.desktop-rail:has(#desktop-sidebar) {
   padding-left: 3.5rem;
 }
 
-.desktop-reading .desktop-sidebar {
+.desktop-rail .desktop-sidebar:not(.is-open) {
   @apply w-14;
 }
 
-.desktop-reading .desktop-sidebar > a:first-child {
+.desktop-rail .desktop-sidebar:not(.is-open) > a:first-child {
   @apply justify-center px-0;
 }
 
-.desktop-reading
-  .desktop-sidebar
+.desktop-rail
+  .desktop-sidebar:not(.is-open)
   :is(
     #nav-brand,
     .desktop-nav-heading,
@@ -612,23 +614,23 @@ body.desktop-reading:has(#desktop-sidebar) {
   display: none;
 }
 
-.desktop-reading .desktop-sidebar .desktop-nav-item,
-.desktop-reading .desktop-sidebar .desktop-nav-item > a {
+.desktop-rail .desktop-sidebar:not(.is-open) .desktop-nav-item,
+.desktop-rail .desktop-sidebar:not(.is-open) .desktop-nav-item > a {
   @apply justify-center;
 }
 
-.desktop-reading .desktop-sidebar .desktop-nav-item {
+.desktop-rail .desktop-sidebar:not(.is-open) .desktop-nav-item {
   @apply mx-2 px-0 py-2;
 }
 
-.desktop-reading .desktop-sidebar .desktop-nav-item i {
+.desktop-rail .desktop-sidebar:not(.is-open) .desktop-nav-item i {
   @apply text-lg;
 }
 
 /* The rail: home, the viewer, every tool, then up to six pinned tools.
    Recent tools stay in the full sidebar and on the home page. */
-.desktop-reading
-  .desktop-sidebar
+.desktop-rail
+  .desktop-sidebar:not(.is-open)
   :is(
     .desktop-nav-recent,
     .desktop-nav-favorites > .desktop-nav-item:nth-of-type(n + 7)
@@ -636,12 +638,17 @@ body.desktop-reading:has(#desktop-sidebar) {
   display: none;
 }
 
-.desktop-reading .desktop-sidebar .desktop-nav-fixed {
+.desktop-rail .desktop-sidebar:not(.is-open) .desktop-nav-fixed {
   @apply mx-3 mb-2 border-b border-gray-700 pb-2;
 }
 
 .desktop-nav-fixed {
   @apply mb-3;
+}
+
+/* The rail opened: the full sidebar over the page, which stays put. */
+.desktop-rail .desktop-sidebar.is-open {
+  @apply z-50 shadow-2xl;
 }
 
 /* A rail icon's name, shown beside it on hover. */
@@ -3439,8 +3446,15 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
   display: none;
 }
 
+/* What is selected, or how an operation went: a pill floating at the
+   bottom of the grid. */
 .page-grid-status {
-  @apply mb-4 text-sm text-gray-400;
+  @apply sticky bottom-4 z-10 mx-auto w-fit max-w-full rounded-full border border-gray-700 bg-gray-800 px-4 py-1.5 text-sm text-gray-200 shadow-lg;
+  margin-top: 1rem;
+}
+
+.page-grid-status.hidden {
+  display: none;
 }
 
 .page-grid-status.error {

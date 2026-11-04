@@ -1,4 +1,5 @@
 {
+  "CONFIDENTIAL": "LƯU HÀNH NỘI BỘ",
   "(Empty Resource)": "(Tài nguyên trống)",
   "(No Subject)": "(Không có chủ đề)",
   "- Additional context for RAG systems": "- Ngữ cảnh bổ sung cho hệ thống RAG",
@@ -1398,7 +1399,7 @@
   "PDF decrypted successfully! All encryption and restrictions removed.": "Đã giải mã PDF thành công! Mọi mã hóa và hạn chế đã được gỡ bỏ.",
   "PDF decrypted successfully! Your download has started.": "Đã giải mã PDF thành công! Quá trình tải xuống đã bắt đầu.",
   "PDF downloaded successfully.": "Đã tải PDF xuống thành công.",
-  "PDF Editor": "Trình chỉnh sửa PDF",
+  "PDF Editor": "Chỉnh sửa & ghi chú",
   "PDF encrypted successfully with 256-bit AES!": "Đã mã hóa PDF bằng AES 256-bit thành công.",
   "PDF Files": "Tệp PDF",
   "PDF files (multiple supported)": "Tệp PDF (hỗ trợ nhiều tệp)",

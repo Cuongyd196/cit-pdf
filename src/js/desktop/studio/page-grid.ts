@@ -73,7 +73,7 @@ export function initPageGrid(options: {
   const status = make('p', 'page-grid-status');
   status.setAttribute('role', 'status');
   const cells = make('div', 'page-grid-cells');
-  host.append(status, cells);
+  host.append(cells, status);
   container.append(host);
 
   let shown = false;
@@ -103,14 +103,17 @@ export function initPageGrid(options: {
   function renderStatus(): void {
     const picked = selection.pages.length;
     status.classList.toggle('error', Boolean(note?.error));
+    // How to select is each page's tooltip; the line shows only when there
+    // is something to say.
     status.textContent =
       note?.text ??
       (picked === 0
-        ? ds('gridHint')
+        ? ''
         : ds('gridSelected', {
             n: picked,
             pages: describePages(selection.pages),
           }));
+    status.classList.toggle('hidden', !status.textContent);
   }
 
   function renderSelection(): void {
@@ -193,7 +196,7 @@ export function initPageGrid(options: {
         cell.dataset.index = String(index);
         cell.draggable = true;
         cell.setAttribute('role', 'option');
-        cell.title = ds('gridPage', { n: index + 1 });
+        cell.title = `${ds('gridPage', { n: index + 1 })}\n${ds('gridHint')}`;
         const thumb = make('div', 'page-thumb loading');
         thumb.style.width = `${THUMB_WIDTH}px`;
         thumb.style.height = `${Math.round(THUMB_WIDTH * ratio)}px`;

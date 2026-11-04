@@ -15,13 +15,7 @@ import {
   type DesktopStringKey,
 } from './strings.js';
 import { homeBlurb } from './tool-blurbs.js';
-import {
-  THEME_EVENT,
-  initTheme,
-  setThemePreference,
-  themePreference,
-  type ThemePreference,
-} from './theme.js';
+import { initTheme } from './theme.js';
 import { initUpdateBanner } from './update-check.js';
 import { initIconFamily } from './icons.js';
 import { initToolWorkspace } from './workspace.js';
@@ -174,7 +168,6 @@ const PENDING_FILE_KEY = 'cit:pending-file';
 const VIEWER_TABS_KEY = 'cit:viewer-tabs';
 // Buttons that leave a tool's editor for its upload screen.
 const BACK_TO_DOCUMENT = '#exitEditor';
-const READING_SIDEBAR_KEY = 'cit:reading-sidebar';
 const SAVED_TOAST_MS = 15000;
 
 const MAX_RECENT = 5;
@@ -404,9 +397,9 @@ export function initDesktopShell(options: ShellOptions): void {
       el('span', 'truncate', ds('homeAllTools'))
     );
     all.addEventListener('click', (event) => {
-      if (!onHome) return;
       event.preventDefault();
-      scrollToAllTools();
+      if (onHome) scrollToAllTools();
+      else toggleToolPanel();
     });
     fixed.append(all);
     nav!.append(fixed);
@@ -490,6 +483,7 @@ export function initDesktopShell(options: ShellOptions): void {
   );
   getBridge()?.onFindTool?.(findTool);
   initRailLabels();
+  initToolPanel();
 
   // Recent tools as of arriving on this page; the home page is not a tool,
   // so nothing was just added.
@@ -497,7 +491,6 @@ export function initDesktopShell(options: ShellOptions): void {
   void initUpdateBanner();
 
   initTheme();
-  initThemeToggle();
   const opened = initOpenedFiles(
     pick(OPEN_FILE_TOOLS),
     currentTool,
@@ -510,7 +503,6 @@ export function initDesktopShell(options: ShellOptions): void {
     back:
       opened?.backFromTool ??
       (() => document.getElementById('back-to-tools')?.click()),
-    setReading,
     currentFile: () => pageFile,
   });
   // The first group, Popular Tools, repeats tools of the others; the few it
@@ -573,37 +565,6 @@ function renderHomeRecent(tools: ShellTool[]): void {
   searchBar?.addEventListener('input', () => {
     section.classList.toggle('hidden', searchBar.value.trim() !== '');
   });
-}
-
-/** Status bar button: one click flips between the light and dark themes. */
-function initThemeToggle(): void {
-  const toggle = document.getElementById('desktop-theme-toggle');
-  if (!toggle) return;
-  const icon = toggle.querySelector('i');
-  const label = toggle.querySelector('span');
-
-  // Light, dark, then whatever Windows uses.
-  const next: Record<ThemePreference, ThemePreference> = {
-    light: 'dark',
-    dark: 'system',
-    system: 'light',
-  };
-  const look: Record<ThemePreference, [string, DesktopStringKey]> = {
-    light: ['ph-sun', 'themeLight'],
-    dark: ['ph-moon', 'themeDark'],
-    system: ['ph-desktop', 'themeSystem'],
-  };
-  const sync = () => {
-    const [iconName, labelKey] = look[themePreference()];
-    if (icon) icon.className = `ph ${iconName} text-sm`;
-    if (label) label.textContent = ds(labelKey);
-    toggle.title = ds('themeToggleHint');
-  };
-  toggle.addEventListener('click', () => {
-    setThemePreference(next[themePreference()]);
-  });
-  document.addEventListener(THEME_EVENT, sync);
-  sync();
 }
 
 function getFileInput(): HTMLInputElement | null {
@@ -829,7 +790,6 @@ function initOpenedFiles(
         files.map((file) => fileOrigins.get(file) ?? null)
       );
       pageFile = viewerTabs[active] ?? null;
-      setReading(files.length > 0);
       if (restoringTabs) return;
       saveViewerTabs({
         files: viewerTabs.filter((tab): tab is OpenedFile => tab !== null),
@@ -1056,14 +1016,16 @@ function formatOpenedAt(at: number | undefined, now = Date.now()): string {
   if (minutes < 1) return ds('timeJustNow');
   if (minutes < 60) return ds('timeMinutes', { n: String(minutes) });
   const date = new Date(at);
-  const time = date.toLocaleTimeString(undefined, {
+  // The app's language, not the system's: Vietnamese reads 24-hour time.
+  const locale = desktopLang() === 'vi' ? 'vi-VN' : undefined;
+  const time = date.toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
   });
   const startOfToday = new Date(now).setHours(0, 0, 0, 0);
   if (at >= startOfToday) return ds('timeToday', { time });
   if (at >= startOfToday - 86400000) return ds('timeYesterday', { time });
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -1153,8 +1115,7 @@ function scrollToAllTools(): void {
 
 /**
  * Ctrl+K and File > Find a tool…: the home page's search box, else the
- * sidebar's; from the rail, where neither is on screen, the home page's
- * list of tools.
+ * rail's full list of tools with its search box.
  */
 function findTool(): void {
   // The viewer's ribbon answers with its All tools panel.
@@ -1165,20 +1126,75 @@ function findTool(): void {
   ) {
     return;
   }
-  const boxes = ['home-tool-search', 'desktop-search'].map(
-    (id) => document.getElementById(id) as HTMLInputElement | null
-  );
-  const box = boxes.find((input) => input && input.offsetParent !== null);
-  if (box) {
+  const box = document.getElementById(
+    'home-tool-search'
+  ) as HTMLInputElement | null;
+  if (box && box.offsetParent !== null) {
     box.focus();
     box.select();
     return;
   }
-  const link = el('a', 'hidden');
-  link.href = allToolsHref();
-  document.body.append(link);
-  rewriteLinks();
-  link.click();
+  openToolPanel();
+}
+
+/**
+ * The rail's toolbox, and Ctrl+K off the home page: the full sidebar
+ * (search, pinned and recent tools, every tool by group) opens over the
+ * page. Escape, a click outside it, or the toolbox again closes it.
+ */
+function openToolPanel(): void {
+  const sidebar = document.getElementById('desktop-sidebar');
+  if (!sidebar) return;
+  sidebar.classList.add('is-open');
+  sidebar
+    .querySelector('.desktop-nav-item.active')
+    ?.scrollIntoView({ block: 'nearest' });
+  const search = document.getElementById(
+    'desktop-search'
+  ) as HTMLInputElement | null;
+  search?.focus();
+  search?.select();
+}
+
+function closeToolPanel(): void {
+  const sidebar = document.getElementById('desktop-sidebar');
+  if (!sidebar?.classList.contains('is-open')) return;
+  sidebar.classList.remove('is-open');
+  const search = document.getElementById(
+    'desktop-search'
+  ) as HTMLInputElement | null;
+  if (search?.value) {
+    search.value = '';
+    search.dispatchEvent(new Event('input'));
+  }
+  if (sidebar.contains(document.activeElement)) {
+    (document.activeElement as HTMLElement).blur();
+  }
+}
+
+function toggleToolPanel(): void {
+  if (document.getElementById('desktop-sidebar')?.classList.contains('is-open'))
+    closeToolPanel();
+  else openToolPanel();
+}
+
+function initToolPanel(): void {
+  const sidebar = document.getElementById('desktop-sidebar');
+  if (!sidebar) return;
+  document.body.classList.add('desktop-rail');
+  document.addEventListener('pointerdown', (event) => {
+    if (!sidebar.contains(event.target as Node)) closeToolPanel();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && sidebar.classList.contains('is-open')) {
+      event.preventDefault();
+      closeToolPanel();
+    }
+  });
+  // The viewer's frames take clicks for themselves.
+  window.addEventListener('blur', () => {
+    if (document.activeElement instanceof HTMLIFrameElement) closeToolPanel();
+  });
 }
 
 /**
@@ -1202,11 +1218,7 @@ function initRailLabels(): void {
       ? ds('railHome')
       : item?.querySelector('span')?.textContent?.trim() ||
         item?.querySelector('a')?.title;
-    if (
-      !item ||
-      !label ||
-      !document.body.classList.contains('desktop-reading')
-    ) {
+    if (!item || !label || sidebar.classList.contains('is-open')) {
       tip.classList.add('hidden');
       return;
     }
@@ -1245,8 +1257,6 @@ function initHomeStart(options: HomeOptions): void {
   if (!start || !bridge) return;
 
   document.body.classList.add('desktop-home-start');
-  // The home page lists the tools itself: a rail is enough on the side.
-  document.body.classList.add('desktop-reading');
 
   const scrollToTools = () => {
     if (window.location.hash === ALL_TOOLS_HASH) scrollToAllTools();
@@ -1449,21 +1459,6 @@ function initHomeStart(options: HomeOptions): void {
   });
 }
 
-// While a document is open in the viewer the sidebar shrinks to a rail of
-// icons, leaving the width to the page. The user can bring it back, and
-// that choice is remembered.
-let reading = false;
-
-function applyReading(): void {
-  const keepOpen = getStoredItem(READING_SIDEBAR_KEY) === 'open';
-  document.body.classList.toggle('desktop-reading', reading && !keepOpen);
-}
-
-function setReading(value: boolean): void {
-  reading = value;
-  applyReading();
-}
-
 /**
  * Viewer page: the ribbon above the document (studio/ribbon.ts). Its tabs
  * group what Studio and the page grid do to the document in place, and
@@ -1476,16 +1471,6 @@ function initViewerActions(
   const row = document.getElementById('viewer-actions');
   if (!row || !getBridge()) return;
 
-  const toggle = el('button', 'pdf-view-action pdf-view-action-icon');
-  toggle.type = 'button';
-  toggle.title = ds('sidebarToggle');
-  toggle.setAttribute('aria-label', toggle.title);
-  toggle.append(el('i', 'ph ph-sidebar-simple'));
-  toggle.addEventListener('click', () => {
-    const collapsed = document.body.classList.contains('desktop-reading');
-    setStoredItem(READING_SIDEBAR_KEY, collapsed ? 'open' : 'rail');
-    applyReading();
-  });
   row.classList.remove('hidden');
 
   void Promise.all([
@@ -1495,7 +1480,6 @@ function initViewerActions(
   ]).then(async ([{ createRibbon }, { initStudio }, docs]) => {
     const ribbon = createRibbon({
       host: row,
-      lead: [toggle],
       tool: (slug) => toolsBySlug.get(slug),
       groups: groups.map((group) => ({
         name: group.name,
@@ -1505,6 +1489,7 @@ function initViewerActions(
         if (pageFile) rememberPendingFile(pageFile);
       },
       goToPage: (page) => docs.goToPage(page),
+      showViewerToolbar: (shown) => docs.showToolbar(shown),
     });
     const studio = await initStudio({
       row: ribbon.clusterHost,

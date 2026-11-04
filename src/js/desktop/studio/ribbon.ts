@@ -34,8 +34,6 @@ export interface RibbonTool {
 export interface RibbonOptions {
   /** The ribbon's host (#viewer-actions). */
   host: HTMLElement;
-  /** Placed first on the tab row (the sidebar toggle). */
-  lead: HTMLElement[];
   tool(slug: string): RibbonTool | undefined;
   /** Tool groups for the "All tools" panel, as in the sidebar. */
   groups: Array<{ name: string; tools: RibbonTool[] }>;
@@ -43,6 +41,8 @@ export interface RibbonOptions {
   beforeLeaving(): void;
   /** Shows a page of the tab on screen in the reader. */
   goToPage(page: number): void;
+  /** PDF.js's toolbar shows only under a tab without a toolbar of its own. */
+  showViewerToolbar(shown: boolean): void;
 }
 
 export interface Ribbon {
@@ -81,7 +81,7 @@ export function createRibbon(options: RibbonOptions): Ribbon {
   const top = make('div', 'ribbon-top');
   const tabList = make('div', 'ribbon-tabs');
   tabList.setAttribute('role', 'tablist');
-  top.append(...options.lead, tabList);
+  top.append(tabList);
   const bar = make('div', 'ribbon-bar');
   bar.setAttribute('role', 'toolbar');
   host.replaceChildren(top, bar);
@@ -290,6 +290,7 @@ export function createRibbon(options: RibbonOptions): Ribbon {
     }
     bar.replaceChildren(...items);
     bar.classList.toggle('hidden', items.length === 0);
+    options.showViewerToolbar(items.length === 0);
     rewriteLinks();
   }
 
@@ -319,9 +320,13 @@ export function createRibbon(options: RibbonOptions): Ribbon {
   });
   document.addEventListener(VIEWER_KEYDOWN_EVENT, (event) => {
     const key = (event as CustomEvent<KeyboardEvent>).detail;
-    if ((key.ctrlKey || key.metaKey) && key.key.toLowerCase() === 'k') {
+    if (!(key.ctrlKey || key.metaKey)) return;
+    if (key.key.toLowerCase() === 'k') {
       event.preventDefault();
       findTool();
+    } else if (key.key.toLowerCase() === 'f' && tab !== 'read') {
+      // Finding is on the reader's toolbar, which only Đọc shows.
+      setTab('read');
     }
   });
 

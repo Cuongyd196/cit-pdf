@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { once } from 'node:events';
-import { pipeline } from 'node:stream/promises';
 import { app, dialog, BrowserWindow } from 'electron';
 import * as tar from 'tar';
 import type {
@@ -425,7 +424,8 @@ export class ModulesManager {
       fileStream.destroy();
       if (controller.signal.aborted) {
         throw new Error(
-          `Download stalled: no data for ${DOWNLOAD_STALL_MS / 1000}s from ${new URL(url).host}. Check the network connection and try again.`
+          `Download stalled: no data for ${DOWNLOAD_STALL_MS / 1000}s from ${new URL(url).host}. Check the network connection and try again.`,
+          { cause: err }
         );
       }
       throw err;
