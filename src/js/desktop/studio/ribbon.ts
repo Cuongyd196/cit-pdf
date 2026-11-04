@@ -315,6 +315,9 @@ export function createRibbon(options: RibbonOptions): Ribbon {
     search.select();
   };
   document.addEventListener(FIND_TOOL_EVENT, (event) => {
+    // No document open: the panel's place is hidden, so the shell's own
+    // list answers instead.
+    if (!container || container.offsetParent === null) return;
     event.preventDefault();
     findTool();
   });
