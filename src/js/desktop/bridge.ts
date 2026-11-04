@@ -45,7 +45,15 @@ export interface ModuleStatus {
 }
 
 export type UpdateCheckResult =
-  | { ok: true; current: string; latest: string; newer: boolean; url: string }
+  | {
+      ok: true;
+      current: string;
+      latest: string;
+      newer: boolean;
+      url: string;
+      /** The app can download and run the new installer itself. */
+      canInstall?: boolean;
+    }
   | { ok: false; current: string; error: 'network' | 'no-release' };
 
 export interface SavedDownload {
@@ -118,6 +126,13 @@ interface DesktopBridge {
   registerPickedFile(file: File): Promise<OpenedFile | null>;
   openInNewWindow(path: string): Promise<boolean>;
   checkForUpdate(): Promise<UpdateCheckResult>;
+  /** Downloads, checks and runs the new installer, then the app quits. */
+  installUpdate?(): Promise<
+    { ok: true } | { ok: false; error: 'manual' | 'download' | 'verify' | 'launch' }
+  >;
+  onUpdateProgress?(
+    cb: (p: { received: number; total: number }) => void
+  ): () => void;
   onDownloadSaved(cb: (saved: SavedDownload) => void): () => void;
   setSaveTarget(mode: SaveMode, path: string): Promise<boolean>;
   showSavedInFolder(path: string): Promise<boolean>;

@@ -301,14 +301,25 @@ const STRINGS = {
     updateLatest: 'Bạn đang dùng phiên bản mới nhất ({current}).',
     updateAvailable: 'Đã có phiên bản {latest}. Bạn đang dùng {current}.',
     updateStatus: 'Có bản mới {latest}',
-    updateStatusHint: 'Bạn đang dùng {current}. Bấm để mở trang tải bản mới.',
+    updateStatusHint: 'Bạn đang dùng {current}. Bấm để xem và cập nhật.',
     updateDownload: 'Tải bản mới',
     updateNoRelease: 'Chưa có bản phát hành nào.',
     updateFailed: 'Không kiểm tra được. Hãy xem lại kết nối mạng rồi thử lại.',
     updateHint: 'Bật hoặc tắt việc tự động kiểm tra trong Cài đặt.',
-    updateDismiss: 'Bỏ qua',
-    updateDismissHint:
-      'Không nhắc lại bản này nữa. Khi có bản mới hơn sẽ báo lại.',
+    updateBadge: 'Cập nhật',
+    updateVersions: '{current} → {latest}',
+    updateText:
+      'CIT-PDF {latest} đã có, với các tính năng và bản sửa lỗi mới nhất.',
+    updateWhatsNew: 'Có gì mới',
+    updateLater: 'Để sau',
+    updateInstall: 'Cập nhật và khởi động lại',
+    updateClose: 'Đóng',
+    updateInstalling: 'Đang tải bản cài đặt… {pct}%',
+    updateRestarting: 'Đang cài đặt, ứng dụng sẽ tự mở lại sau ít giây…',
+    updateInstallFailed:
+      'Không cập nhật tự động được. Bấm "Có gì mới" để tải bản cài đặt.',
+    updateVerifyFailed:
+      'Tệp tải về không khớp mã kiểm tra nên đã bị bỏ. Hãy thử lại sau.',
     autoUpdate: 'Tự động kiểm tra cập nhật',
     autoUpdateDescription:
       'Mỗi ngày một lần, hỏi GitHub xem có bản mới không và báo ở trang chủ. Không tự tải về hay cài đặt.',
@@ -613,15 +624,26 @@ const STRINGS = {
     updateLatest: 'You are on the latest version ({current}).',
     updateAvailable: 'Version {latest} is available. You have {current}.',
     updateStatus: 'Version {latest} available',
-    updateStatusHint: 'You have {current}. Click to open the download page.',
+    updateStatusHint: 'You have {current}. Click to see and update.',
     updateDownload: 'Download the new version',
     updateNoRelease: 'No release has been published yet.',
     updateFailed:
       'Could not check. Please check your internet connection and try again.',
     updateHint: 'Turn automatic checking on or off in Settings.',
-    updateDismiss: 'Skip',
-    updateDismissHint:
-      'Stop reminding me about this version. A later one will show again.',
+    updateBadge: 'Update',
+    updateVersions: '{current} → {latest}',
+    updateText:
+      'CIT-PDF {latest} is available with the latest features and bug fixes.',
+    updateWhatsNew: "What's new",
+    updateLater: 'Later',
+    updateInstall: 'Update and restart',
+    updateClose: 'Close',
+    updateInstalling: 'Downloading the installer… {pct}%',
+    updateRestarting: 'Installing. The app will open again in a few seconds…',
+    updateInstallFailed:
+      'Could not update automatically. Use "What\'s new" to download the installer.',
+    updateVerifyFailed:
+      'The download did not match its checksum and was discarded. Try again later.',
     autoUpdate: 'Check for updates automatically',
     autoUpdateDescription:
       'Once a day, asks GitHub whether a new version is out and shows it on the home page. Nothing is downloaded or installed.',

@@ -4,7 +4,7 @@
  */
 import { getBridge } from './bridge.js';
 import { applyDesktopStrings, ds } from './strings.js';
-import { rememberUpdateResult } from './update-check.js';
+import { rememberUpdateResult, showUpdateDialog } from './update-check.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const bridge = getBridge();
@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           download.href = result.url;
           download.classList.remove('hidden');
+          showUpdateDialog(result);
         } else {
           status.className = 'mt-3 text-sm text-gray-300';
           status.textContent = ds('updateLatest', { current: result.current });

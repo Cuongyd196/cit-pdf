@@ -1,7 +1,9 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import {
   app,
   BrowserWindow,
@@ -16,6 +18,7 @@ import { registerAppScheme, setupAppProtocol } from './protocol.js';
 import { ModulesManager } from './modules-manager.js';
 import { fill, setUiLanguage, ui } from './ui-strings.js';
 import { isNewerVersion } from './version.js';
+import { findInstaller, type ReleaseInstaller } from './release-installer.js';
 import {
   IPC_CHANNELS,
   PRINT_DUPLEX_MODES,
@@ -31,7 +34,9 @@ import {
   type PrintResult,
   type SaveMode,
   type SavedDownload,
+  type InstallUpdateResult,
   type UpdateCheckResult,
+  type UpdateProgress,
 } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -727,6 +732,8 @@ ipcMain.handle(
       const release = (await response.json()) as {
         tag_name?: unknown;
         html_url?: unknown;
+        assets?: unknown;
+        body?: unknown;
       };
       if (typeof release.tag_name !== 'string') {
         return { ok: false, current, error: 'network' };
@@ -738,17 +745,113 @@ ipcMain.handle(
           ? release.html_url
           : RELEASES_PAGE;
       const latest = release.tag_name.replace(/^v/i, '');
+      const newer = isNewerVersion(latest, current);
+      pendingInstaller =
+        newer && canSelfUpdate()
+          ? findInstaller(release, `${RELEASES_PAGE}/download/`)
+          : null;
       return {
         ok: true,
         current,
         latest,
-        newer: isNewerVersion(latest, current),
+        newer,
         url,
+        canInstall: pendingInstaller !== null,
       };
     } catch (e) {
       console.warn('[Main] Update check failed:', e);
       return { ok: false, current, error: 'network' };
     }
+  }
+);
+
+// "Update and restart" works for the installed app on Windows; the portable
+// one and a run from source get the download page instead.
+function canSelfUpdate(): boolean {
+  return (
+    app.isPackaged &&
+    process.platform === 'win32' &&
+    !process.env.PORTABLE_EXECUTABLE_FILE
+  );
+}
+
+// The installer of the release the last check found newer. Kept here, so
+// the page only asks to install and never hands over a URL to run.
+let pendingInstaller: ReleaseInstaller | null = null;
+
+async function downloadInstaller(
+  installer: ReleaseInstaller,
+  dest: string,
+  onProgress: (p: UpdateProgress) => void
+): Promise<string> {
+  const response = await net.fetch(installer.url);
+  if (!response.ok || !response.body) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  const total =
+    Number(response.headers.get('content-length')) || installer.size || 0;
+  const hash = crypto.createHash('sha256');
+  const out = fs.createWriteStream(dest);
+  let received = 0;
+  try {
+    const reader = response.body.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      hash.update(value);
+      received += value.length;
+      if (!out.write(Buffer.from(value))) {
+        await new Promise((resolve) => out.once('drain', resolve));
+      }
+      onProgress({ received, total });
+    }
+  } finally {
+    await new Promise<void>((resolve) => out.end(resolve));
+  }
+  return hash.digest('hex');
+}
+
+ipcMain.handle(
+  IPC_CHANNELS.INSTALL_UPDATE,
+  async (event): Promise<InstallUpdateResult> => {
+    const installer = pendingInstaller;
+    if (!installer || !canSelfUpdate()) return { ok: false, error: 'manual' };
+
+    const dir = path.join(os.tmpdir(), 'CIT-PDF-update');
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, installer.name);
+    let sha256: string;
+    try {
+      sha256 = await downloadInstaller(installer, file, (progress) => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send(IPC_CHANNELS.UPDATE_PROGRESS, progress);
+        }
+      });
+    } catch (e) {
+      console.warn('[Main] Update download failed:', e);
+      return { ok: false, error: 'download' };
+    }
+    if (sha256 !== installer.sha256) {
+      console.warn('[Main] Update hash mismatch:', sha256, installer.sha256);
+      fs.rmSync(dir, { recursive: true, force: true });
+      return { ok: false, error: 'verify' };
+    }
+
+    // Silent install over the current one, then the installer starts the
+    // app again (--force-run). The app quits so its files can be replaced.
+    try {
+      const child = spawn(file, ['/S', '--force-run'], {
+        detached: true,
+        stdio: 'ignore',
+      });
+      child.unref();
+    } catch (e) {
+      console.warn('[Main] Could not start the installer:', e);
+      return { ok: false, error: 'launch' };
+    }
+    setTimeout(() => app.quit(), 500);
+    return { ok: true };
   }
 );
 

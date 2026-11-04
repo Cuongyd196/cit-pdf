@@ -325,9 +325,8 @@ function getCurrentConfig(): PageWatermarkConfig {
     tileGapY: readNumberInput('tile-gap-y', 75),
     x: pageState.watermarkX,
     y: pageState.watermarkY,
-    text:
-      (document.getElementById('watermark-text') as HTMLInputElement)?.value ||
-      '',
+    // As the preview shows it: the placeholder when nothing is typed.
+    text: watermarkTextOrDefault(),
     fontSize:
       parseInt(
         (document.getElementById('font-size') as HTMLInputElement)?.value

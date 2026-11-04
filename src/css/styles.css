@@ -486,14 +486,79 @@ body:has(#desktop-statusbar) .pdf-view-panel {
   display: none;
 }
 
-/* Home page notice: a newer release is out. */
-.desktop-update-banner {
-  @apply flex items-center gap-3 mb-6 px-4 py-3 rounded-lg border border-indigo-500 bg-indigo-600/15 text-sm text-white;
+/* A newer release is out (update-check.ts): app, versions, What's new,
+   Later, Update and restart. */
+.desktop-update-dialog {
+  @apply fixed inset-0 z-[10000] flex items-center justify-center p-4;
+  background-color: rgb(0 0 0 / 0.45);
+  animation: mac-fade-in var(--dur-3) var(--ease-mac) backwards;
 }
 
-/* The home page spaces its rows itself. */
-.desktop-home-main > .desktop-update-banner {
-  @apply mb-0;
+.desktop-update-box {
+  @apply w-full max-w-lg rounded-xl border border-gray-700 bg-gray-800 p-6 shadow-2xl;
+  animation: mac-sheet-in var(--dur-4) var(--ease-mac) backwards;
+}
+
+.desktop-update-head {
+  @apply flex items-start gap-4;
+}
+
+.desktop-update-logo {
+  @apply h-12 w-12 flex-shrink-0 rounded-xl;
+}
+
+.desktop-update-title {
+  @apply text-xl font-semibold text-white;
+}
+
+.desktop-update-badge {
+  @apply rounded bg-indigo-600 px-2 py-0.5 text-xs font-bold tracking-wide uppercase;
+  color: #ffffff;
+}
+
+.desktop-update-versions {
+  @apply mt-1 font-mono text-sm text-gray-400;
+}
+
+.desktop-update-close {
+  @apply -mt-1 -mr-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-lg text-gray-400 hover:bg-gray-700 hover:text-white;
+}
+
+.desktop-update-text {
+  @apply mt-5 text-[15px] leading-relaxed text-gray-300;
+}
+
+.desktop-update-track {
+  @apply mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-700;
+}
+
+.desktop-update-bar {
+  @apply h-full w-0 rounded-full bg-indigo-500 transition-all duration-200;
+}
+
+.desktop-update-status {
+  @apply mt-2 text-sm text-gray-400;
+}
+
+.desktop-update-status.is-error {
+  @apply text-yellow-500;
+}
+
+.desktop-update-foot {
+  @apply mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-gray-700 pt-5;
+}
+
+.desktop-update-link {
+  @apply text-sm font-medium text-gray-200 underline underline-offset-4 hover:text-white;
+}
+
+.desktop-update-later {
+  @apply rounded-md border border-gray-600 px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-700 hover:text-white disabled:opacity-50;
+}
+
+.desktop-update-primary {
+  @apply rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50;
+  color: #ffffff;
 }
 
 /* Status bar: a newer release, beside the version. */
@@ -503,15 +568,6 @@ body:has(#desktop-statusbar) .pdf-view-panel {
 
 .desktop-update-status > i {
   @apply text-sm;
-}
-
-.desktop-update-banner-action {
-  @apply flex-shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold no-underline hover:bg-indigo-700;
-  color: #ffffff;
-}
-
-.desktop-update-banner-dismiss {
-  @apply flex-shrink-0 rounded-md border border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-200 hover:bg-gray-700 hover:text-white;
 }
 
 /* One tab per open document, above the viewer frames. */

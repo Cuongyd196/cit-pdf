@@ -100,8 +100,26 @@ export interface PrintResult {
 
 /** Result of asking GitHub for the latest release. */
 export type UpdateCheckResult =
-  | { ok: true; current: string; latest: string; newer: boolean; url: string }
+  | {
+      ok: true;
+      current: string;
+      latest: string;
+      newer: boolean;
+      url: string;
+      /** The app can download and run the new installer itself. */
+      canInstall?: boolean;
+    }
   | { ok: false; current: string; error: 'network' | 'no-release' };
+
+/** "Update and restart": false when it could not, and why. */
+export type InstallUpdateResult =
+  | { ok: true }
+  | { ok: false; error: 'manual' | 'download' | 'verify' | 'launch' };
+
+export interface UpdateProgress {
+  received: number;
+  total: number;
+}
 
 /** A file the app just finished saving through a download. */
 export interface SavedDownload {
@@ -139,6 +157,8 @@ export const IPC_CHANNELS = {
   REGISTER_PICKED_FILE: 'bento:register-picked-file',
   OPEN_IN_NEW_WINDOW: 'bento:open-in-new-window',
   CHECK_UPDATE: 'bento:check-update',
+  INSTALL_UPDATE: 'bento:install-update',
+  UPDATE_PROGRESS: 'bento:update-progress',
   DOWNLOAD_SAVED: 'bento:download-saved',
   SHOW_SAVED_IN_FOLDER: 'bento:show-saved-in-folder',
   OPEN_SAVED_FILE: 'bento:open-saved-file',
