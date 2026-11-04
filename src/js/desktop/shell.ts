@@ -509,6 +509,12 @@ export function initDesktopShell(options: ShellOptions): void {
   void import('./form-layout.js').then(({ initFormLayout }) =>
     initFormLayout()
   );
+  void import('./loader-status.js').then(({ initLoaderStatus }) =>
+    initLoaderStatus()
+  );
+  void import('./empty-state.js').then(({ initEmptyState }) =>
+    initEmptyState()
+  );
   initToolWorkspace({
     back:
       opened?.backFromTool ??

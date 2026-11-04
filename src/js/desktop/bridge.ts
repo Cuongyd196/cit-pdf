@@ -97,6 +97,8 @@ interface DesktopBridge {
   platform: string;
   ensureModules(names: DesktopModuleName[]): Promise<EnsureResult>;
   onModuleProgress(cb: (p: ModuleProgress) => void): () => void;
+  /** Stops the engine downloads under way; ensureModules says cancelled. */
+  cancelModuleDownloads?(): Promise<void>;
   getModulesStatus(): Promise<ModuleStatus[]>;
   removeModule(name: DesktopModuleName): Promise<boolean>;
   /** Folder picker, then installs the missing engines found in it. */
@@ -146,13 +148,19 @@ function formatMB(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1);
 }
 
+/** The tool's "Processing…" card, when it is on screen. */
+function loaderCard(): HTMLElement | null {
+  const modal = document.getElementById('loader-modal');
+  if (!modal || modal.classList.contains('hidden')) return null;
+  return modal.firstElementChild as HTMLElement | null;
+}
+
 function showProgress(p: ModuleProgress): void {
   let overlay = document.getElementById(OVERLAY_ID);
   if (!overlay) {
     overlay = document.createElement('div');
     overlay.id = OVERLAY_ID;
-    overlay.className =
-      'fixed bottom-4 right-4 z-[9999] w-80 rounded-xl border border-gray-700 bg-gray-800/95 p-4 shadow-2xl backdrop-blur';
+    overlay.dataset.noTranslate = '';
 
     const title = document.createElement('p');
     title.className = 'mb-2 text-sm font-semibold text-white';
@@ -171,15 +179,36 @@ function showProgress(p: ModuleProgress): void {
     detail.className = 'mt-2 text-xs text-gray-400';
     detail.dataset.role = 'detail';
 
-    overlay.append(title, track, detail);
-    document.body.appendChild(overlay);
+    const note = document.createElement('p');
+    note.className = 'mt-1 text-xs text-gray-400';
+    note.textContent = ds('moduleDownloadNote');
+
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'desktop-module-cancel';
+    cancel.textContent = ds('moduleDownloadCancel');
+    cancel.addEventListener('click', () => {
+      cancel.disabled = true;
+      void getBridge()?.cancelModuleDownloads?.();
+    });
+
+    overlay.append(title, track, detail, note, cancel);
   }
+
+  // Inside the tool's waiting card when there is one: one box, saying
+  // what it waits for. Otherwise a card of its own in the corner.
+  const card = loaderCard();
+  const host = card ?? document.body;
+  if (overlay.parentElement !== host) host.appendChild(overlay);
+  overlay.className = card
+    ? 'desktop-module-progress w-72'
+    : 'desktop-module-progress fixed bottom-4 right-4 z-[9999] w-80 rounded-xl border border-gray-700 bg-gray-800/95 p-4 shadow-2xl backdrop-blur';
 
   const pct = p.total > 0 ? Math.min(100, (p.received / p.total) * 100) : 0;
   const title = overlay.querySelector<HTMLElement>('[data-role="title"]');
   const bar = overlay.querySelector<HTMLElement>('[data-role="bar"]');
   const detail = overlay.querySelector<HTMLElement>('[data-role="detail"]');
-  if (title) title.textContent = `⬇ ${p.label}`;
+  if (title) title.textContent = ds('moduleDownloading', { label: p.label });
   if (bar) bar.style.width = `${pct.toFixed(1)}%`;
   if (detail) {
     detail.textContent =
@@ -239,8 +268,8 @@ export async function ensureDesktopModules(
     if (!result.ok) {
       throw new Error(
         result.cancelled
-          ? 'Required component was not downloaded (cancelled by user).'
-          : `Required component could not be installed: ${result.error ?? 'unknown error'}`
+          ? ds('moduleCancelled')
+          : ds('moduleFailed', { error: result.error ?? '?' })
       );
     }
   } finally {

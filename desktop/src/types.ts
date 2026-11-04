@@ -129,6 +129,7 @@ export const IPC_CHANNELS = {
   READ_OPENED_FILE: 'bento:read-opened-file',
   ENSURE_MODULES: 'bento:ensure-modules',
   MODULE_PROGRESS: 'bento:module-progress',
+  CANCEL_MODULE_DOWNLOADS: 'bento:cancel-module-downloads',
   GET_PLATFORM: 'bento:get-platform',
   OPEN_EXTERNAL: 'bento:open-external',
   SHOW_SAVE_DIALOG: 'bento:show-save-dialog',

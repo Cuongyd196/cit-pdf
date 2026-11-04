@@ -35,6 +35,10 @@ const bridge = {
     };
   },
 
+  cancelModuleDownloads: (): Promise<void> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.CANCEL_MODULE_DOWNLOADS);
+  },
+
   getModulesStatus: (): Promise<ModuleStatus[]> => {
     return ipcRenderer.invoke(IPC_CHANNELS.GET_MODULES_STATUS);
   },

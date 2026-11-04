@@ -527,6 +527,10 @@ ipcMain.handle(IPC_CHANNELS.GET_MODULES_STATUS, (): ModuleStatus[] => {
   return modulesManager?.getStatus() ?? [];
 });
 
+ipcMain.handle(IPC_CHANNELS.CANCEL_MODULE_DOWNLOADS, (): void => {
+  modulesManager?.cancelDownloads();
+});
+
 ipcMain.handle(
   IPC_CHANNELS.REMOVE_MODULE,
   async (event, name: DesktopModuleName): Promise<boolean> => {

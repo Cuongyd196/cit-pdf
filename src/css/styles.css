@@ -1081,8 +1081,9 @@ body.desktop-home-start .desktop-home {
   @apply flex min-w-0 flex-col gap-0.5;
 }
 
+/* Two lines rather than an ellipsis: "PowerPoint sang PDF" must read whole. */
 .desktop-home-card-name {
-  @apply truncate text-sm font-medium text-gray-200;
+  @apply line-clamp-2 text-sm leading-snug font-medium text-gray-200;
 }
 
 .desktop-home-card:hover .desktop-home-card-name {
@@ -1205,6 +1206,47 @@ body:has(#desktop-sidebar) #drop-zone > div > :is(i, svg) {
 body:has(#desktop-sidebar) #drop-zone > div > p {
   grid-column: 2;
   margin: 0;
+}
+
+/* No file yet (empty-state.ts): nothing sits under the drop zone, so it
+   takes the card's room, centred, with a button to pick a file. */
+body:has(#desktop-sidebar).desktop-awaiting-file #drop-zone {
+  min-height: 16rem;
+  justify-content: center;
+  border-width: 2px;
+  border-radius: 0.75rem;
+}
+
+body:has(#desktop-sidebar).desktop-awaiting-file #drop-zone > div {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  row-gap: 0.5rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+
+body:has(#desktop-sidebar).desktop-awaiting-file #drop-zone > div > :is(i, svg) {
+  grid-row: auto;
+  margin-bottom: 0.5rem;
+  font-size: 3rem;
+}
+
+body:has(#desktop-sidebar).desktop-awaiting-file #drop-zone > div > p {
+  grid-column: auto;
+}
+
+body:has(#desktop-sidebar).desktop-awaiting-file #drop-zone [data-i18n='upload.clickToSelect'] {
+  @apply mb-2 inline-block rounded-lg bg-indigo-600 px-5 py-2.5 text-base font-semibold text-white;
+}
+
+body:has(#desktop-sidebar).desktop-awaiting-file #drop-zone:hover [data-i18n='upload.clickToSelect'] {
+  @apply bg-indigo-500;
+}
+
+body:has(#desktop-sidebar).desktop-awaiting-file
+  #drop-zone
+  p:has(> [data-i18n='upload.clickToSelect']) {
+  @apply flex flex-col items-center text-gray-400;
 }
 
 /* Everything in the app stays on this computer; no need to repeat it on
@@ -2091,6 +2133,24 @@ input[type='number']::-webkit-outer-spin-button {
   }
 }
 
+/* Tailwind v4 has no bg-opacity-*: the dialogs' backdrops, written for v3
+   ("bg-black bg-opacity-75"), painted solid and hid the page behind them. */
+.bg-black.bg-opacity-50 {
+  background-color: rgb(0 0 0 / 0.5);
+}
+
+.bg-black.bg-opacity-60 {
+  background-color: rgb(0 0 0 / 0.6);
+}
+
+.bg-black.bg-opacity-75 {
+  background-color: rgb(0 0 0 / 0.75);
+}
+
+.bg-gray-900.bg-opacity-90 {
+  background-color: color-mix(in srgb, var(--color-gray-900) 90%, transparent);
+}
+
 /* ---- Dialogs: backdrop fade + sheet scale-in ---- */
 
 #loader-modal,
@@ -2113,6 +2173,33 @@ input[type='number']::-webkit-outer-spin-button {
 .animate-scale-in {
   animation: mac-sheet-in var(--dur-4) var(--ease-mac) backwards;
   will-change: transform, opacity;
+}
+
+/* Waiting card (desktop): time spent, and an engine download with Cancel. */
+.desktop-loader-elapsed {
+  @apply max-w-72 text-center text-sm text-gray-400;
+}
+
+/* In the waiting card it replaces the tool's own bar, which stays at 0%
+   while the engine downloads. */
+#loader-modal > div:has(#bento-desktop-module-progress) .loader-progress-container {
+  display: none;
+}
+
+#loader-modal .desktop-module-progress {
+  @apply text-center;
+}
+
+.desktop-module-cancel {
+  @apply mt-3 rounded-lg border border-gray-600 px-3 py-1.5 text-sm text-gray-200;
+}
+
+.desktop-module-cancel:hover:not(:disabled) {
+  @apply bg-gray-700 text-white;
+}
+
+.desktop-module-cancel:disabled {
+  @apply opacity-60;
 }
 
 /* ---- In-app view switching (tool grid <-> tool interface) ---- */

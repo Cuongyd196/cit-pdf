@@ -23,11 +23,16 @@ type FileSource = (
   onProgress: (received: number, total: number) => void
 ) => Promise<void>;
 
+/** A download the user stopped (cancelDownloads), not one that failed. */
+class DownloadCancelled extends Error {}
+
 export class ModulesManager {
   private manifest: ModulesManifest;
   private userModulesDir: string;
   private bundledModulesDir: string;
   private installing = new Map<DesktopModuleName, Promise<void>>();
+  private downloads = new Set<AbortController>();
+  private cancelled = new WeakSet<AbortController>();
 
   constructor(manifestPath: string) {
     const raw = fs.readFileSync(manifestPath, 'utf8');
@@ -197,12 +202,23 @@ export class ModulesManager {
         }
         await install;
       } catch (err: unknown) {
+        if (err instanceof DownloadCancelled) {
+          return { ok: false, cancelled: true };
+        }
         const msg = err instanceof Error ? err.message : String(err);
         return { ok: false, error: msg };
       }
     }
 
     return { ok: true };
+  }
+
+  /** Stops every download under way (the user's Cancel). */
+  cancelDownloads(): void {
+    for (const controller of this.downloads) {
+      this.cancelled.add(controller);
+      controller.abort();
+    }
   }
 
   /** The names an offline pack gives a module's files: each URL's last part. */
@@ -388,6 +404,7 @@ export class ModulesManager {
     onProgress: (received: number, total: number) => void
   ): Promise<void> {
     const controller = new AbortController();
+    this.downloads.add(controller);
     let timer: NodeJS.Timeout | undefined;
     const armStallTimer = () => {
       clearTimeout(timer);
@@ -422,6 +439,9 @@ export class ModulesManager {
       }
     } catch (err: unknown) {
       fileStream.destroy();
+      if (this.cancelled.has(controller)) {
+        throw new DownloadCancelled('Download cancelled', { cause: err });
+      }
       if (controller.signal.aborted) {
         throw new Error(
           `Download stalled: no data for ${DOWNLOAD_STALL_MS / 1000}s from ${new URL(url).host}. Check the network connection and try again.`,
@@ -431,6 +451,7 @@ export class ModulesManager {
       throw err;
     } finally {
       clearTimeout(timer);
+      this.downloads.delete(controller);
     }
 
     await new Promise<void>((resolve, reject) => {
