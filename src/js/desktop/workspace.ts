@@ -138,6 +138,11 @@ export interface WorkspaceOptions {
   currentFile: () => OpenedFile | null;
 }
 
+/** The tool page has a workspace of its own (it then has no form layout). */
+export function hasWorkspace(slug: string): boolean {
+  return slug in WORKSPACE_TOOLS;
+}
+
 function pageSlug(): string {
   const last = window.location.pathname.split('/').pop() || '';
   return last.replace(/\.html$/, '');

@@ -1038,36 +1038,38 @@ body.desktop-home-start .desktop-home {
 }
 
 .desktop-home-groups {
-  @apply flex flex-col gap-7;
+  @apply flex flex-col gap-5;
 }
 
 .desktop-home-group {
-  @apply flex flex-col gap-3;
+  @apply flex flex-col gap-1.5;
 }
 
 .desktop-home-group-title {
   @apply flex items-baseline gap-2 text-sm font-semibold tracking-wide text-gray-300 uppercase;
 }
 
+/* Every tool as a row of a list: icon and name, the description on hover
+   (the link's title). Lighter than cards for a hundred tools. */
 .desktop-home-card-grid {
-  @apply grid gap-3;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  @apply grid gap-x-3 gap-y-0.5;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
 }
 
 .desktop-home-card {
-  @apply relative rounded-xl border border-gray-700 bg-gray-800;
+  @apply relative rounded-lg;
 }
 
 .desktop-home-card:hover {
-  border-color: var(--color-indigo-500);
+  @apply bg-gray-800;
 }
 
 .desktop-home-card-link {
-  @apply flex h-full items-center gap-3 py-3 pr-11 pl-3 no-underline;
+  @apply flex h-full items-center gap-2.5 py-1.5 pr-10 pl-1.5 no-underline;
 }
 
 .desktop-home-card-icon {
-  @apply flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-xl text-indigo-400;
+  @apply flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-lg text-indigo-400;
   background-color: color-mix(
     in srgb,
     var(--color-indigo-500) 14%,
@@ -1079,13 +1081,16 @@ body.desktop-home-start .desktop-home {
   @apply flex min-w-0 flex-col gap-0.5;
 }
 
-/* Names up to two lines; descriptions are short enough for one or two. */
 .desktop-home-card-name {
-  @apply line-clamp-2 text-[15px] leading-snug font-semibold text-white;
+  @apply truncate text-sm font-medium text-gray-200;
+}
+
+.desktop-home-card:hover .desktop-home-card-name {
+  @apply text-white;
 }
 
 .desktop-home-card-sub {
-  @apply line-clamp-2 text-xs leading-snug text-gray-400;
+  display: none;
 }
 
 .desktop-home-card-star {
@@ -3922,4 +3927,62 @@ html[data-theme='light'] body:has(#desktop-sidebar) ::placeholder {
 
 .desktop-modules-shipped > i {
   @apply text-base text-green-400;
+}
+
+/* Form tools (desktop/form-layout.ts): once a file is in, the files and a
+   preview on the left, the options on the right. Until then the columns
+   stack and the card is as before. */
+body.desktop-form-on #uploader {
+  @apply py-6;
+}
+
+body.desktop-form-on #tool-uploader {
+  max-width: 72rem;
+}
+
+body.desktop-form-on .desktop-form {
+  @apply grid items-start gap-8;
+  grid-template-columns: minmax(0, 1fr) 24rem;
+}
+
+.desktop-form-main {
+  @apply min-w-0;
+}
+
+/* The column grows with the page, so the run button keeps to the bottom
+   of the window as on the other tool pages. */
+body.desktop-form-on .desktop-form-side {
+  @apply rounded-xl border border-gray-700 bg-gray-900 p-5;
+}
+
+body.desktop-form-on .desktop-form-side > * {
+  @apply mt-0;
+}
+
+body.desktop-form-on #drop-zone {
+  @apply py-3;
+}
+
+.desktop-form-preview {
+  @apply mt-4 flex justify-center rounded-xl bg-gray-900 p-4;
+}
+
+.desktop-form-preview.hidden {
+  display: none;
+}
+
+.desktop-form-preview > canvas {
+  @apply h-auto rounded bg-white shadow-lg;
+  width: min(100%, 520px);
+}
+
+/* A narrow window keeps one column. */
+@media (max-width: 960px) {
+  body.desktop-form-on .desktop-form {
+    display: block;
+  }
+
+  body.desktop-form-on .desktop-form-side {
+    @apply mt-6 border-0 bg-transparent p-0;
+  }
 }

@@ -499,6 +499,9 @@ export function initDesktopShell(options: ShellOptions): void {
   );
   // Popular Tools repeats the others.
   initViewerActions(toolsBySlug, shellCategories.slice(1));
+  void import('./form-layout.js').then(({ initFormLayout }) =>
+    initFormLayout()
+  );
   initToolWorkspace({
     back:
       opened?.backFromTool ??
