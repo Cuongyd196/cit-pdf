@@ -301,6 +301,8 @@ export function createRibbon(options: RibbonOptions): Ribbon {
       button.setAttribute('aria-selected', String(on));
     }
     panel.classList.toggle('hidden', tab !== 'all');
+    // "All tools" can be the remembered tab, shown without setTab: fill it.
+    if (tab === 'all' && !list.firstChild) renderPanel();
     if (tab === 'pages') grid?.show();
     else grid?.hide();
     renderBar();
