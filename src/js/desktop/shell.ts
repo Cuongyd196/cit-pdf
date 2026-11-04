@@ -399,7 +399,14 @@ export function initDesktopShell(options: ShellOptions): void {
     all.addEventListener('click', (event) => {
       event.preventDefault();
       if (onHome) scrollToAllTools();
-      else toggleToolPanel();
+      // The viewer's ribbon has its own All tools panel: one list, not two.
+      else if (
+        document.dispatchEvent(
+          new CustomEvent(FIND_TOOL_EVENT, { cancelable: true })
+        )
+      ) {
+        toggleToolPanel();
+      }
     });
     fixed.append(all);
     nav!.append(fixed);
