@@ -8,7 +8,7 @@
       "probe": "dist/coherentpdf.browser.min.js",
       "label": {
         "en": "CoherentPDF engine",
-        "vi": "Bộ xử lý CoherentPDF"
+        "vi": "Bộ xử lý trang PDF (CoherentPDF)"
       },
       "source": "npm registry · coherentpdf@2.5.5",
       "kind": "npm-tarball",
@@ -22,7 +22,7 @@
       "probe": "dist/index.js",
       "label": {
         "en": "PyMuPDF engine (PDF → Word/Excel/Text, e-books, tables…)",
-        "vi": "Bộ xử lý PyMuPDF (PDF → Word/Excel/Text, sách điện tử, bảng…)"
+        "vi": "Bộ chuyển PDF sang Word, Excel, văn bản (PyMuPDF)"
       },
       "source": "npm registry · @bentopdf/pymupdf-wasm@0.11.16",
       "kind": "npm-tarball",
@@ -36,7 +36,7 @@
       "probe": "assets/gs.js",
       "label": {
         "en": "Ghostscript engine (PDF/A, strong compression)",
-        "vi": "Bộ xử lý Ghostscript (PDF/A, nén mạnh)"
+        "vi": "Bộ nén mạnh và PDF lưu trữ (Ghostscript)"
       },
       "source": "npm registry · @bentopdf/gs-wasm@0.1.1",
       "kind": "npm-tarball",
@@ -50,7 +50,7 @@
       "probe": "soffice.wasm.gz",
       "label": {
         "en": "LibreOffice engine (Word/Excel/PowerPoint → PDF)",
-        "vi": "Bộ xử lý LibreOffice (Word/Excel/PowerPoint → PDF)"
+        "vi": "Bộ chuyển Word, Excel, PowerPoint sang PDF (LibreOffice)"
       },
       "source": "GitHub · alam00000/bentopdf @ f30a084 (public/libreoffice-wasm)",
       "kind": "files",
@@ -77,7 +77,7 @@
       "probe": "worker.min.js",
       "label": {
         "en": "OCR engine (text recognition for scanned documents)",
-        "vi": "Bộ nhận dạng OCR (nhận dạng chữ trong tài liệu quét)"
+        "vi": "Bộ nhận dạng chữ trong bản quét (OCR)"
       },
       "source": "jsDelivr · tesseract.js@7.0.0, tesseract.js-core@7.0.0 · GitHub · googlefonts/noto-fonts (Noto Sans, OFL-1.1)",
       "kind": "files",

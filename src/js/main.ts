@@ -725,7 +725,9 @@ const init = async () => {
     'compact-mode-toggle'
   ) as HTMLInputElement;
 
-  const savedCompactMode = getStoredItem('compactMode') === 'true';
+  // The app's home list is compact already and has no setting for it.
+  const savedCompactMode =
+    !__DESKTOP__ && getStoredItem('compactMode') === 'true';
   if (compactModeToggle) {
     compactModeToggle.checked = savedCompactMode;
   }

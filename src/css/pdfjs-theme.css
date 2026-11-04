@@ -137,6 +137,28 @@ dialog {
   display: flex !important;
 }
 
+/* In the desktop app, whose ribbon prints and rotates pages: the
+   toolbar keeps finding, paging, zoom and the ⋯ menu. */
+.cit-in-app :is(#printButton, #secondaryPrint),
+.cit-in-app
+  :is(
+    #pageRotateCw,
+    #pageRotateCcw,
+    #pageRotateCcw + .horizontalToolbarSeparator
+  ) {
+  display: none !important;
+}
+
+/* The ribbon's tab has its own toolbar: PDF.js's steps aside and the
+   document takes the room. */
+.cit-no-toolbar .toolbar {
+  display: none;
+}
+
+.cit-no-toolbar :is(#sidebarContainer, #viewerContainer) {
+  inset-block-start: 0;
+}
+
 /* ---------- Items added by CIT-PDF ---------- */
 
 .cit-group {

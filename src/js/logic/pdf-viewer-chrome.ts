@@ -38,6 +38,12 @@ export interface ViewerChromeOptions {
   closeLabel: string;
   twoPagesLabel: string;
   onClose: () => void;
+  /**
+   * Inside the desktop app, whose own tab and ribbon name the file, print
+   * and close it: those are left out here, and so is rotating the view,
+   * which the ribbon's page rotation would be mistaken for.
+   */
+  inApp?: boolean;
 }
 
 // PDF.js ships its own translations; pick the closest one to the app language.
@@ -240,6 +246,16 @@ export async function applyViewerChrome(
   const left = doc.getElementById('toolbarViewerLeft');
   const right = doc.getElementById('toolbarViewerRight');
   if (!left || !right) return;
+
+  if (options.inApp) {
+    doc.documentElement.classList.add('cit-in-app');
+    const view = doc.createElement('div');
+    view.className = 'cit-group cit-hide-medium';
+    if (app) addSpreadToggle(doc, app, view, options.twoPagesLabel);
+    moveToToolbar(doc, 'presentationMode', view);
+    right.prepend(view, separator(doc));
+    return;
+  }
 
   // File name, after the search button.
   const name = doc.createElement('span');

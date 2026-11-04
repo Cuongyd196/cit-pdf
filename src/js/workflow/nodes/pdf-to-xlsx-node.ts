@@ -4,7 +4,7 @@ import { pdfSocket } from '../sockets';
 import type { SocketData } from '../types';
 import { requirePdfInput, extractAllPdfs } from '../types';
 import { downloadFile } from '../../utils/helpers.js';
-import { loadPyMuPDF } from '../../utils/pymupdf-loader.js';
+import { loadPyMuPDFMainThread } from '../../utils/pymupdf-loader.js';
 import { wfError } from '../errors';
 
 export class PdfToXlsxNode extends BaseWorkflowNode {
@@ -21,7 +21,7 @@ export class PdfToXlsxNode extends BaseWorkflowNode {
     bytes: Uint8Array,
     filename: string
   ): Promise<{ blob: Blob; name: string }> {
-    const pymupdf = await loadPyMuPDF();
+    const pymupdf = await loadPyMuPDFMainThread();
     const blob = new Blob([new Uint8Array(bytes)], { type: 'application/pdf' });
     const doc = await pymupdf.open(blob);
 

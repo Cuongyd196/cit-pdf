@@ -16,6 +16,14 @@ export interface ViewerDocuments {
   pageCount(file: File): number | null;
   /** Prints the tab on screen, as the viewer's own print button does. */
   print(): void;
+  /** Shows this page (1-based) of the tab on screen. */
+  goToPage(page: number): void;
+  /**
+   * Shows or hides PDF.js's own toolbar in every tab. The ribbon hides it
+   * while one of its tabs has a toolbar of its own, so that one row of
+   * tools sits over the document, not two.
+   */
+  showToolbar(shown: boolean): void;
 }
 
 /** A tab finished laying out its pages (opened, or shown new bytes). */

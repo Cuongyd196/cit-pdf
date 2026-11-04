@@ -301,7 +301,25 @@ provideViewerDocuments({
     return app?.pdfDocument ? (app.pagesCount ?? null) : null;
   },
   print: () => activeTab?.iframe.contentWindow?.print(),
+  goToPage: (page) => {
+    const app = (activeTab?.iframe.contentWindow as ViewerWindow | null)
+      ?.PDFViewerApplication;
+    if (app?.pdfDocument) app.page = page;
+  },
+  showToolbar: (shown) => {
+    toolbarShown = shown;
+    for (const tab of tabs) applyToolbarShown(tab.iframe);
+  },
 });
+
+let toolbarShown = true;
+
+function applyToolbarShown(iframe: HTMLIFrameElement) {
+  iframe.contentDocument?.documentElement.classList.toggle(
+    'cit-no-toolbar',
+    !toolbarShown
+  );
+}
 
 const VIEW_HISTORY_KEY = 'pdfjs.history';
 const VIEW_HISTORY_MAX = 50;
@@ -366,6 +384,7 @@ function openFile(file: File) {
 
   iframe.addEventListener('load', () => {
     if (__DESKTOP__) installDesktopPrint(iframe);
+    applyToolbarShown(iframe);
     const app = (iframe.contentWindow as ViewerWindow | null)
       ?.PDFViewerApplication;
     void app?.initializedPromise?.then(() =>
@@ -380,6 +399,9 @@ function openFile(file: File) {
       closeLabel: t('tools:viewPdf.close'),
       twoPagesLabel: t('tools:viewPdf.twoPages'),
       onClose: () => void requestClose(tab),
+      // The app's tab, ribbon and window already name the file, rotate
+      // pages, print and close the tab.
+      inApp: __DESKTOP__,
     });
   });
 

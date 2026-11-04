@@ -4,7 +4,7 @@ import { pdfSocket } from '../sockets';
 import type { SocketData } from '../types';
 import { requirePdfInput, extractAllPdfs } from '../types';
 import { downloadFile } from '../../utils/helpers.js';
-import { loadPyMuPDF } from '../../utils/pymupdf-loader.js';
+import { loadPyMuPDFMainThread } from '../../utils/pymupdf-loader.js';
 
 export class PdfToSvgNode extends BaseWorkflowNode {
   readonly category = 'Output' as const;
@@ -21,7 +21,7 @@ export class PdfToSvgNode extends BaseWorkflowNode {
   ): Promise<Record<string, SocketData>> {
     const pdfInputs = requirePdfInput(inputs, 'PDF to SVG');
     const allPdfs = extractAllPdfs(pdfInputs);
-    const pymupdf = await loadPyMuPDF();
+    const pymupdf = await loadPyMuPDFMainThread();
 
     const JSZip = (await import('jszip')).default;
     const zip = new JSZip();

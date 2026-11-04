@@ -281,6 +281,14 @@ async function changePage(newPageNum: number) {
   updateWatermarkOverlay();
 }
 
+/** The typed text, else the placeholder, which is in the app's language. */
+function watermarkTextOrDefault(): string {
+  const input = document.getElementById(
+    'watermark-text'
+  ) as HTMLInputElement | null;
+  return input?.value || input?.placeholder || 'CONFIDENTIAL';
+}
+
 function readNumberInput(id: string, fallback: number): number {
   const input = document.getElementById(id) as HTMLInputElement | null;
   if (!input) return fallback;
@@ -317,9 +325,8 @@ function getCurrentConfig(): PageWatermarkConfig {
     tileGapY: readNumberInput('tile-gap-y', 75),
     x: pageState.watermarkX,
     y: pageState.watermarkY,
-    text:
-      (document.getElementById('watermark-text') as HTMLInputElement)?.value ||
-      '',
+    // As the preview shows it: the placeholder when nothing is typed.
+    text: watermarkTextOrDefault(),
     fontSize:
       parseInt(
         (document.getElementById('font-size') as HTMLInputElement)?.value
@@ -746,9 +753,7 @@ function renderTilePreview() {
   let opacity: number;
 
   if (watermarkType === 'text') {
-    const text =
-      (document.getElementById('watermark-text') as HTMLInputElement)?.value ||
-      'CONFIDENTIAL';
+    const text = watermarkTextOrDefault();
     const fontSize = readNumberInput('font-size', 72);
     uiAngle = readNumberInput('angle-text', 0);
     opacity = readNumberInput('opacity-text', 0.3);
@@ -860,9 +865,7 @@ function updateWatermarkOverlay() {
     textOverlay.classList.remove('hidden');
     imageOverlay.classList.add('hidden');
 
-    const text =
-      (document.getElementById('watermark-text') as HTMLInputElement)?.value ||
-      'CONFIDENTIAL';
+    const text = watermarkTextOrDefault();
     const fontSizePdf =
       parseInt(
         (document.getElementById('font-size') as HTMLInputElement)?.value

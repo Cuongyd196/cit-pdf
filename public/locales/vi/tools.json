@@ -122,7 +122,7 @@
     "splitDone": "Đã chia thành {{count}} tệp, mỗi tệp dưới {{limit}}, gói trong một tệp ZIP.",
     "name": "Nén PDF",
     "subtitle": "Giảm kích thước tệp PDF của bạn.",
-    "algorithmLabel": "Thuật toán nén",
+    "algorithmLabel": "Kiểu nén",
     "condense": "Condense (Khuyến nghị)",
     "photon": "Photon (Dành cho PDF nhiều ảnh)",
     "condenseInfo": "Condense sử dụng nén nâng cao: loại bỏ dữ liệu thừa, tối ưu hóa hình ảnh, gọn phông chữ. Phù hợp với hầu hết PDF.",
@@ -146,7 +146,7 @@
     "compressButton": "Nén PDF"
   },
   "pdfEditor": {
-    "name": "Trình chỉnh sửa PDF",
+    "name": "Chỉnh sửa & ghi chú",
     "subtitle": "Ghi chú, tô sáng, chỉnh sửa, bình luận, thêm hình dạng/hình ảnh, tìm kiếm và xem PDF."
   },
   "editPdfText": {
@@ -698,7 +698,7 @@
     }
   },
   "ocrPdf": {
-    "name": "OCR PDF",
+    "name": "Nhận dạng chữ (OCR)",
     "subtitle": "Làm cho PDF có thể tìm kiếm và sao chép được.",
     "languagesHint": "Chọn ngôn ngữ có trong tài liệu để nhận dạng chính xác hơn.",
     "qualityTitle": "Chất lượng",
@@ -929,8 +929,8 @@
     "subtitle": "Chuẩn hóa tất cả các trang về cùng một kích thước."
   },
   "linearizePdf": {
-    "name": "Tuyến tính hóa PDF",
-    "subtitle": "Tối ưu hóa PDF để xem web nhanh."
+    "name": "Tối ưu mở nhanh trên web",
+    "subtitle": "Sắp xếp lại tệp để trang đầu hiện ngay khi mở qua mạng, không phải chờ tải hết."
   },
   "pageDimensions": {
     "name": "Kích thước trang",
@@ -957,7 +957,7 @@
     "subtitle": "Mở khóa PDF bằng cách xóa bảo vệ mật khẩu."
   },
   "flattenPdf": {
-    "name": "Làm phẳng PDF",
+    "name": "Khóa biểu mẫu & ghi chú",
     "subtitle": "Làm cho trường form và ghi chú không thể chỉnh sửa."
   },
   "removeMetadata": {
@@ -1150,9 +1150,9 @@
     "name": "PDF sang văn bản",
     "subtitle": "Trích xuất văn bản từ tệp PDF và lưu dưới dạng tệp văn bản (.txt). Hỗ trợ nhiều tệp.",
     "noteLabel": "Lưu ý:",
-    "noteText": "Công cụ này CHỈ hoạt động với PDF được tạo kỹ thuật số. Đối với tài liệu quét hoặc PDF dựa trên hình ảnh, hãy sử dụng công cụ OCR PDF của chúng tôi thay thế.",
+    "noteText": "Công cụ này CHỈ hoạt động với PDF được tạo kỹ thuật số. Đối với tài liệu quét hoặc PDF dựa trên hình ảnh, hãy dùng công cụ Nhận dạng chữ (OCR) trước.",
     "convertButton": "Trích xuất văn bản",
-    "note": "Công cụ này CHỈ hoạt động với các tệp PDF được tạo kỹ thuật số. Đối với tài liệu quét hoặc PDF dựa trên hình ảnh, hãy sử dụng công cụ OCR PDF của chúng tôi."
+    "note": "Công cụ này CHỈ hoạt động với các tệp PDF được tạo kỹ thuật số. Đối với tài liệu quét hoặc PDF dựa trên hình ảnh, hãy dùng công cụ Nhận dạng chữ (OCR) trước."
   },
   "digitalSignPdf": {
     "name": "Chữ ký số PDF",
@@ -1266,7 +1266,7 @@
   },
   "deskewPdf": {
     "name": "Chỉnh nghiêng PDF",
-    "subtitle": "Tự động làm thẳng các trang quét bị nghiêng bằng OpenCV."
+    "subtitle": "Tự động làm thẳng các trang quét bị nghiêng."
   },
   "pdfToWord": {
     "name": "PDF sang Word",
@@ -1289,8 +1289,8 @@
     "subtitle": "Xem, chuyển đổi, thêm và xóa các lớp OCG trong PDF của bạn."
   },
   "pdfToPdfa": {
-    "name": "PDF sang PDF/A",
-    "subtitle": "Chuyển đổi PDF sang PDF/A để lưu trữ lâu dài."
+    "name": "PDF lưu trữ (PDF/A)",
+    "subtitle": "Chuyển sang chuẩn PDF/A, dùng để nộp và lưu trữ hồ sơ lâu dài."
   },
   "rasterizePdf": {
     "name": "Chuyển PDF thành ảnh",

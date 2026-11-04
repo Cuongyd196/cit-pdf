@@ -3,7 +3,7 @@ import { BaseWorkflowNode } from './base-node';
 import { pdfSocket } from '../sockets';
 import type { SocketData } from '../types';
 import { requirePdfInput, processBatch } from '../types';
-import { convertFontsToOutlines } from '../../utils/ghostscript-loader.js';
+import { convertFontsToOutlinesOffThread } from '../../utils/ghostscript-loader.js';
 import { loadPdfDocument } from '../../utils/load-pdf-document.js';
 
 export class FontToOutlineNode extends BaseWorkflowNode {
@@ -24,7 +24,7 @@ export class FontToOutlineNode extends BaseWorkflowNode {
 
     return {
       pdf: await processBatch(pdfInputs, async (input) => {
-        const resultBytes = await convertFontsToOutlines(
+        const resultBytes = await convertFontsToOutlinesOffThread(
           new Uint8Array(input.bytes)
         );
         const bytes = new Uint8Array(resultBytes);

@@ -15,23 +15,18 @@ import {
   type DesktopStringKey,
 } from './strings.js';
 import { homeBlurb } from './tool-blurbs.js';
-import {
-  THEME_EVENT,
-  initTheme,
-  setThemePreference,
-  themePreference,
-  type ThemePreference,
-} from './theme.js';
+import { initTheme } from './theme.js';
 import { initUpdateBanner } from './update-check.js';
 import { initIconFamily } from './icons.js';
 import { initToolWorkspace } from './workspace.js';
-import { menuButton, type MenuChoice, type MenuEntry } from './menu.js';
 import {
   VIEWER_SELECT_EVENT,
   VIEWER_TABS_EVENT,
   type ViewerSelectDetail,
   type ViewerTabsDetail,
 } from '../logic/view-pdf-events.js';
+import { whenViewerDocuments } from '../logic/viewer-document.js';
+import { FIND_TOOL_EVENT } from './studio/commands.js';
 
 interface ShellOptions {
   categoryTranslationKeys: Record<string, string>;
@@ -173,16 +168,8 @@ const PENDING_FILE_KEY = 'cit:pending-file';
 const VIEWER_TABS_KEY = 'cit:viewer-tabs';
 // Buttons that leave a tool's editor for its upload screen.
 const BACK_TO_DOCUMENT = '#exitEditor';
-const READING_SIDEBAR_KEY = 'cit:reading-sidebar';
 const SAVED_TOAST_MS = 15000;
 
-// Viewer: the picker of tools that open the document on their own page,
-// by purpose. What Studio does to the document in place is not offered.
-const VIEWER_PICKER_GROUPS: Array<[DesktopStringKey, string[]]> = [
-  ['pickConvert', ['pdf-to-word', 'pdf-to-jpg', 'pdf-to-excel', 'ocr-pdf']],
-  ['pickPages', ['merge-pdf', 'split-pdf', 'organize-pdf', 'edit-pdf-text']],
-  ['pickSecure', ['sign-pdf', 'protect-pdf', 'unlock-pdf']],
-];
 const MAX_RECENT = 5;
 
 // Home page: tools offered beside the recent files, after the user's
@@ -410,9 +397,16 @@ export function initDesktopShell(options: ShellOptions): void {
       el('span', 'truncate', ds('homeAllTools'))
     );
     all.addEventListener('click', (event) => {
-      if (!onHome) return;
       event.preventDefault();
-      scrollToAllTools();
+      if (onHome) scrollToAllTools();
+      // The viewer's ribbon has its own All tools panel: one list, not two.
+      else if (
+        document.dispatchEvent(
+          new CustomEvent(FIND_TOOL_EVENT, { cancelable: true })
+        )
+      ) {
+        toggleToolPanel();
+      }
     });
     fixed.append(all);
     nav!.append(fixed);
@@ -496,6 +490,7 @@ export function initDesktopShell(options: ShellOptions): void {
   );
   getBridge()?.onFindTool?.(findTool);
   initRailLabels();
+  initToolPanel();
 
   // Recent tools as of arriving on this page; the home page is not a tool,
   // so nothing was just added.
@@ -503,19 +498,27 @@ export function initDesktopShell(options: ShellOptions): void {
   void initUpdateBanner();
 
   initTheme();
-  initThemeToggle();
   const opened = initOpenedFiles(
     pick(OPEN_FILE_TOOLS),
     currentTool,
     toolsBySlug.get(VIEWER_SLUG),
     (slug) => toolsBySlug.has(slug)
   );
-  initViewerActions(toolsBySlug);
+  // Popular Tools repeats the others.
+  initViewerActions(toolsBySlug, shellCategories.slice(1));
+  void import('./form-layout.js').then(({ initFormLayout }) =>
+    initFormLayout()
+  );
+  void import('./loader-status.js').then(({ initLoaderStatus }) =>
+    initLoaderStatus()
+  );
+  void import('./empty-state.js').then(({ initEmptyState }) =>
+    initEmptyState()
+  );
   initToolWorkspace({
     back:
       opened?.backFromTool ??
       (() => document.getElementById('back-to-tools')?.click()),
-    setReading,
     currentFile: () => pageFile,
   });
   // The first group, Popular Tools, repeats tools of the others; the few it
@@ -578,37 +581,6 @@ function renderHomeRecent(tools: ShellTool[]): void {
   searchBar?.addEventListener('input', () => {
     section.classList.toggle('hidden', searchBar.value.trim() !== '');
   });
-}
-
-/** Status bar button: one click flips between the light and dark themes. */
-function initThemeToggle(): void {
-  const toggle = document.getElementById('desktop-theme-toggle');
-  if (!toggle) return;
-  const icon = toggle.querySelector('i');
-  const label = toggle.querySelector('span');
-
-  // Light, dark, then whatever Windows uses.
-  const next: Record<ThemePreference, ThemePreference> = {
-    light: 'dark',
-    dark: 'system',
-    system: 'light',
-  };
-  const look: Record<ThemePreference, [string, DesktopStringKey]> = {
-    light: ['ph-sun', 'themeLight'],
-    dark: ['ph-moon', 'themeDark'],
-    system: ['ph-desktop', 'themeSystem'],
-  };
-  const sync = () => {
-    const [iconName, labelKey] = look[themePreference()];
-    if (icon) icon.className = `ph ${iconName} text-sm`;
-    if (label) label.textContent = ds(labelKey);
-    toggle.title = ds('themeToggleHint');
-  };
-  toggle.addEventListener('click', () => {
-    setThemePreference(next[themePreference()]);
-  });
-  document.addEventListener(THEME_EVENT, sync);
-  sync();
 }
 
 function getFileInput(): HTMLInputElement | null {
@@ -773,111 +745,6 @@ function showOpenFilePicker(
   rewriteLinks();
 }
 
-/** Viewer: open the document on screen in another tool's page. */
-function showViewerToolPicker(
-  file: OpenedFile,
-  toolsBySlug: Map<string, ShellTool>
-): void {
-  document.getElementById('desktop-open-file')?.remove();
-  const all = [...toolsBySlug.values()].filter((t) => t.slug !== VIEWER_SLUG);
-
-  const overlay = el('div', 'desktop-picker-overlay');
-  overlay.id = 'desktop-open-file';
-  const dialog = el('div', 'desktop-picker');
-  dialog.setAttribute('role', 'dialog');
-  const search = el('input', 'desktop-picker-search');
-  search.type = 'search';
-  search.placeholder = ds('pickSearch');
-  const body = el('div', 'desktop-picker-body');
-  const closeButton = el('button', 'desktop-picker-close');
-  closeButton.type = 'button';
-  closeButton.title = ds('cancel');
-  closeButton.setAttribute('aria-label', ds('cancel'));
-  closeButton.append(el('i', 'ph ph-x'));
-  const head = el('div', 'desktop-picker-head');
-  head.append(
-    el('h2', 'desktop-picker-title', ds('openFileTitle')),
-    closeButton
-  );
-  dialog.append(head, el('p', 'desktop-picker-file', file.name), search, body);
-
-  const close = () => {
-    overlay.remove();
-    document.removeEventListener('keydown', onKey, true);
-  };
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key !== 'Escape') return;
-    e.stopPropagation();
-    if (search.value) {
-      search.value = '';
-      render(false);
-    } else close();
-  };
-
-  const card = (tool: ShellTool) => {
-    const link = el('a', 'desktop-picker-tool');
-    link.href = tool.href;
-    link.title = tool.subtitle;
-    link.dataset.slug = tool.slug;
-    link.append(iconEl(tool.icon), el('span', '', tool.name));
-    link.addEventListener('click', () => rememberPendingFile(file));
-    return link;
-  };
-  const group = (title: string | null, tools: ShellTool[]) => {
-    const wrap = el('div', 'desktop-picker-group');
-    if (title) wrap.append(el('p', 'desktop-picker-heading', title));
-    const grid = el('div', 'desktop-picker-grid');
-    grid.append(...tools.map(card));
-    wrap.append(grid);
-    return wrap;
-  };
-
-  function render(showAll: boolean): void {
-    body.textContent = '';
-    const term = search.value.toLowerCase().trim();
-    if (term) {
-      const found = all.filter((t) =>
-        `${t.name} ${t.subtitle}`.toLowerCase().includes(term)
-      );
-      body.append(
-        found.length
-          ? group(null, found)
-          : el('p', 'desktop-picker-empty', ds('pickNone'))
-      );
-    } else if (showAll) {
-      body.append(group(null, all));
-    } else {
-      for (const [title, slugs] of VIEWER_PICKER_GROUPS) {
-        const tools = slugs
-          .map((slug) => toolsBySlug.get(slug))
-          .filter((tool): tool is ShellTool => Boolean(tool));
-        if (tools.length) body.append(group(ds(title), tools));
-      }
-      const more = el('button', 'desktop-picker-all', ds('pickAll'));
-      more.type = 'button';
-      more.addEventListener('click', () => render(true));
-      body.append(more);
-    }
-    rewriteLinks();
-  }
-
-  search.addEventListener('input', () => render(false));
-  search.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      body.querySelector<HTMLAnchorElement>('.desktop-picker-tool')?.click();
-    }
-  });
-  closeButton.addEventListener('click', () => close());
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) close();
-  });
-  document.addEventListener('keydown', onKey, true);
-  overlay.append(dialog);
-  document.body.append(overlay);
-  render(false);
-  search.focus();
-}
-
 function initOpenedFiles(
   tools: ShellTool[],
   currentTool: ShellTool | undefined,
@@ -939,7 +806,6 @@ function initOpenedFiles(
         files.map((file) => fileOrigins.get(file) ?? null)
       );
       pageFile = viewerTabs[active] ?? null;
-      setReading(files.length > 0);
       if (restoringTabs) return;
       saveViewerTabs({
         files: viewerTabs.filter((tab): tab is OpenedFile => tab !== null),
@@ -1166,14 +1032,16 @@ function formatOpenedAt(at: number | undefined, now = Date.now()): string {
   if (minutes < 1) return ds('timeJustNow');
   if (minutes < 60) return ds('timeMinutes', { n: String(minutes) });
   const date = new Date(at);
-  const time = date.toLocaleTimeString(undefined, {
+  // The app's language, not the system's: Vietnamese reads 24-hour time.
+  const locale = desktopLang() === 'vi' ? 'vi-VN' : undefined;
+  const time = date.toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
   });
   const startOfToday = new Date(now).setHours(0, 0, 0, 0);
   if (at >= startOfToday) return ds('timeToday', { time });
   if (at >= startOfToday - 86400000) return ds('timeYesterday', { time });
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -1263,24 +1131,86 @@ function scrollToAllTools(): void {
 
 /**
  * Ctrl+K and File > Find a tool…: the home page's search box, else the
- * sidebar's; from the rail, where neither is on screen, the home page's
- * list of tools.
+ * rail's full list of tools with its search box.
  */
 function findTool(): void {
-  const boxes = ['home-tool-search', 'desktop-search'].map(
-    (id) => document.getElementById(id) as HTMLInputElement | null
-  );
-  const box = boxes.find((input) => input && input.offsetParent !== null);
-  if (box) {
+  // The viewer's ribbon answers with its All tools panel.
+  if (
+    !document.dispatchEvent(
+      new CustomEvent(FIND_TOOL_EVENT, { cancelable: true })
+    )
+  ) {
+    return;
+  }
+  const box = document.getElementById(
+    'home-tool-search'
+  ) as HTMLInputElement | null;
+  if (box && box.offsetParent !== null) {
     box.focus();
     box.select();
     return;
   }
-  const link = el('a', 'hidden');
-  link.href = allToolsHref();
-  document.body.append(link);
-  rewriteLinks();
-  link.click();
+  openToolPanel();
+}
+
+/**
+ * The rail's toolbox, and Ctrl+K off the home page: the full sidebar
+ * (search, pinned and recent tools, every tool by group) opens over the
+ * page. Escape, a click outside it, or the toolbox again closes it.
+ */
+function openToolPanel(): void {
+  const sidebar = document.getElementById('desktop-sidebar');
+  if (!sidebar) return;
+  sidebar.classList.add('is-open');
+  sidebar
+    .querySelector('.desktop-nav-item.active')
+    ?.scrollIntoView({ block: 'nearest' });
+  const search = document.getElementById(
+    'desktop-search'
+  ) as HTMLInputElement | null;
+  search?.focus();
+  search?.select();
+}
+
+function closeToolPanel(): void {
+  const sidebar = document.getElementById('desktop-sidebar');
+  if (!sidebar?.classList.contains('is-open')) return;
+  sidebar.classList.remove('is-open');
+  const search = document.getElementById(
+    'desktop-search'
+  ) as HTMLInputElement | null;
+  if (search?.value) {
+    search.value = '';
+    search.dispatchEvent(new Event('input'));
+  }
+  if (sidebar.contains(document.activeElement)) {
+    (document.activeElement as HTMLElement).blur();
+  }
+}
+
+function toggleToolPanel(): void {
+  if (document.getElementById('desktop-sidebar')?.classList.contains('is-open'))
+    closeToolPanel();
+  else openToolPanel();
+}
+
+function initToolPanel(): void {
+  const sidebar = document.getElementById('desktop-sidebar');
+  if (!sidebar) return;
+  document.body.classList.add('desktop-rail');
+  document.addEventListener('pointerdown', (event) => {
+    if (!sidebar.contains(event.target as Node)) closeToolPanel();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && sidebar.classList.contains('is-open')) {
+      event.preventDefault();
+      closeToolPanel();
+    }
+  });
+  // The viewer's frames take clicks for themselves.
+  window.addEventListener('blur', () => {
+    if (document.activeElement instanceof HTMLIFrameElement) closeToolPanel();
+  });
 }
 
 /**
@@ -1304,11 +1234,7 @@ function initRailLabels(): void {
       ? ds('railHome')
       : item?.querySelector('span')?.textContent?.trim() ||
         item?.querySelector('a')?.title;
-    if (
-      !item ||
-      !label ||
-      !document.body.classList.contains('desktop-reading')
-    ) {
+    if (!item || !label || sidebar.classList.contains('is-open')) {
       tip.classList.add('hidden');
       return;
     }
@@ -1347,8 +1273,6 @@ function initHomeStart(options: HomeOptions): void {
   if (!start || !bridge) return;
 
   document.body.classList.add('desktop-home-start');
-  // The home page lists the tools itself: a rail is enough on the side.
-  document.body.classList.add('desktop-reading');
 
   const scrollToTools = () => {
     if (window.location.hash === ALL_TOOLS_HASH) scrollToAllTools();
@@ -1551,85 +1475,44 @@ function initHomeStart(options: HomeOptions): void {
   });
 }
 
-// While a document is open in the viewer the sidebar shrinks to a rail of
-// icons, leaving the width to the page. The user can bring it back, and
-// that choice is remembered.
-let reading = false;
-
-function applyReading(): void {
-  const keepOpen = getStoredItem(READING_SIDEBAR_KEY) === 'open';
-  document.body.classList.toggle('desktop-reading', reading && !keepOpen);
-}
-
-function setReading(value: boolean): void {
-  reading = value;
-  applyReading();
-}
-
 /**
- * Viewer page: the row above the document. Studio puts what changes the
- * document in place there; the menu at its end opens the document in
- * another tool's page (a link, so the page's file follows the click).
+ * Viewer page: the ribbon above the document (studio/ribbon.ts). Its tabs
+ * group what Studio and the page grid do to the document in place, and
+ * link the tools that open on their own page (the document goes along).
  */
-function initViewerActions(toolsBySlug: Map<string, ShellTool>): void {
+function initViewerActions(
+  toolsBySlug: Map<string, ShellTool>,
+  groups: ShellCategory[]
+): void {
   const row = document.getElementById('viewer-actions');
   if (!row || !getBridge()) return;
 
-  const toggle = el('button', 'pdf-view-action pdf-view-action-icon');
-  toggle.type = 'button';
-  toggle.title = ds('sidebarToggle');
-  toggle.setAttribute('aria-label', toggle.title);
-  toggle.append(el('i', 'ph ph-sidebar-simple'));
-  toggle.addEventListener('click', () => {
-    const collapsed = document.body.classList.contains('desktop-reading');
-    setStoredItem(READING_SIDEBAR_KEY, collapsed ? 'open' : 'rail');
-    applyReading();
-  });
-  row.append(toggle, el('span', 'pdf-view-actions-divider'));
-
-  // One menu for every tool not on the row: first those Studio applies to
-  // this document in place, then those that open on their own page.
-  let inPlace: () => MenuChoice[] = () => [];
-  const openWith = menuButton({
-    icon: 'ph-squares-four',
-    label: ds('quickOtherTools'),
-    title: ds('quickOtherToolsHint'),
-    className: 'pdf-view-action pdf-view-open-with studio-more',
-    choices: () => {
-      const here = inPlace();
-      const choices: MenuEntry[] = here.length
-        ? [{ heading: ds('quickInPlace') }, ...here]
-        : [];
-      if (choices.length) choices.push({ separator: true });
-      choices.push({
-        icon: 'ph-magnifying-glass',
-        label: ds('quickOpenWith'),
-        title: ds('quickOpenWithHint'),
-        id: 'all',
-        external: true,
-        run: () => {
-          if (pageFile) showViewerToolPicker(pageFile, toolsBySlug);
-        },
-      });
-      return choices;
-    },
-  });
-  // Links in the menu get the language prefix like every other link.
-  openWith.addEventListener('click', () => rewriteLinks());
-  row.append(el('span', 'pdf-view-actions-divider'), openWith);
-
   row.classList.remove('hidden');
-  rewriteLinks();
 
-  void import('./studio/studio.js').then(({ initStudio }) =>
-    initStudio({
-      row,
-      currentFile: () => pageFile,
-      inPlaceChoices: (list) => {
-        inPlace = list;
+  void Promise.all([
+    import('./studio/ribbon.js'),
+    import('./studio/studio.js'),
+    whenViewerDocuments(),
+  ]).then(async ([{ createRibbon }, { initStudio }, docs]) => {
+    const ribbon = createRibbon({
+      host: row,
+      tool: (slug) => toolsBySlug.get(slug),
+      groups: groups.map((group) => ({
+        name: group.name,
+        tools: group.tools.filter((tool) => tool.slug !== VIEWER_SLUG),
+      })),
+      beforeLeaving: () => {
+        if (pageFile) rememberPendingFile(pageFile);
       },
-    })
-  );
+      goToPage: (page) => docs.goToPage(page),
+      showViewerToolbar: (shown) => docs.showToolbar(shown),
+    });
+    const studio = await initStudio({
+      row: ribbon.clusterHost,
+      currentFile: () => pageFile,
+    });
+    if (studio) ribbon.attach(studio);
+  });
 }
 
 // A tool's "Success" box and the "Saved" notice say the same thing; the

@@ -5,9 +5,14 @@
  */
 
 import { getWasmBaseUrl, isWasmAvailable } from '../config/wasm-cdn-config.js';
-import { PDFDict, PDFName, PDFArray } from 'pdf-lib';
-import { loadPdfDocument } from './load-pdf-document.js';
-import { ensureDesktopModules } from '../desktop/bridge.js';
+import { PDFDict, PDFName, PDFArray, PDFDocument } from 'pdf-lib';
+
+// Also runs in ghostscript.worker.ts, so nothing here may touch the page at
+// load: the desktop bridge is imported where it is used, on the page only.
+async function ensureGhostscriptInstalled(): Promise<void> {
+  const { ensureDesktopModules } = await import('../desktop/bridge.js');
+  await ensureDesktopModules(['ghostscript']);
+}
 
 interface GhostscriptModule {
   FS: {
@@ -23,6 +28,17 @@ export type PdfALevel = 'PDF/A-1b' | 'PDF/A-2b' | 'PDF/A-3b';
 
 let cachedGsModule: GhostscriptModule | null = null;
 
+// In the worker (ghostscript.worker.ts): the base URL the page resolved,
+// since the worker has neither the stored settings nor the desktop bridge.
+let workerBaseUrl: string | null = null;
+
+export function setGhostscriptBaseUrl(url: string): void {
+  workerBaseUrl = url;
+}
+
+const configured = () =>
+  workerBaseUrl !== null || isWasmAvailable('ghostscript');
+
 export function setCachedGsModule(module: GhostscriptModule): void {
   cachedGsModule = module;
 }
@@ -32,8 +48,8 @@ export function getCachedGsModule(): GhostscriptModule | null {
 }
 
 export async function loadGsModule(): Promise<GhostscriptModule> {
-  await ensureDesktopModules(['ghostscript']);
-  const gsBaseUrl = getWasmBaseUrl('ghostscript')!;
+  if (workerBaseUrl === null) await ensureGhostscriptInstalled();
+  const gsBaseUrl = workerBaseUrl ?? getWasmBaseUrl('ghostscript')!;
   const normalizedUrl = gsBaseUrl.endsWith('/') ? gsBaseUrl : `${gsBaseUrl}/`;
 
   const gsJsUrl = `${normalizedUrl}gs.js`;
@@ -69,7 +85,7 @@ export async function convertToPdfA(
   level: PdfALevel = 'PDF/A-2b',
   onProgress?: (msg: string) => void
 ): Promise<Uint8Array> {
-  if (!isWasmAvailable('ghostscript')) {
+  if (!configured()) {
     throw new Error(
       'Ghostscript is not configured. Please configure it in WASM Settings.'
     );
@@ -283,9 +299,8 @@ export async function convertToPdfA(
 async function addPageGroupDictionaries(
   pdfData: Uint8Array
 ): Promise<Uint8Array> {
-  const pdfDoc = await loadPdfDocument(pdfData, {
-    updateMetadata: false,
-  });
+  // Ghostscript's own output: well formed, no repair needed.
+  const pdfDoc = await PDFDocument.load(pdfData, { updateMetadata: false });
 
   const catalog = pdfDoc.catalog;
   const outputIntentsArray = catalog.lookup(PDFName.of('OutputIntents'));
@@ -385,7 +400,12 @@ export async function convertFileToPdfA(
 ): Promise<Blob> {
   const arrayBuffer = await file.arrayBuffer();
   const pdfData = new Uint8Array(arrayBuffer);
-  const result = await convertToPdfA(pdfData, level, onProgress);
+  const result = await offThread(
+    { task: 'pdfa', level },
+    pdfData,
+    onProgress,
+    () => convertToPdfA(pdfData, level, onProgress)
+  );
   const copy = new Uint8Array(result.length);
   copy.set(result);
   return new Blob([copy], { type: 'application/pdf' });
@@ -395,7 +415,7 @@ export async function convertFontsToOutlines(
   pdfData: Uint8Array,
   onProgress?: (msg: string) => void
 ): Promise<Uint8Array> {
-  if (!isWasmAvailable('ghostscript')) {
+  if (!configured()) {
     throw new Error(
       'Ghostscript is not configured. Please configure it in WASM Settings.'
     );
@@ -484,8 +504,74 @@ export async function convertFileToOutlines(
 ): Promise<Blob> {
   const arrayBuffer = await file.arrayBuffer();
   const pdfData = new Uint8Array(arrayBuffer);
-  const result = await convertFontsToOutlines(pdfData, onProgress);
+  const result = await convertFontsToOutlinesOffThread(pdfData, onProgress);
   const copy = new Uint8Array(result.length);
   copy.set(result);
   return new Blob([copy], { type: 'application/pdf' });
+}
+
+/** Fonts to outlines in a worker (see offThread). */
+export function convertFontsToOutlinesOffThread(
+  pdfData: Uint8Array,
+  onProgress?: (msg: string) => void
+): Promise<Uint8Array> {
+  return offThread({ task: 'outlines' }, pdfData, onProgress, () =>
+    convertFontsToOutlines(pdfData, onProgress)
+  );
+}
+
+export type GhostscriptTask =
+  | { task: 'pdfa'; level: PdfALevel }
+  | { task: 'outlines' };
+
+/**
+ * Runs a Ghostscript task in a worker of its own, so a long conversion
+ * does not freeze the page; the worker ends with the task, freeing its
+ * memory. Where no worker starts, runs `here` on the page instead.
+ */
+async function offThread(
+  job: GhostscriptTask,
+  pdfData: Uint8Array,
+  onProgress: ((msg: string) => void) | undefined,
+  here: () => Promise<Uint8Array>
+): Promise<Uint8Array> {
+  if (typeof window === 'undefined' || typeof Worker === 'undefined') {
+    return here();
+  }
+  if (!configured()) return here();
+  await ensureGhostscriptInstalled();
+  const base = new URL(getWasmBaseUrl('ghostscript')!, location.href).href;
+  let worker: Worker;
+  try {
+    worker = new Worker(new URL('./ghostscript.worker.ts', import.meta.url), {
+      type: 'module',
+    });
+  } catch (e) {
+    console.warn('[Ghostscript] No worker, converting on the page:', e);
+    return here();
+  }
+  let started = false;
+  const result = await new Promise<Uint8Array | null>((resolve, reject) => {
+    worker.onmessage = (event: MessageEvent) => {
+      const data = event.data as {
+        type: string;
+        message?: string;
+        bytes?: Uint8Array;
+      };
+      started = true;
+      if (data.type === 'progress') onProgress?.(data.message ?? '');
+      else if (data.type === 'result') resolve(data.bytes ?? new Uint8Array());
+      else if (data.type === 'error') reject(new Error(data.message));
+    };
+    worker.onerror = (event) => {
+      event.preventDefault();
+      // A worker that never answered could not start: use the page.
+      if (!started) resolve(null);
+      else reject(new Error(event.message || 'Ghostscript worker failed'));
+    };
+    // A copy goes over, so the page keeps its bytes for the fallback.
+    const copy = pdfData.slice();
+    worker.postMessage({ ...job, base, pdfData: copy }, [copy.buffer]);
+  }).finally(() => worker.terminate());
+  return result ?? here();
 }

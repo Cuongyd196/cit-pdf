@@ -8,7 +8,7 @@ import {
 } from '../utils/helpers.js';
 import { state } from '../state.js';
 import { createIcons, icons } from 'lucide';
-import { loadPyMuPDF } from '../utils/pymupdf-loader.js';
+import { loadPyMuPDFMainThread } from '../utils/pymupdf-loader.js';
 import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
 
 interface ExtractedImage {
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const decryptedFiles = await batchDecryptIfNeeded(state.files);
       showLoader('Loading PDF processor...');
       state.files = decryptedFiles;
-      const pymupdf = await loadPyMuPDF();
+      const pymupdf = await loadPyMuPDFMainThread();
 
       extractedImages = [];
       let imgCounter = 0;

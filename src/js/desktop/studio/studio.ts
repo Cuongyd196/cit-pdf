@@ -1,11 +1,11 @@
 /**
  * Studio: tools applied in place to the document on screen in the viewer,
  * with undo, saved once at the end (over the original, or as a new file).
- * The drawer on the right lists the tools; the quick-action row carries the
- * Studio button and, once a document has changes, Undo, Redo and Save.
+ * The drawer on the right holds a tool's options; the ribbon (ribbon.ts)
+ * opens tools through the StudioApi and the page grid applies its edits
+ * through it. Undo, Redo and Save sit at the end of the ribbon's tab row.
  */
 import { downloadFile } from '../../utils/helpers.js';
-import { getStoredItem, setStoredItem } from '../../utils/safe-storage.js';
 import {
   VIEWER_KEYDOWN_EVENT,
   VIEWER_PAGES_EVENT,
@@ -19,8 +19,7 @@ import {
 } from '../../logic/view-pdf-events.js';
 import { getBridge, type OpenedFile, type SaveMode } from '../bridge.js';
 import { confirmOverwrite, overwriteConfirmed } from '../confirm-overwrite.js';
-import type { MenuChoice } from '../menu.js';
-import { ds, type DesktopStringKey } from '../strings.js';
+import { ds } from '../strings.js';
 import {
   exportEmbedEditorPdf,
   startEmbedEditor,
@@ -34,27 +33,36 @@ import {
   type StudioValues,
 } from './tools.js';
 
-const OPEN_KEY = 'cit:studio-open';
-
-// On the row above the document, by tool id, with the label they get there;
-// the rest of Studio's tools are in its "More" menu.
-const ROW_TOOLS: Array<[string, DesktopStringKey]> = [
-  ['edit', 'studioEdit'],
-  ['rotate', 'quickRotate'],
-  ['compress', 'quickCompress'],
-  ['delete-pages', 'studioDelete'],
-  ['insert', 'studioInsertShort'],
-  ['extract', 'studioExtractShort'],
-];
-const MORE_TOOLS = ['watermark', 'page-numbers', 'flatten'];
-
 export interface StudioOptions {
-  /** The quick-action row above the document. */
+  /** Where Undo, Redo and Save go: the end of the ribbon's tab row. */
   row: HTMLElement;
   /** The file on disk behind the tab on screen, if it has one. */
   currentFile: () => OpenedFile | null;
-  /** Hands the tools not on the row to the row's "Other tools" menu. */
-  inPlaceChoices: (list: () => MenuChoice[]) => void;
+}
+
+/** What the ribbon and the page grid ask of Studio. */
+export interface StudioApi {
+  /**
+   * Opens a tool's options in the drawer (the editor, for Edit), with some
+   * fields set beforehand; asked again for the tool on show, closes it.
+   */
+  openTool(id: string, preset?: StudioValues): void;
+  closeDrawer(): void;
+  /** The tool in the open drawer, or null. */
+  shownTool(): string | null;
+  isEditing(): boolean;
+  isBusy(): boolean;
+  /** The tab on screen and its bytes as Studio has them, edits included. */
+  current(): Promise<{ file: File; bytes: Uint8Array } | null>;
+  /** One history step: `change` makes the new bytes from the current ones. */
+  apply(
+    label: string,
+    change: (bytes: Uint8Array) => Promise<Uint8Array>
+  ): Promise<{ ok: true } | { ok: false; error: unknown }>;
+  /** A file made from the document, offered with Save as next to it. */
+  saveNewFile(bytes: Uint8Array, name: string, type?: string): Promise<void>;
+  /** Called after any change: history, drawer, busy, tab on screen. */
+  onChange(listener: () => void): void;
 }
 
 function make<K extends keyof HTMLElementTagNameMap>(
@@ -185,11 +193,14 @@ function confirmDiscard(name: string): Promise<boolean> {
   });
 }
 
-export async function initStudio(options: StudioOptions): Promise<void> {
+export async function initStudio(
+  options: StudioOptions
+): Promise<StudioApi | null> {
   const drawer = document.getElementById('studio-drawer');
   const bridge = getBridge();
-  if (!drawer || !bridge) return;
+  if (!drawer || !bridge) return null;
   const docs: ViewerDocuments = await whenViewerDocuments();
+  const listeners: Array<() => void> = [];
 
   const histories = new Map<File, EditHistory>();
   let tool: StudioTool | null = null;
@@ -204,54 +215,24 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     drawerWasOpen: boolean;
   } | null = null;
 
-  // ---- Tools on the row above the document: each opens its options in the
-  // drawer (or, for editing, the editor itself).
+  // ---- Tools are opened by the ribbon: options in the drawer, or, for
+  // editing, the editor itself.
   const toolById = (id: string) => STUDIO_TOOLS.find((t) => t.id === id);
-  const openTool = (next: StudioTool) => {
+  const openTool = (next: StudioTool, preset?: StudioValues) => {
     if (next.opensEditor) {
       void startEditing();
       return;
     }
     // Its button again closes the drawer.
-    if (!drawer.hidden && tool === next) {
+    if (!drawer.hidden && tool === next && !preset) {
       setOpen(false);
       return;
     }
-    showTool(next);
+    showTool(next, preset);
     setOpen(true);
   };
-  const rowButtons = new Map<string, HTMLElement>();
-  for (const [id, label] of ROW_TOOLS) {
-    const rowTool = toolById(id);
-    if (!rowTool) continue;
-    const button = make('button', 'pdf-view-action studio-row-tool');
-    button.type = 'button';
-    button.dataset.tool = id;
-    button.title = ds(rowTool.hint);
-    button.append(icon(rowTool.icon), make('span', '', ds(label)));
-    button.addEventListener('click', () => openTool(rowTool));
-    rowButtons.set(id, button);
-  }
-  options.inPlaceChoices(() =>
-    MORE_TOOLS.flatMap((id) => {
-      const moreTool = toolById(id);
-      return moreTool
-        ? [
-            {
-              icon: `ph-${moreTool.icon}`,
-              label: ds(moreTool.name),
-              id,
-              run: () => openTool(moreTool),
-            },
-          ]
-        : [];
-    })
-  );
-  const divider = options.row.querySelector('.pdf-view-actions-divider');
-  if (divider) divider.after(...rowButtons.values());
-  else options.row.prepend(...rowButtons.values());
 
-  // ---- Undo, Redo, Save on the same row, once there are changes
+  // ---- Undo, Redo, Save at the end of the ribbon's tab row
   const cluster = make('div', 'studio-cluster hidden');
   const info = make('span', 'studio-info');
   const folder = iconButton('folder-open', ds('studioFolder'));
@@ -295,7 +276,6 @@ export async function initStudio(options: StudioOptions): Promise<void> {
   function setOpen(open: boolean): void {
     drawer!.hidden = !open;
     drawer!.classList.toggle('hidden', !open);
-    setStoredItem(OPEN_KEY, open ? '1' : '0');
     render();
     if (open && !tool) {
       window.setTimeout(() =>
@@ -349,7 +329,7 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     render();
   }
 
-  function fieldInput(field: StudioField): HTMLElement {
+  function fieldInput(field: StudioField, preset?: string): HTMLElement {
     let input: HTMLInputElement | HTMLSelectElement;
     if (field.kind === 'select') {
       input = make('select', 'studio-input');
@@ -358,7 +338,7 @@ export async function initStudio(options: StudioOptions): Promise<void> {
         option.value = value;
         input.append(option);
       }
-      input.value = field.value;
+      input.value = preset ?? field.value;
     } else {
       input = make(
         'input',
@@ -377,7 +357,7 @@ export async function initStudio(options: StudioOptions): Promise<void> {
       if (field.kind === 'text' && field.placeholder) {
         input.placeholder = ds(field.placeholder);
       }
-      if (field.kind !== 'file') input.value = String(field.value);
+      if (field.kind !== 'file') input.value = preset ?? String(field.value);
     }
     input.name = field.id;
     input.id = `studio-field-${field.id}`;
@@ -429,7 +409,7 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     update();
   }
 
-  function showTool(next: StudioTool): void {
+  function showTool(next: StudioTool, preset: StudioValues = {}): void {
     tool = next;
     message = null;
     const back = make('button', 'studio-back');
@@ -444,7 +424,9 @@ export async function initStudio(options: StudioOptions): Promise<void> {
     const hint = make('p', 'studio-tool-hint', ds(next.hint));
     const form = make('form', 'studio-form');
     form.noValidate = true;
-    form.append(...next.fields.map(fieldInput));
+    form.append(
+      ...next.fields.map((field) => fieldInput(field, preset[field.id]))
+    );
     followShownWhen(form, next.fields);
     const note = make('p', 'studio-message');
     note.setAttribute('role', 'status');
@@ -617,11 +599,22 @@ export async function initStudio(options: StudioOptions): Promise<void> {
       const result = await which.apply(history.current, values, {
         files,
         fileName: file.name,
+        progress: (text) => {
+          message = { text, error: false };
+          render();
+        },
       });
       if (which.makesFile) {
-        await saveNewFile(result.bytes, result.fileName ?? file.name);
+        await saveNewFile(
+          result.bytes,
+          result.fileName ?? file.name,
+          result.type
+        );
+        const made = ds('studioMadeFile', {
+          name: result.fileName ?? file.name,
+        });
         message = {
-          text: ds('studioMadeFile', { name: result.fileName ?? file.name }),
+          text: result.note ? `${made}. ${result.note}` : made,
           error: false,
         };
         return;
@@ -669,16 +662,17 @@ export async function initStudio(options: StudioOptions): Promise<void> {
   }
 
   /** A file made from the document, offered in its folder under its name. */
-  async function saveNewFile(bytes: Uint8Array, name: string): Promise<void> {
+  async function saveNewFile(
+    bytes: Uint8Array,
+    name: string,
+    type = 'application/pdf'
+  ): Promise<void> {
     const file = docs.active();
     const opened = options.currentFile();
     if (file && opened && opened.name === file.name) {
       await bridge!.setSaveTarget('saveAs', opened.path);
     }
-    downloadFile(
-      new Blob([bytes as BlobPart], { type: 'application/pdf' }),
-      name
-    );
+    downloadFile(new Blob([bytes as BlobPart], { type }), name);
   }
 
   /** Saves the tab on screen; false when it has nothing Studio changed. */
@@ -798,21 +792,9 @@ export async function initStudio(options: StudioOptions): Promise<void> {
       if (changed && text) note.scrollIntoView({ block: 'nearest' });
     }
     drawer!.classList.toggle('busy', busy);
-    // The row shows which tool the drawer holds.
-    const shown = drawer!.hidden ? null : tool?.id;
-    for (const [id, button] of rowButtons) {
-      button.classList.toggle(
-        'active',
-        id === shown || (id === 'edit' && Boolean(editing))
-      );
-    }
-    options.row
-      .querySelector('.studio-more')
-      ?.classList.toggle(
-        'active',
-        Boolean(shown && MORE_TOOLS.includes(shown))
-      );
     renderHistory(history);
+    // The ribbon shows which tool the drawer holds.
+    for (const listener of listeners) listener();
   }
 
   // Tabs come and go: drop what closed tabs kept, follow the one on screen.
@@ -877,5 +859,47 @@ export async function initStudio(options: StudioOptions): Promise<void> {
   });
 
   showList();
-  setOpen(getStoredItem(OPEN_KEY) === '1');
+  setOpen(false);
+
+  return {
+    openTool(id, preset) {
+      const found = toolById(id);
+      if (found) openTool(found, preset);
+    },
+    closeDrawer: () => setOpen(false),
+    shownTool: () => (drawer.hidden ? null : (tool?.id ?? null)),
+    isEditing: () => Boolean(editing),
+    isBusy: () => busy,
+    async current() {
+      const file = docs.active();
+      if (!file) return null;
+      return { file, bytes: (await historyFor(file)).current };
+    },
+    async apply(label, change) {
+      const file = docs.active();
+      if (!file || busy || editing) {
+        return { ok: false, error: new Error('Studio is busy') };
+      }
+      busy = true;
+      message = null;
+      render();
+      try {
+        const history = await historyFor(file);
+        const bytes = await change(history.current);
+        history.push(label, bytes);
+        await show(file, bytes);
+        return { ok: true };
+      } catch (error) {
+        console.error('[Studio]', error);
+        return { ok: false, error };
+      } finally {
+        busy = false;
+        render();
+      }
+    },
+    saveNewFile,
+    onChange(listener) {
+      listeners.push(listener);
+    },
+  };
 }

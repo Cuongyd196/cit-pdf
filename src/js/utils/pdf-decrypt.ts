@@ -1,5 +1,5 @@
 import { getCpdf, isCpdfAvailable } from './cpdf-helper';
-import { isPyMuPDFAvailable, loadPyMuPDF } from './pymupdf-loader';
+import { isPyMuPDFAvailable, loadPyMuPDFMainThread } from './pymupdf-loader';
 import type { CpdfInstance } from '@/types';
 
 export type PdfDecryptEngine = 'cpdf' | 'pymupdf';
@@ -93,7 +93,7 @@ async function decryptWithPyMuPDF(
   inputBytes: Uint8Array,
   password: string
 ): Promise<Uint8Array> {
-  const pymupdf = await loadPyMuPDF();
+  const pymupdf = await loadPyMuPDFMainThread();
   const document = await pymupdf.open(
     new Blob([new Uint8Array(inputBytes)], { type: 'application/pdf' })
   );

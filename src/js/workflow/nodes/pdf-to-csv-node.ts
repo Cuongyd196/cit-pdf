@@ -4,7 +4,7 @@ import { pdfSocket } from '../sockets';
 import type { SocketData } from '../types';
 import { requirePdfInput, extractAllPdfs } from '../types';
 import { downloadFile } from '../../utils/helpers.js';
-import { loadPyMuPDF } from '../../utils/pymupdf-loader.js';
+import { loadPyMuPDFMainThread } from '../../utils/pymupdf-loader.js';
 import { wfError } from '../errors';
 
 function tableToCsv(rows: (string | null)[][]): string {
@@ -34,7 +34,7 @@ export class PdfToCsvNode extends BaseWorkflowNode {
   }
 
   private async extractTables(bytes: Uint8Array): Promise<(string | null)[][]> {
-    const pymupdf = await loadPyMuPDF();
+    const pymupdf = await loadPyMuPDFMainThread();
     const blob = new Blob([new Uint8Array(bytes)], { type: 'application/pdf' });
     const doc = await pymupdf.open(blob);
     const allRows: (string | null)[][] = [];

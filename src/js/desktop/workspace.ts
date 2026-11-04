@@ -134,10 +134,13 @@ const WORKSPACE_TOOLS: Record<string, WorkspaceTool> = {
 export interface WorkspaceOptions {
   /** Back: to the document in the viewer, or to the tools. */
   back: () => void;
-  /** Shrinks the sidebar to its rail while the workspace is on. */
-  setReading: (on: boolean) => void;
   /** The file this page works on, when the app knows where it is on disk. */
   currentFile: () => OpenedFile | null;
+}
+
+/** The tool page has a workspace of its own (it then has no form layout). */
+export function hasWorkspace(slug: string): boolean {
+  return slug in WORKSPACE_TOOLS;
 }
 
 function pageSlug(): string {
@@ -418,7 +421,6 @@ export function initToolWorkspace(options: WorkspaceOptions): void {
       }
     }
     document.body.classList.toggle('desktop-workspace', open);
-    options.setReading(open);
   };
 
   // The PDF editor redraws a lot; one look per frame is plenty.

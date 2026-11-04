@@ -6,7 +6,7 @@ import { requirePdfInput, extractAllPdfs } from '../types';
 import { downloadFile } from '../../utils/helpers.js';
 import * as pdfjsLib from 'pdfjs-dist';
 import type JSZip from 'jszip';
-import { loadPyMuPDF } from '../../utils/pymupdf-loader.js';
+import { loadPyMuPDFMainThread } from '../../utils/pymupdf-loader.js';
 
 export class PdfToImagesNode extends BaseWorkflowNode {
   readonly category = 'Output' as const;
@@ -64,7 +64,7 @@ export class PdfToImagesNode extends BaseWorkflowNode {
     allPdfs: PDFData[],
     zip: JSZip
   ): Promise<void> {
-    const pymupdf = await loadPyMuPDF();
+    const pymupdf = await loadPyMuPDFMainThread();
     for (const pdf of allPdfs) {
       const blob = new Blob([new Uint8Array(pdf.bytes)], {
         type: 'application/pdf',

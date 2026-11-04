@@ -2,7 +2,9 @@
 // This script applies the full-width preference from localStorage to page uploaders
 
 export function initFullWidthMode() {
-  const savedFullWidth = localStorage.getItem('fullWidthMode') !== 'false';
+  // The app has no setting for it: its tool pages size themselves.
+  const savedFullWidth =
+    __DESKTOP__ || localStorage.getItem('fullWidthMode') !== 'false';
 
   if (savedFullWidth) {
     applyFullWidthMode(true);

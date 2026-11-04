@@ -2,16 +2,19 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import {
   IPC_CHANNELS,
   type DesktopModuleName,
+  type FolderInstallResult,
   type ModuleProgress,
   type ModuleStatus,
   type OpenedFile,
   type EnsureResult,
+  type InstallUpdateResult,
   type PrinterInfo,
   type PrintRequest,
   type PrintResult,
   type SaveMode,
   type SavedDownload,
   type UpdateCheckResult,
+  type UpdateProgress,
 } from './types.js';
 
 const bridge = {
@@ -34,12 +37,20 @@ const bridge = {
     };
   },
 
+  cancelModuleDownloads: (): Promise<void> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.CANCEL_MODULE_DOWNLOADS);
+  },
+
   getModulesStatus: (): Promise<ModuleStatus[]> => {
     return ipcRenderer.invoke(IPC_CHANNELS.GET_MODULES_STATUS);
   },
 
   removeModule: (name: DesktopModuleName): Promise<boolean> => {
     return ipcRenderer.invoke(IPC_CHANNELS.REMOVE_MODULE, name);
+  },
+
+  installModulesFromFolder: (): Promise<FolderInstallResult> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.INSTALL_MODULES_FROM_FOLDER);
   },
 
   // Files handed to the app by the OS ("Open with") or the File menu.
@@ -142,6 +153,23 @@ const bridge = {
   // Asks GitHub whether a newer release exists. Runs only on request.
   checkForUpdate: (): Promise<UpdateCheckResult> => {
     return ipcRenderer.invoke(IPC_CHANNELS.CHECK_UPDATE);
+  },
+
+  // Downloads the installer the last check found, checks its hash, runs it
+  // and quits. Answers only when it could not.
+  installUpdate: (): Promise<InstallUpdateResult> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.INSTALL_UPDATE);
+  },
+
+  onUpdateProgress: (cb: (p: UpdateProgress) => void): (() => void) => {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      progress: UpdateProgress
+    ) => cb(progress);
+    ipcRenderer.on(IPC_CHANNELS.UPDATE_PROGRESS, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.UPDATE_PROGRESS, handler);
+    };
   },
 
   // Keeps the menu bar and native dialogs in the language of the pages.

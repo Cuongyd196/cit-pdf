@@ -9,76 +9,31 @@ import {
 import { state } from '../state.js';
 import { createIcons, icons } from 'lucide';
 import { loadPyMuPDF } from '../utils/pymupdf-loader.js';
+import type { PyMuPDFInstance } from '@/types';
 import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
 import { deduplicateFileName } from '../utils/deduplicate-filename.js';
-import { performOcr } from '../utils/ocr.js';
-import { resolveConfiguredTesseractAvailableLanguages } from '../utils/tesseract-language-availability.js';
+import { convertToDocx, recognizeIfScanned } from '../utils/pdf-to-docx.js';
 
-// A scan has no text for the converter to find. Fewer characters than this
-// over the sampled pages counts as "no text".
-const MIN_TEXT_CHARS = 20;
-const TEXT_SAMPLE_PAGES = 5;
-// Render scale for recognition: about 200 DPI.
-const OCR_SCALE = 2.8;
+// Without a warning, a long document looks like a hang.
+const SLOW_NOTE = ' Long documents can take several minutes.';
 
-async function hasText(file: File): Promise<boolean> {
-  const data = await readFileAsArrayBuffer(file);
-  const pdf = await getPDFDocument({ data }).promise;
-  try {
-    let chars = 0;
-    const pages = Math.min(pdf.numPages, TEXT_SAMPLE_PAGES);
-    for (let i = 1; i <= pages && chars < MIN_TEXT_CHARS; i++) {
-      const content = await (await pdf.getPage(i)).getTextContent();
-      for (const item of content.items) {
-        if ('str' in item) chars += item.str.replace(/\s/g, '').length;
-      }
-    }
-    return chars >= MIN_TEXT_CHARS;
-  } finally {
-    await pdf.destroy();
-  }
-}
-
-// Vietnamese and English, limited to what this build offers. English goes
-// last: put first, it costs Vietnamese capitals their diacritics.
-function ocrLanguages(): string {
-  const available = resolveConfiguredTesseractAvailableLanguages();
-  const wanted = ['vie', 'eng'].filter(
-    (code) => !available || available.includes(code)
-  );
-  return wanted.join('+') || 'eng';
-}
-
-/**
- * A scanned PDF is replaced by pages holding its recognized text, so the
- * Word file gets editable text instead of one picture per page.
- */
-async function recognizeIfScanned(
-  file: File
-): Promise<{ file: File; recognized: boolean }> {
-  if (await hasText(file)) return { file, recognized: false };
-
-  showLoader('Scanned document: recognizing text (OCR)...');
-  const bytes = (await readFileAsArrayBuffer(file)) as ArrayBuffer;
-  const result = await performOcr(new Uint8Array(bytes), {
-    language: ocrLanguages(),
-    resolution: OCR_SCALE,
-    binarize: false,
-    whitelist: '',
-    textOnly: true,
-    onProgress: (status) => {
-      // Page counts are worth showing; the engine's own states are noise.
-      if (status.startsWith('Processing page')) {
-        showLoader(`Recognizing text (OCR): ${status}`);
-      }
-    },
+function recognize(file: File) {
+  return recognizeIfScanned(file, {
+    onScan: () => showLoader('Scanned document: recognizing text (OCR)...'),
+    onPage: (at, total) =>
+      showLoader(`Recognizing text (OCR): Processing page ${at} of ${total}`),
   });
-  return {
-    file: new File([result.pdfBytes as BlobPart], file.name, {
-      type: 'application/pdf',
-    }),
-    recognized: true,
-  };
+}
+
+/** One file to .docx, showing the page pdf2docx is reading or writing. */
+function toDocx(pymupdf: PyMuPDFInstance, file: File, name: string) {
+  return convertToDocx(pymupdf, file, (writing, at, total) =>
+    showLoader(
+      writing
+        ? `Converting ${name}: writing page ${at} of ${total}...`
+        : `Converting ${name}: reading page ${at} of ${total}...`
+    )
+  );
 }
 
 const OCR_NOTE =
@@ -184,9 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = state.files[0];
         showLoader(`Converting ${file.name}...`);
 
-        const source = await recognizeIfScanned(file);
-        showLoader(`Converting ${file.name}...`);
-        const docxBlob = await pymupdf.pdfToDocx(source.file);
+        const source = await recognize(file);
+        showLoader(`Converting ${file.name}...${SLOW_NOTE}`);
+        const docxBlob = await toDocx(pymupdf, source.file, file.name);
         const outName = file.name.replace(/\.pdf$/i, '') + '.docx';
 
         downloadFile(docxBlob, outName);
@@ -210,12 +165,16 @@ document.addEventListener('DOMContentLoaded', () => {
             `Converting ${i + 1}/${state.files.length}: ${file.name}...`
           );
 
-          const source = await recognizeIfScanned(file);
+          const source = await recognize(file);
           recognized ||= source.recognized;
           showLoader(
-            `Converting ${i + 1}/${state.files.length}: ${file.name}...`
+            `Converting ${i + 1}/${state.files.length}: ${file.name}...${SLOW_NOTE}`
           );
-          const docxBlob = await pymupdf.pdfToDocx(source.file);
+          const docxBlob = await toDocx(
+            pymupdf,
+            source.file,
+            `${i + 1}/${state.files.length}: ${file.name}`
+          );
           const baseName = file.name.replace(/\.pdf$/i, '');
           const arrayBuffer = await docxBlob.arrayBuffer();
           const zipEntryName = deduplicateFileName(
