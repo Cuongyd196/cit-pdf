@@ -13,6 +13,7 @@
     "desktop:build": "node scripts/build-desktop.mjs",
     "desktop:modules-pack": "node scripts/desktop-modules-pack.mjs",
     "desktop:dist": "node scripts/build-desktop.mjs && electron-builder --win",
+    "desktop:dist:x86": "node scripts/build-desktop.mjs && electron-builder --win nsis portable --ia32 --config electron-builder.x86.json",
     "desktop:dist:all": "node scripts/build-desktop.mjs && electron-builder -mwl",
     "build": "node scripts/generate-blog.mjs && node scripts/generate-static-tool-links.mjs && tsc && vite build && node scripts/enhance-seo-pages.mjs && NODE_OPTIONS='--max-old-space-size=3072' node scripts/generate-i18n-pages.mjs && node scripts/generate-sitemap.mjs && node scripts/generate-security-headers.mjs && node scripts/seo-audit.mjs",
     "seo-audit": "node scripts/seo-audit.mjs",

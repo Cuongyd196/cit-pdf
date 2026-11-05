@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "extends": "./electron-builder.json",
+  "electronVersion": "43.8.7",
+  "nsis": {
+    "artifactName": "${productName}-${version}-Windows-x86-Setup.${ext}"
+  },
+  "portable": {
+    "artifactName": "${productName}-${version}-Windows-x86-Portable.${ext}"
+  }
+}
