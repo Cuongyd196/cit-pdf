@@ -101,14 +101,15 @@ Thẻ **Tất cả công cụ** trong trình xem liệt kê mọi công cụ. C�
 
 Tải tại trang [**Releases**](https://github.com/Cuongyd196/cit-pdf/releases/latest).
 
-| Hệ điều hành                  | Tệp                                            | Ghi chú                                                                                              |
-| ----------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Windows 10/11 (64-bit)        | `CIT-PDF-<phiên bản>-Windows-x64-Setup.exe`    | **Nên dùng.** Cài cho tài khoản đang đăng nhập, không cần quyền Administrator. Có cập nhật một bước. |
-| Windows 10/11 (64-bit)        | `CIT-PDF-<phiên bản>-Windows-x64-Portable.exe` | Chạy thẳng không cần cài, chép được sang USB.                                                        |
-| macOS (chip Apple M1 trở lên) | `CIT-PDF-<phiên bản>-macOS-arm64.dmg`          | Mở tệp, kéo CIT-PDF vào Applications.                                                                |
-| macOS (chip Intel)            | `CIT-PDF-<phiên bản>-macOS-x64.dmg`            | Như trên.                                                                                            |
-| Ubuntu / Debian               | `CIT-PDF-<phiên bản>-Linux-amd64.deb`          | `sudo apt install ./CIT-PDF-<phiên bản>-Linux-amd64.deb`                                             |
-| Linux khác                    | `CIT-PDF-<phiên bản>-Linux-x86_64.AppImage`    | `chmod +x` rồi chạy, không cần cài.                                                                  |
+| Hệ điều hành                  | Tệp                                                                | Ghi chú                                                                                              |
+| ----------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Windows 10/11 (64-bit)        | `CIT-PDF-<phiên bản>-Windows-x64-Setup.exe`                        | **Nên dùng.** Cài cho tài khoản đang đăng nhập, không cần quyền Administrator. Có cập nhật một bước. |
+| Windows 10/11 (64-bit)        | `CIT-PDF-<phiên bản>-Windows-x64-Portable.exe`                     | Chạy thẳng không cần cài, chép được sang USB.                                                        |
+| Windows 10/11 (32-bit)        | `CIT-PDF-<phiên bản>-Windows-x86-Setup.exe` / `…-x86-Portable.exe` | Cho máy Windows 32-bit. Máy 64-bit nên dùng bản x64.                                                 |
+| macOS (chip Apple M1 trở lên) | `CIT-PDF-<phiên bản>-macOS-arm64.dmg`                              | Mở tệp, kéo CIT-PDF vào Applications.                                                                |
+| macOS (chip Intel)            | `CIT-PDF-<phiên bản>-macOS-x64.dmg`                                | Như trên.                                                                                            |
+| Ubuntu / Debian               | `CIT-PDF-<phiên bản>-Linux-amd64.deb`                              | `sudo apt install ./CIT-PDF-<phiên bản>-Linux-amd64.deb`                                             |
+| Linux khác                    | `CIT-PDF-<phiên bản>-Linux-x86_64.AppImage`                        | `chmod +x` rồi chạy, không cần cài.                                                                  |
 
 Mỗi bản phát hành ghi kèm mã **SHA-256** của từng tệp để bạn đối chiếu.
 
@@ -161,7 +162,8 @@ npm install
 
 npm run desktop              # build và chạy ứng dụng
 npm run desktop:build        # chỉ build
-npm run desktop:dist         # đóng gói bộ cài Windows vào release/
+npm run desktop:dist         # đóng gói bộ cài Windows 64-bit vào release/
+npm run desktop:dist:x86     # bộ cài Windows 32-bit (Electron 43)
 # macOS và Linux: workflow .github/workflows/desktop-release.yml (chạy tay với tag)
 npm run desktop:modules-pack # gói bộ xử lý ngoại tuyến cho mạng bị chặn
 ```

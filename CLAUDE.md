@@ -24,7 +24,8 @@ npm run docs:dev            # VitePress docs in docs/
 
 npm run desktop             # build desktop bundle and launch Electron
 npm run desktop:build       # build only (dist/ -> desktop/dist-web, desktop/src -> desktop/dist)
-npm run desktop:dist        # + electron-builder --win  -> release/
+npm run desktop:dist        # + electron-builder --win  -> release/ (x64)
+npm run desktop:dist:x86    # Windows 32-bit: electron-builder.x86.json, Electron 43 (44 has no ia32)
 npm run desktop:dist:all    # + electron-builder -mwl
 npm run desktop:modules-pack  # offline engine pack -> release/cit-pdf-modules/
 ```
