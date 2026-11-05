@@ -9,6 +9,7 @@ import {
   loadFallbackFonts,
 } from '../utils/font-loader.js';
 import { setupFormatDock, setupFindSheet } from './edit-pdf-text-dock';
+import type { SpaceReference } from '../utils/restore-spaces.js';
 
 interface DocDescription {
   meta: { name: string; size: number; source?: string } | null;
@@ -283,6 +284,10 @@ interface EditorAppModule {
   setOnSaved: (fn: ((kb: number, fileName: string) => void) | null) => void;
   endEdit: (commit: boolean) => void;
   saveFile: () => Promise<void>;
+  setSpaceReference: (
+    fn: ((pageIndex: number) => SpaceReference | null) | null
+  ) => void;
+  spaceReferenceReady: (pageIndex: number) => void;
 }
 
 function relocateAddText() {
@@ -578,6 +583,35 @@ function setupFallbackFonts(
   );
 }
 
+// The engine loses some word spaces (see utils/restore-spaces.ts). Read the
+// file with pdf.js in the background, page by page, and hand the editor each
+// page's text so it can put them back. Failures only leave the spaces as the
+// engine read them.
+async function attachSpaceReference(app: EditorAppModule, file: File) {
+  try {
+    const [pdfjsLib, { buildSpaceReference }] = await Promise.all([
+      import('pdfjs-dist'),
+      import('../utils/restore-spaces.js'),
+      import('../utils/setup-pdf-worker.js'),
+    ]);
+    const data = new Uint8Array(await file.arrayBuffer());
+    const doc = await pdfjsLib.getDocument({ data }).promise;
+    const refs = new Map<number, SpaceReference>();
+    app.setSpaceReference((pageIndex: number) => refs.get(pageIndex) ?? null);
+    for (let i = 0; i < doc.numPages; i++) {
+      const content = await (await doc.getPage(i + 1)).getTextContent();
+      const text = content.items
+        .map((it) => ('str' in it ? it.str + (it.hasEOL ? '\n' : '') : '\n'))
+        .join('');
+      refs.set(i, buildSpaceReference(text));
+      app.spaceReferenceReady(i);
+    }
+    void doc.destroy();
+  } catch (error) {
+    console.warn('Space reference unavailable', error);
+  }
+}
+
 async function launchEditor(file: File) {
   if (launching) return;
   launching = true;
@@ -618,6 +652,7 @@ async function launchEditor(file: File) {
       throw new Error('WASM engine failed to initialize');
     }
     await appModule.openFile(decrypted[0]);
+    void attachSpaceReference(appModule, decrypted[0]);
     if (window.matchMedia('(max-width: 768px)').matches) fitMobileWidth();
   } catch (error) {
     console.error('Error loading PDF Text Editor:', error);

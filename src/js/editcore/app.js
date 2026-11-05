@@ -13,7 +13,8 @@ window.addEventListener('unhandledrejection', (e) => {
     'UNHANDLED: ' +
     ((e.reason && (e.reason.stack || e.reason.message)) || e.reason);
 });
-import { PdfEngine, OBJ } from './core.js';
+import { PdfEngine, OBJ, FALLBACK_FAMILY_RE } from './core.js';
+import { restoreDroppedSpaces } from '../utils/restore-spaces.js';
 import { applyTagSurgery } from './tagsurgery.js';
 import { pageHasPatternFill, protectPatternArtwork } from './shadingsurgery.js';
 import {
@@ -61,6 +62,7 @@ function pushUndo(entry) {
 }
 
 const WEB_FALLBACK = (family, kind) => {
+  family = (family || '').replace(FALLBACK_FAMILY_RE, '');
   if (kind === 'mono') return `"${family}", 'Courier New', monospace`;
   if (kind === 'serif') return `"${family}", 'Times New Roman', Times, serif`;
   const f = (family || '').toLowerCase();
@@ -3038,9 +3040,44 @@ function renderPage() {
 
 let scanningPages = false;
 
+// Page text read by pdf.js, set by the tool page (see restore-spaces.ts).
+let spaceReference = null;
+function setSpaceReference(fn) {
+  spaceReference = typeof fn === 'function' ? fn : null;
+}
+// Called when pdf.js has read a page: rebuild that page's model if it is
+// showing and not being edited.
+function spaceReferenceReady(pageIndex) {
+  if (!P()?.doc || state.editing || P().pageIndex !== pageIndex) return;
+  refreshModel();
+  renderPage();
+}
+
+// Paragraphs the engine has written back in this session. Laid out again
+// while typing, such a paragraph can come out with a different indent and
+// wrap than its lines on the page, so it is edited as a whole, like an
+// adjusted one (see openEditor). Keyed by page and position, which survive
+// a model rebuild.
+const engineWritten = new Set();
+const writtenKey = (p) =>
+  p?.box
+    ? `${P().pageIndex}|${Math.round(p.box.x)}|${Math.round(p.box.top)}`
+    : '';
+function markEngineWritten(p) {
+  if (!p?.box) return;
+  p.adjusted = true;
+  engineWritten.add(writtenKey(p));
+}
+
 function refreshModel() {
   engineStepEnd();
-  state.paragraphs = P().buildModel();
+  state.paragraphs = restoreDroppedSpaces(
+    P().buildModel(),
+    spaceReference ? spaceReference(P().pageIndex) : null
+  );
+  if (engineWritten.size)
+    for (const p of state.paragraphs)
+      if (engineWritten.has(writtenKey(p))) p.adjusted = true;
   if (scanningPages) return;
   refreshPageExtras();
 }
@@ -3782,7 +3819,13 @@ function openEditor(spec, caret) {
       singleLine = false;
     }
     let lockedPv = null;
-    if (!para.vertical) {
+    // Locked-line editing keeps the page's own objects for the lines that
+    // don't change. When the model was adjusted (restored spaces, fitted line
+    // spacing) or the engine wrote the paragraph back in an earlier edit
+    // (markEngineWritten), those lines no longer match it and the engine
+    // draws both: the old lines and the paragraph laid out again. Such a
+    // paragraph has para.adjusted and is edited as a whole instead.
+    if (!para.vertical && !para.adjusted) {
       try {
         lockedPv = P().previewParagraph(
           para.id,
@@ -3792,6 +3835,11 @@ function openEditor(spec, caret) {
       } catch {
         lockedPv = null;
       }
+      // The engine can lay a paragraph out differently from how it sits on
+      // the page (seen on a paragraph it wrote itself in an earlier edit:
+      // deeper first-line indent, narrower wrap). Locked mode would then
+      // show both layouts, so it needs the preview to match the page lines.
+      if (lockedPv && !previewMatchesPage(lockedPv, para)) lockedPv = null;
       if (lockedPv && lockedPv.lines.length) {
         openPv = lockedPv;
         renderLockedLines(ed, para.runs, lockedPv, para, para.box.x);
@@ -4634,6 +4682,31 @@ const LOCK_CHECK =
 
 let lockedSeq = 0;
 
+/** Whether a preview has the paragraph's lines: same breaks, baselines and starts. */
+function previewMatchesPage(pv, para) {
+  const lines = para.lines;
+  if (!pv?.lines?.length || !lines?.length) return false;
+  if (pv.lines.length !== lines.length) return false;
+  for (let k = 0; k < lines.length; k++) {
+    const L = pv.lines[k];
+    const size = L.size || 12;
+    if (
+      L.flat >= 0 &&
+      typeof lines[k].off === 'number' &&
+      L.flat !== lines[k].off
+    )
+      return false;
+    if (
+      typeof lines[k].y === 'number' &&
+      Math.abs(L.baseline - lines[k].y) > 0.35 * size
+    )
+      return false;
+    const px = lines[k].px;
+    if (typeof px === 'number' && Math.abs(L.x - px) > 0.5 * size) return false;
+  }
+  return true;
+}
+
 function renderLockedLines(ed, runs, pv, para, originX) {
   lockedSeq++;
   const dirty = lockedMutatedLines(ed);
@@ -5237,8 +5310,15 @@ function updateGlassSurface(es, pv, runs) {
   const cv0 = es.glassCanvas;
   const basePxX = Math.round(fullX * scale);
   const basePxY = Math.round(fullY * scale);
+  // A run split off for a fallback font (splitUncoveredChars) makes the
+  // engine draw a partial band with the paragraph laid out again from its
+  // start, on top of the band; redraw the whole paragraph instead.
+  const hasSplitRun = runs.some(
+    (r) => r.sourceIndex === -1 && FALLBACK_FAMILY_RE.test(r.family || '')
+  );
   const canPartial =
     certain &&
+    !hasSplitRun &&
     prev &&
     cv0 &&
     cv0.isConnected &&
@@ -5478,6 +5558,9 @@ function applyLockedGeom(es, pv) {
 }
 
 function beginEdit(para, caret) {
+  // Load the system font of the same name now, so letters the embedded
+  // subset lacks are drawn in it rather than in the generic fallback.
+  for (const r of para?.runs || []) preloadMatchingSystemFont(r.family);
   openEditor({ para }, caret);
 }
 function beginNewTextBox(x, yTop, size, caret, width) {
@@ -5731,7 +5814,110 @@ function parseEditor(ed, original) {
   collect(ed, null);
   if (runs.length > 1 && runs[runs.length - 1].text === '\n')
     runs[runs.length - 2].text += runs.pop().text;
-  return runs.filter((r) => r.text.length > 0);
+  return splitUncoveredChars(
+    runs.filter((r) => r.text.length > 0),
+    original
+  );
+}
+
+// A font embedded as a subset holds only the letters the file already uses.
+// Typed into such a run, a non-ASCII letter the font lacks (ộ, ẳ, and ù too
+// when the run is one of Word's subsets for Vietnamese letters) is drawn by
+// the engine as an empty box. Those letters go into a run of
+// their own with no source font, so the engine asks the font provider for
+// one that has them: a system font of the same name, else the Noto fallback.
+//
+// Only the run's own original text counts as proof that its font has a
+// letter. Word embeds one typeface several times under the same name (one
+// subset for WinAnsi letters, others for ơ, ữ, ệ…), and the engine reports
+// the same font data for all of them, so neither the family name nor
+// runFontData tells the subsets apart.
+const sourceCoverageMemo = new WeakMap();
+// The engine reuses any document font whose name matches a run's family,
+// subset or not, so a split run gets a name no embedded font has. The font
+// provider strips it again to find the real family.
+const FALLBACK_FAMILY_SUFFIX = ' Fallback';
+
+function sourceCoverage(original, idx) {
+  let per = sourceCoverageMemo.get(original);
+  if (!per) {
+    per = new Map();
+    sourceCoverageMemo.set(original, per);
+  }
+  let own = per.get(idx);
+  if (!own) {
+    own = new Set(original[idx].text || '');
+    per.set(idx, own);
+  }
+  return own;
+}
+
+const normFontName = (s) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+    .replace(/(psmt|mt|ps)$/, '');
+const systemFontTried = new Set();
+
+function preloadMatchingSystemFont(family) {
+  if (!family || systemFontTried.has(family) || !localFontMeta.size) return;
+  systemFontTried.add(family);
+  const target = normFontName(family.replace(/ (serif|mono)$/, ''));
+  for (const fam of localFontMeta.keys())
+    if (normFontName(fam) === target) {
+      ensureLocalFontBytes(fam);
+      return;
+    }
+}
+
+function splitUncoveredChars(runs, original) {
+  if (!original || !original.length) return runs;
+  const out = [];
+  for (const r of runs) {
+    const idx = r.sourceIndex;
+    if (r.atomic || !Number.isInteger(idx) || idx < 0 || !original[idx]) {
+      out.push(r);
+      continue;
+    }
+    const covers = sourceCoverage(original, idx);
+    let seg = '';
+    let segOwn = true;
+    let split = false;
+    const flush = () => {
+      if (seg)
+        out.push(
+          segOwn
+            ? { ...r, text: seg }
+            : {
+                ...r,
+                text: seg,
+                sourceIndex: -1,
+                family: FALLBACK_FAMILY_RE.test(r.family)
+                  ? r.family
+                  : r.family + FALLBACK_FAMILY_SUFFIX,
+              }
+        );
+      seg = '';
+    };
+    for (const ch of r.text) {
+      // ASCII the engine draws itself when the subset lacks it; anything
+      // beyond, WinAnsi letters such as ù included, needs a font that has it.
+      const own = ch.charCodeAt(0) < 0x7f || covers.has(ch);
+      if (own !== segOwn) {
+        flush();
+        segOwn = own;
+      }
+      if (!own) split = true;
+      seg += ch;
+    }
+    if (!split) {
+      out.push(r);
+      continue;
+    }
+    flush();
+    preloadMatchingSystemFont(r.family);
+  }
+  return out;
 }
 
 function spanStyle(span, original) {
@@ -5846,10 +6032,13 @@ function endEdit(commit) {
         const updated = P().commitParagraph(e.para.id, runs, e.para.format);
         if (updated) {
           replaceParagraph(e.para.id, updated);
-          cascadeParagraphGrowth(updated, prevBottomEdit);
+          markEngineWritten(updated);
+          // Paragraphs pushed down lie outside the edited box, so redraw the
+          // whole page then; a partial redraw would cut them in half.
+          const pushed = cascadeParagraphGrowth(updated, prevBottomEdit);
           state.selection = { kind: 'para', para: updated };
           state.dirty = true;
-          if (!e.para.sharesObjects && !e.para.unwrapsForms) {
+          if (!pushed && !e.para.sharesObjects && !e.para.unwrapsForms) {
             const pvBox = e.preview
               ? {
                   box: {
@@ -5993,11 +6182,12 @@ function runsDiffer(a, b) {
   return false;
 }
 
+/** Moves the paragraphs below by the edited one's growth; returns how many moved. */
 function cascadeParagraphGrowth(updated, prevBottom) {
-  if (!updated?.box || !(prevBottom > -1e29)) return;
+  if (!updated?.box || !(prevBottom > -1e29)) return 0;
   const newBottom = updated.box.top - updated.box.h;
   const delta = prevBottom - newBottom;
-  if (!(Math.abs(delta) > 0.5)) return;
+  if (!(Math.abs(delta) > 0.5)) return 0;
   const L = updated.box.x;
   const R = updated.box.x + updated.box.w;
   const span = Math.max(1, R - L);
@@ -6022,6 +6212,7 @@ function cascadeParagraphGrowth(updated, prevBottom) {
       replaceParagraph(q.id, moved);
     }
   }
+  return movers.length;
 }
 
 function refreshAfterMutation(dirtyRect) {
@@ -6477,6 +6668,7 @@ function changeFormat(mutate) {
   const updated = P().commitParagraph(para.id, safe, fmt);
   if (updated) {
     replaceParagraph(updated.id, updated);
+    markEngineWritten(updated);
     cascadeParagraphGrowth(updated, prevBottomFmt);
     state.selection = { kind: 'para', para: updated };
     if (state.editing) {
@@ -9104,7 +9296,10 @@ function syncInspector() {
         hScale: parseFloat(span.dataset.hScale) || 1,
       };
   }
-  setSelectValue($('fFamily'), r.family || 'Helvetica');
+  setSelectValue(
+    $('fFamily'),
+    (r.family || 'Helvetica').replace(FALLBACK_FAMILY_RE, '')
+  );
   $('fSize').value = (r.size || 12).toFixed(0);
   $('fColor').value = rgbaToHex(r.rgba >>> 0 || 255);
   for (const b of $('fToggles').children) {
@@ -9231,6 +9426,9 @@ function goToPage(i) {
 
 async function openFile(file, sourceUrl = null, knownBytes) {
   endEdit(false);
+  // A reference belongs to one file; the tool page sets it again after this.
+  spaceReference = null;
+  engineWritten.clear();
   if (state.extWatch) {
     clearInterval(state.extWatch);
     state.extWatch = null;
@@ -10255,6 +10453,8 @@ async function addImageFromFile(file) {
 
 export {
   openFile,
+  setSpaceReference,
+  spaceReferenceReady,
   engineReady,
   setZoom,
   getZoom,

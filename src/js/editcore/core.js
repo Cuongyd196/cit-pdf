@@ -20,6 +20,54 @@ export const OBJ = {
   FORM: 5,
 };
 
+// Marks a run split off by the editor because its letters are missing from
+// the embedded subset (see splitUncoveredChars in app.js).
+export const FALLBACK_FAMILY_RE = / Fallback$/;
+
+// Word spaces list items and paragraphs with space-after, so inside one
+// detected paragraph the gap after a hard break (17.6 pt, say) is larger
+// than the gap between wrapped lines (14.6 pt). The engine keeps a single
+// line spacing, taken from the larger gap, and ignores paraSpacing between
+// lines of one paragraph. Re-laid out, every wrapped line then gets the
+// larger gap too: the paragraph grows and pushes the text below it into
+// images. Use the mean gap instead, so the paragraph keeps its height and
+// its last line stays where it was; each line moves by a point or two.
+export function fitParagraphSpacing(paragraphs) {
+  for (const p of paragraphs || []) {
+    const f = p.format;
+    const lines = p.lines;
+    if (!f || !lines || lines.length < 3 || p.vertical || p.rotation) continue;
+    const size = p.runs?.[0]?.size;
+    if (!(f.lineSpacing > 0) || !(size > 0)) continue;
+    const flat = (p.runs || []).map((r) => r.text || '').join('');
+    const gaps = [];
+    let soft = 0;
+    let hard = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const gap = lines[i - 1].y - lines[i].y;
+      if (!(gap > 0)) break;
+      gaps.push(gap);
+      if (flat[lines[i].off - 1] === '\n') hard++;
+      else soft++;
+    }
+    if (gaps.length !== lines.length - 1 || !soft || !hard) continue;
+    const max = Math.max(...gaps);
+    const min = Math.min(...gaps);
+    const used = f.lineSpacing * size;
+    // Only the case above: the engine took the larger gap, the two kinds
+    // differ by at least a point, and no gap is out of line (a column or
+    // page jump inside the paragraph).
+    if (Math.abs(used - max) > 0.5 || max - min < 1 || max > 2.5 * size)
+      continue;
+    const mean = gaps.reduce((x, y) => x + y, 0) / gaps.length;
+    f.lineSpacing = mean / size;
+    // The model no longer matches the page's objects line for line; the
+    // editor must not open it in locked-line mode (see openEditor).
+    p.adjusted = true;
+  }
+  return paragraphs;
+}
+
 const sfntCoverMemo = new WeakMap();
 
 export function sfntCovers(bytes, cps) {
@@ -381,6 +429,8 @@ export class PdfEngine {
       (ctx, familyPtr, bold, italic, cps, n, outData, outSize) => {
         let fam = M.UTF8ToString(familyPtr);
         fam = fam.replace(/ (serif|mono)$/, '');
+        const split = FALLBACK_FAMILY_RE.test(fam);
+        fam = fam.replace(FALLBACK_FAMILY_RE, '');
         const want = [];
         for (let i = 0; i < n; i++) want.push(M.HEAPU32[(cps >> 2) + i]);
         const styleKey = (bold ? 1 : 0) + '' + (italic ? 1 : 0);
@@ -400,7 +450,8 @@ export class PdfEngine {
         if (!bytes) bytes = normLookup(fam, styleKey, want);
         if (
           !bytes &&
-          want.some((cp) => needsFontEmbedding(String.fromCodePoint(cp)))
+          (split ||
+            want.some((cp) => needsFontEmbedding(String.fromCodePoint(cp))))
         ) {
           for (const b of PdfEngine.fallbackFonts.values()) {
             if (b && b.length && sfntCovers(b, want)) {
@@ -798,7 +849,7 @@ export class PdfEngine {
     const json = M.UTF8ToString(ptr);
     M._ec_string_free(ptr);
     this._readPageTransform();
-    return JSON.parse(json).paragraphs;
+    return fitParagraphSpacing(JSON.parse(json).paragraphs);
   }
 
   _readPageTransform() {
@@ -1224,7 +1275,7 @@ export class PdfEngine {
     const json = M.UTF8ToString(ptr);
     M._ec_string_free(ptr);
     try {
-      return JSON.parse(json).paragraphs || [];
+      return fitParagraphSpacing(JSON.parse(json).paragraphs || []);
     } catch {
       return [];
     }
