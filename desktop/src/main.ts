@@ -30,6 +30,8 @@ import {
   type ModuleStatus,
   type OpenedFile,
   type PrinterInfo,
+  type PrintDuplexMode,
+  type PrintPaperSize,
   type PrintRequest,
   type PrintResult,
   type SaveMode,
@@ -905,6 +907,154 @@ ipcMain.handle(
   }
 );
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([promise, sleep(ms).then(() => null)]);
+}
+
+/**
+ * Waits until Chromium's PDF viewer in `win` has loaded the whole document.
+ * Printing earlier does not fail: the job just never finishes. The viewer
+ * runs in an extension frame whose toolbar reports the load progress; if
+ * that is not found (a later Chromium may change it), a first-page print to
+ * memory, with a time limit, tells instead.
+ */
+async function pdfViewerReady(win: BrowserWindow): Promise<boolean> {
+  const deadline = Date.now() + 60_000;
+  let progressUnknownSince = 0;
+  while (Date.now() < deadline) {
+    if (win.isDestroyed()) return false;
+    const viewer = win.webContents.mainFrame.framesInSubtree.find((f) =>
+      f.url.startsWith('chrome-extension://')
+    );
+    if (viewer) {
+      const progress = await withTimeout(
+        viewer
+          .executeJavaScript(
+            `(() => {
+              const v = document.querySelector('pdf-viewer');
+              const bar = v && v.shadowRoot && v.shadowRoot.querySelector('viewer-toolbar');
+              return bar && typeof bar.loadProgress === 'number' ? bar.loadProgress : -1;
+            })()`
+          )
+          .catch(() => -1),
+        2000
+      );
+      if (typeof progress === 'number' && progress >= 100) {
+        await sleep(150);
+        return true;
+      }
+      if (progress === -1 || progress === null) {
+        progressUnknownSince ||= Date.now();
+        if (Date.now() - progressUnknownSince > 3000) {
+          const probe = await withTimeout(
+            win.webContents.printToPDF({ pageRanges: '1' }).catch(() => null),
+            10_000
+          );
+          return !!probe && probe.length > 0;
+        }
+      } else {
+        progressUnknownSince = 0;
+      }
+    }
+    await sleep(100);
+  }
+  return false;
+}
+
+interface VectorPrintOptions {
+  deviceName: string;
+  copies: number;
+  paperSize: PrintPaperSize;
+  landscape: boolean;
+  duplexMode: PrintDuplexMode;
+  color: boolean;
+  printableArea: boolean;
+  dryRunPath?: string;
+}
+
+/**
+ * Prints a PDF through Chromium's PDF viewer in a hidden window. The viewer
+ * hands the printer the pages as PDFium draws them, text and lines as
+ * vectors, so print comes out as sharp as from any PDF reader. (Printing
+ * pages drawn as pictures blurred small text and table lines.)
+ */
+async function printPdfVector(
+  bytes: Uint8Array,
+  options: VectorPrintOptions
+): Promise<PrintResult> {
+  const file = path.join(
+    os.tmpdir(),
+    `cit-pdf-print-${crypto.randomUUID()}.pdf`
+  );
+  let win: BrowserWindow | null = null;
+  try {
+    await fs.promises.writeFile(file, bytes);
+    win = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        plugins: true,
+        sandbox: true,
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    });
+    win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    win.webContents.on('will-navigate', (e) => e.preventDefault());
+    await win.loadFile(file);
+
+    if (!(await pdfViewerReady(win)))
+      return { success: false, error: 'vector-unavailable' };
+
+    if (options.dryRunPath) {
+      const pdf = await win.webContents.printToPDF({
+        pageSize: options.paperSize,
+        landscape: options.landscape,
+        margins: { top: 0, bottom: 0, left: 0, right: 0 },
+      });
+      await fs.promises.writeFile(options.dryRunPath, pdf);
+      return { success: true };
+    }
+
+    return await new Promise<PrintResult>((resolve) => {
+      // A job that never reports back must not hold the dialog forever. It
+      // may still come out, so this is an error, not a reason to print the
+      // pictures instead.
+      const timer = setTimeout(
+        () => resolve({ success: false, error: 'Printer did not answer' }),
+        180_000
+      );
+      win!.webContents.print(
+        {
+          silent: true,
+          printBackground: true,
+          deviceName: options.deviceName,
+          copies: options.copies,
+          collate: true,
+          pageSize: options.paperSize,
+          landscape: options.landscape,
+          duplexMode: options.duplexMode,
+          color: options.color,
+          margins: {
+            marginType: options.printableArea ? 'printableArea' : 'none',
+          },
+        },
+        (success, failureReason) => {
+          clearTimeout(timer);
+          resolve(success ? { success } : { success, error: failureReason });
+        }
+      );
+    });
+  } catch (e) {
+    console.error('[Main] Vector print failed:', e);
+    return { success: false, error: 'vector-unavailable' };
+  } finally {
+    if (win && !win.isDestroyed()) win.destroy();
+    fs.promises.rm(file, { force: true }).catch(() => {});
+  }
+}
+
 ipcMain.handle(
   IPC_CHANNELS.PRINT,
   async (event, request: PrintRequest): Promise<PrintResult> => {
@@ -922,6 +1072,25 @@ ipcMain.handle(
 
     // Development aid: write the print layout to a PDF instead of printing.
     const dryRunPath = process.env.CIT_PRINT_TO_FILE;
+
+    if (request.pdf instanceof Uint8Array && request.pdf.length > 0) {
+      if (!dryRunPath) {
+        const known = await contents.getPrintersAsync();
+        if (!known.some((printer) => printer.name === request.deviceName)) {
+          return { success: false, error: 'Unknown printer' };
+        }
+      }
+      return printPdfVector(request.pdf, {
+        deviceName: request.deviceName,
+        copies,
+        paperSize,
+        landscape,
+        duplexMode,
+        color: request.color !== false,
+        printableArea: request.printableArea === true,
+        dryRunPath,
+      });
+    }
     if (dryRunPath) {
       const pdf = await contents.printToPDF({
         pageSize: paperSize,
