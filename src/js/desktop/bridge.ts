@@ -94,6 +94,8 @@ export interface PrintRequest {
   duplexMode: PrintDuplexMode;
   color: boolean;
   printableArea: boolean;
+  /** The PDF itself, printed as vectors through Chromium's PDF viewer. */
+  pdf?: Uint8Array;
 }
 
 export interface PrintResult {
@@ -128,7 +130,8 @@ interface DesktopBridge {
   checkForUpdate(): Promise<UpdateCheckResult>;
   /** Downloads, checks and runs the new installer, then the app quits. */
   installUpdate?(): Promise<
-    { ok: true } | { ok: false; error: 'manual' | 'download' | 'verify' | 'launch' }
+    | { ok: true }
+    | { ok: false; error: 'manual' | 'download' | 'verify' | 'launch' }
   >;
   onUpdateProgress?(
     cb: (p: { received: number; total: number }) => void

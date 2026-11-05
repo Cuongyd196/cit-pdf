@@ -91,6 +91,11 @@ export interface PrintRequest {
   color: boolean;
   /** Keep content inside the printer's printable area. */
   printableArea: boolean;
+  /**
+   * The PDF itself. When given, it is printed through Chromium's PDF viewer,
+   * which keeps text and lines as vectors, instead of the window.
+   */
+  pdf?: Uint8Array;
 }
 
 export interface PrintResult {

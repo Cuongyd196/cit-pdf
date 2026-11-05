@@ -4,8 +4,11 @@
  * left, a preview of each sheet on the right, and a silent print through the
  * main process.
  *
- * Pages are rasterised into a print-only container in this document; the main
- * process then prints the window, where print CSS hides everything else.
+ * The PDF itself goes to the main process, which prints it through
+ * Chromium's PDF viewer, so text and lines stay vectors. When that is not
+ * possible, pages are rasterised into a print-only container in this
+ * document and the main process prints the window, where print CSS hides
+ * everything else.
  */
 import { getStoredItem, setStoredItem } from '../utils/safe-storage.js';
 import {
@@ -36,6 +39,11 @@ interface PdfPage {
 interface PdfDocument {
   numPages: number;
   getPage(pageNumber: number): Promise<PdfPage>;
+  /** The file as loaded. */
+  getData?(): Promise<Uint8Array>;
+  /** The file with form values and drawings the user added in the viewer. */
+  saveDocument?(): Promise<Uint8Array>;
+  annotationStorage?: { size: number };
 }
 
 export interface PrintSource {
@@ -77,7 +85,11 @@ const PAPER_POINTS: Record<PrintPaperSize, [number, number]> = {
   Legal: [612, 1008],
 };
 
-const PRINT_DPI = 200;
+// Pages printed as pictures (see rasterDpi). 200 DPI looked blurry next to
+// a vector print; 300 is close to it on paper.
+const MAX_PRINT_DPI = 300;
+const MIN_PRINT_DPI = 200;
+const PRINT_PIXEL_BUDGET = 150e6;
 const PREVIEW_SCALE = 1.5;
 // Keeps very large pages (posters, plans) from exhausting canvas memory.
 const MAX_CANVAS_SIDE = 5000;
@@ -537,6 +549,57 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
     printButton.disabled = value;
   }
 
+  // The bytes to print: with what the user filled in or drew, if anything.
+  // Only the chosen pages, in their order: the PDF viewer cancels a print
+  // given a page range (seen on Windows), so the file itself holds just them.
+  async function pdfBytes(pages: number[]): Promise<Uint8Array | null> {
+    try {
+      const whole =
+        (pdfDocument.annotationStorage?.size ?? 0) > 0 &&
+        pdfDocument.saveDocument
+          ? await pdfDocument.saveDocument()
+          : pdfDocument.getData
+            ? await pdfDocument.getData()
+            : null;
+      if (!whole) return null;
+      const all = pages.length === total && pages.every((p, i) => p === i + 1);
+      if (all) return whole;
+      const { PDFDocument } = await import('pdf-lib');
+      // The bytes come from the viewer's frame, another JS realm: pdf-lib's
+      // instanceof check rejects its Uint8Array, so copy them into this one.
+      const src = await PDFDocument.load(new Uint8Array(whole), {
+        ignoreEncryption: true,
+      });
+      // pdf-lib cannot decrypt, so its copy of an encrypted file would be
+      // unreadable; such a file prints as pictures.
+      if (src.isEncrypted) return null;
+      const out = await PDFDocument.create();
+      const copied = await out.copyPages(
+        src,
+        pages.map((p) => p - 1)
+      );
+      copied.forEach((page) => out.addPage(page));
+      return await out.save();
+    } catch (e) {
+      console.warn('[Desktop] Print: could not prepare the PDF itself:', e);
+      return null;
+    }
+  }
+
+  // Resolution for pages printed as pictures: as sharp as MAX_PRINT_DPI
+  // allows, lowered for long documents so that all their pages, which are
+  // held in memory until the job is sent, stay within PRINT_PIXEL_BUDGET.
+  async function rasterDpi(pages: number[]): Promise<number> {
+    let squareInches = 0;
+    for (const n of pages) {
+      const v = (await pdfDocument.getPage(n)).getViewport({ scale: 1 });
+      squareInches += (v.width / 72) * (v.height / 72);
+    }
+    if (!(squareInches > 0)) return MIN_PRINT_DPI;
+    const fits = Math.sqrt(PRINT_PIXEL_BUDGET / squareInches);
+    return Math.max(MIN_PRINT_DPI, Math.min(MAX_PRINT_DPI, Math.floor(fits)));
+  }
+
   async function print(): Promise<void> {
     const pages = selectedPages();
     if (busy || !pages || pages.length === 0 || printers.length === 0) return;
@@ -545,6 +608,46 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
     try {
       const landscape = await isLandscape(pages);
       const fit = scaleSelect.value === 'fit';
+      const request = {
+        deviceName: printerSelect.value,
+        copies: copies(),
+        paperSize: paperSelect.value as PrintPaperSize,
+        landscape,
+        duplexMode: duplexSelect.value as PrintDuplexMode,
+        color: colorSelect.value === 'color',
+        printableArea: fit,
+      };
+      const remember = () => {
+        const next: SavedSettings = {
+          printer: printerSelect.value,
+          paper: paperSelect.value as PrintPaperSize,
+          duplex: duplexSelect.value as PrintDuplexMode,
+          color: colorSelect.value === 'color',
+          scale: scaleSelect.value as Scale,
+        };
+        setStoredItem(SETTINGS_KEY, JSON.stringify(next));
+      };
+
+      // First the PDF itself, which prints as vectors (sharp text and
+      // lines). The pages drawn as pictures below are the way back whenever
+      // that print does not go through.
+      const pdf = await pdfBytes(pages);
+      if (pdf) {
+        status.textContent = ds('printSending');
+        const vector = await bridge!.print({ ...request, pdf });
+        if (vector.success) {
+          remember();
+          close();
+          return;
+        }
+        // A job that may still come out must not be printed twice.
+        if (
+          vector.error === 'Unknown printer' ||
+          vector.error === 'Printer did not answer'
+        )
+          throw new Error(vector.error);
+      }
+      const dpi = await rasterDpi(pages);
 
       removePrintRoot();
       const style = el('style');
@@ -594,7 +697,7 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
           await renderPage(
             source.fontDocument,
             page,
-            PRINT_DPI / 72,
+            dpi / 72,
             size.quarterTurn
           )
         );
@@ -613,25 +716,9 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
       document.body.append(root);
 
       status.textContent = ds('printSending');
-      const result = await bridge!.print({
-        deviceName: printerSelect.value,
-        copies: copies(),
-        paperSize: paperSelect.value as PrintPaperSize,
-        landscape,
-        duplexMode: duplexSelect.value as PrintDuplexMode,
-        color: colorSelect.value === 'color',
-        printableArea: fit,
-      });
+      const result = await bridge!.print(request);
       if (!result.success) throw new Error(result.error || '');
-
-      const next: SavedSettings = {
-        printer: printerSelect.value,
-        paper: paperSelect.value as PrintPaperSize,
-        duplex: duplexSelect.value as PrintDuplexMode,
-        color: colorSelect.value === 'color',
-        scale: scaleSelect.value as Scale,
-      };
-      setStoredItem(SETTINGS_KEY, JSON.stringify(next));
+      remember();
       close();
     } catch (e) {
       console.error('[Desktop] Print failed:', e);
