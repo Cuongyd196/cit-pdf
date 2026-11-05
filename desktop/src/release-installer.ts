@@ -19,7 +19,11 @@ interface ReleaseAsset {
   digest?: unknown;
 }
 
-const INSTALLER_NAME = /^CIT-PDF-[\w.-]+-Windows-x64-Setup\.exe$/;
+/** The installer's name for each Windows build: x64, and x86 for ia32. */
+const INSTALLER_NAME: Record<string, RegExp> = {
+  x64: /^CIT-PDF-[\w.-]+-Windows-x64-Setup\.exe$/,
+  ia32: /^CIT-PDF-[\w.-]+-Windows-x86-Setup\.exe$/,
+};
 const HEX_64 = /^[0-9a-f]{64}$/;
 
 function escapeRegExp(text: string): string {
@@ -29,18 +33,23 @@ function escapeRegExp(text: string): string {
 /**
  * The release's Setup.exe and its SHA-256: from the asset's digest, else
  * from the release notes ("`<name>`: `<hex>`", as each release lists them).
- * Null when there is no installer from our releases or no hash to check it
- * with: the app then sends the user to the download page instead.
+ * `arch` is the running app's (process.arch): a 32-bit app takes the x86
+ * installer, never the x64 one, which would not run there.
+ * Null when there is no installer for it from our releases or no hash to
+ * check it with: the app then sends the user to the download page instead.
  */
 export function findInstaller(
   release: { assets?: unknown; body?: unknown },
-  downloadPrefix: string
+  downloadPrefix: string,
+  arch = 'x64'
 ): ReleaseInstaller | null {
+  const pattern = INSTALLER_NAME[arch];
+  if (!pattern) return null;
   const assets = Array.isArray(release.assets)
     ? (release.assets as ReleaseAsset[])
     : [];
   const asset = assets.find(
-    (a) => typeof a.name === 'string' && INSTALLER_NAME.test(a.name)
+    (a) => typeof a.name === 'string' && pattern.test(a.name)
   );
   if (!asset) return null;
   const name = asset.name as string;

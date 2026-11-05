@@ -41,6 +41,23 @@ describe('findInstaller', () => {
     );
   });
 
+  it('gives a 32-bit app the x86 installer, never the x64 one', () => {
+    const x86 = setup({
+      name: 'CIT-PDF-1.0.6-Windows-x86-Setup.exe',
+      browser_download_url: `${PREFIX}1.0.6/CIT-PDF-1.0.6-Windows-x86-Setup.exe`,
+      digest: `sha256:${'d'.repeat(64)}`,
+    });
+    const x64 = setup({ digest: `sha256:${HASH}` });
+    expect(findInstaller({ assets: [x64, x86] }, PREFIX, 'ia32')?.name).toBe(
+      'CIT-PDF-1.0.6-Windows-x86-Setup.exe'
+    );
+    expect(findInstaller({ assets: [x64] }, PREFIX, 'ia32')).toBe(null);
+    expect(findInstaller({ assets: [x64, x86] }, PREFIX, 'x64')?.name).toBe(
+      'CIT-PDF-1.0.6-Windows-x64-Setup.exe'
+    );
+    expect(findInstaller({ assets: [x64] }, PREFIX, 'arm64')).toBe(null);
+  });
+
   it('only takes installers from our releases', () => {
     const elsewhere = setup({
       browser_download_url: 'https://example.com/CIT-PDF-1.0.6-Windows-x64-Setup.exe',

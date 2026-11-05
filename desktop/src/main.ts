@@ -748,7 +748,7 @@ ipcMain.handle(
       const newer = isNewerVersion(latest, current);
       pendingInstaller =
         newer && canSelfUpdate()
-          ? findInstaller(release, `${RELEASES_PAGE}/download/`)
+          ? findInstaller(release, `${RELEASES_PAGE}/download/`, process.arch)
           : null;
       return {
         ok: true,
