@@ -6724,12 +6724,25 @@ function objectIndex() {
   return items;
 }
 
+// How far, in screen pixels, a click may miss a thin object (a ruled or
+// dotted line in a form is often under 1pt thick) and still pick it.
+const THIN_HIT_PX = 5;
+
 function hitTestObject(px, py) {
+  const tol = THIN_HIT_PX / (state.zoom || 1);
   let best = null;
   for (const o of objectIndex()) {
     if (!scopeAllowsObj(o.type)) continue;
     const b = o.bounds;
-    if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) best = o;
+    const padX = b.w < 2 * tol ? tol : 0;
+    const padY = b.h < 2 * tol ? tol : 0;
+    if (
+      px >= b.x - padX &&
+      px <= b.x + b.w + padX &&
+      py >= b.y - padY &&
+      py <= b.y + b.h + padY
+    )
+      best = o;
   }
   return best ? { ...best } : null;
 }
