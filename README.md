@@ -134,6 +134,61 @@ Bộ cài chỉ chứa phần lõi (khoảng 145 MB). Các bộ xử lý nặng 
 
 Có thể tải trước toàn bộ hoặc xóa bớt cho nhẹ ổ đĩa trong **Cài đặt › Bộ xử lý**.
 
+## Chính sách quyền riêng tư
+
+_Cập nhật lần cuối: 05/11/2026_
+
+### Tệp của bạn không rời khỏi máy
+
+Mọi thao tác trên tài liệu (mở, sửa, ghép, nén, chuyển đổi, nhận dạng chữ, ký số…) đều chạy ngay trên máy của bạn. CIT-PDF không có máy chủ riêng và không gửi tệp, nội dung tệp, tên tệp hay thông tin trong tệp đi đâu cả. Ứng dụng không giữ bản sao tài liệu của bạn; tệp tạm dùng khi in được xóa ngay sau khi in xong.
+
+### Những gì CIT-PDF không thu thập
+
+- Không có tài khoản, không cần đăng nhập.
+- Không dùng công cụ thống kê, không theo dõi hành vi, không gửi báo cáo lỗi hay dữ liệu sử dụng về đâu.
+- Không có quảng cáo.
+
+### Những gì được lưu trên máy bạn
+
+Các thông tin sau chỉ nằm trong thư mục dữ liệu của ứng dụng trên máy bạn, không gửi đi đâu:
+
+- cài đặt (ngôn ngữ, máy in, tùy chọn in…);
+- danh sách tệp mở gần đây và công cụ yêu thích;
+- các bộ xử lý đã tải về.
+
+Gỡ ứng dụng hoặc xóa thư mục dữ liệu của ứng dụng là xóa hết những thông tin này.
+
+### Khi nào CIT-PDF dùng Internet
+
+Ứng dụng chỉ kết nối mạng trong các trường hợp dưới đây. Không trường hợp nào gửi tài liệu của bạn đi.
+
+| Khi nào                                           | Kết nối tới                                                           | Gửi đi những gì                                                                                             |
+| ------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Dùng lần đầu công cụ cần bộ xử lý nặng            | `registry.npmjs.org`, `raw.githubusercontent.com`, `cdn.jsdelivr.net` | Chỉ là yêu cầu tải tệp về. Có thể tránh hoàn toàn bằng cách cài bộ xử lý từ thư mục (xem phần trên).        |
+| Kiểm tra bản mới (tối đa một lần mỗi ngày)        | `api.github.com`                                                      | Chỉ là yêu cầu xem số phiên bản mới nhất.                                                                   |
+| Bấm "Cập nhật và khởi động lại"                   | `github.com`                                                          | Chỉ là yêu cầu tải bản cài đặt về.                                                                          |
+| Ký số **có** đóng dấu thời gian (tùy chọn)        | Máy chủ đóng dấu thời gian bạn chọn (ví dụ FreeTSA)                   | Mã băm (dấu vân tay) của tài liệu, không phải tài liệu. Ký số không đóng dấu thời gian thì không dùng mạng. |
+| Nhận dạng chữ ngôn ngữ khác tiếng Việt, tiếng Anh | Kho phông chữ Noto trên CDN                                           | Chỉ là yêu cầu tải phông chữ của ngôn ngữ đó.                                                               |
+| Bấm vào liên kết (trang dự án, ủng hộ…)           | Trang đó, mở bằng trình duyệt của bạn                                 | Như khi bạn tự mở trang đó.                                                                                 |
+
+Như mọi lượt truy cập mạng, các máy chủ trên nhìn thấy địa chỉ IP của bạn. Chúng có chính sách quyền riêng tư riêng.
+
+### Bảo mật
+
+Vì tài liệu không được gửi lên máy chủ nào, không có nguy cơ lộ tài liệu trên đường truyền hay trên máy chủ. Bộ xử lý tải về được kiểm tra mã băm trước khi dùng, bản cài đặt mới cũng được kiểm tra SHA-256 trước khi cài. Độ an toàn của tài liệu vì vậy phụ thuộc vào chính máy tính của bạn: hãy giữ hệ điều hành và phần mềm diệt virus luôn cập nhật.
+
+### Mã nguồn mở
+
+CIT-PDF là phần mềm mã nguồn mở. Bạn có thể tự kiểm tra mọi điều ghi ở đây trong mã nguồn của kho này, hoặc tự build ứng dụng từ mã nguồn.
+
+### Thay đổi chính sách
+
+Khi chính sách này thay đổi, nội dung mới được cập nhật tại đây kèm ngày cập nhật. Các thay đổi cũng được ghi trong lịch sử của kho mã nguồn.
+
+### Liên hệ
+
+Câu hỏi về quyền riêng tư xin gửi tại [Issues](https://github.com/Cuongyd196/cit-pdf/issues) của kho này.
+
 ## Ủng hộ dự án
 
 CIT-PDF miễn phí và sẽ luôn miễn phí. Nếu ứng dụng giúp ích cho công việc của bạn và bạn **muốn** ủng hộ để dự án tiếp tục phát triển, có thể chọn một trong các cách dưới đây. Mọi đóng góp đều là tự nguyện, không ủng hộ bạn vẫn dùng đầy đủ mọi tính năng.
