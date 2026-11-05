@@ -24,6 +24,8 @@
   <a href="#cài-đặt">Cài đặt</a>
   &nbsp;·&nbsp;
   <a href="https://github.com/Cuongyd196/cit-pdf/issues">Báo lỗi</a>
+  &nbsp;·&nbsp;
+  <a href="#ủng-hộ-dự-án">☕ Ủng hộ</a>
 </p>
 
 <p align="center">
@@ -130,6 +132,23 @@ Bộ cài chỉ chứa phần lõi (khoảng 145 MB). Các bộ xử lý nặng 
 | CoherentPDF (cpdf) | Xử lý trang                                          | có sẵn trong bộ cài    | không cần tải    |
 
 Có thể tải trước toàn bộ hoặc xóa bớt cho nhẹ ổ đĩa trong **Cài đặt › Bộ xử lý**.
+
+## Ủng hộ dự án
+
+CIT-PDF miễn phí và sẽ luôn miễn phí. Nếu ứng dụng giúp ích cho công việc của bạn và bạn **muốn** ủng hộ để dự án tiếp tục phát triển, có thể chọn một trong các cách dưới đây. Mọi đóng góp đều là tự nguyện, không ủng hộ bạn vẫn dùng đầy đủ mọi tính năng.
+
+| Cách ủng hộ                                | Liên kết                                                                 |
+| ------------------------------------------ | ------------------------------------------------------------------------ |
+| 🏦 Chuyển khoản ngân hàng Việt Nam (mã QR) | [Xem mã QR](https://buymeacoffee.com/cuongit96/gallery/5234541)          |
+| 💳 Thẻ Visa / PayPal                       | [Buy Me a Coffee](https://buymeacoffee.com/cuongit96)                    |
+| 💖 GitHub Sponsors                         | [github.com/sponsors/Cuongyd196](https://github.com/sponsors/Cuongyd196) |
+
+Không tiện ủng hộ? Bấm ⭐ **Star** cho kho này, chia sẻ CIT-PDF với đồng nghiệp, hoặc [báo lỗi và góp ý](https://github.com/Cuongyd196/cit-pdf/issues) cũng là giúp dự án rất nhiều. Cảm ơn bạn!
+
+<p align="center">
+  <a href="https://buymeacoffee.com/cuongit96"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-%E1%BB%A7ng%20h%E1%BB%99-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy Me a Coffee"></a>
+  <a href="https://github.com/sponsors/Cuongyd196"><img src="https://img.shields.io/badge/GitHub%20Sponsors-%E1%BB%A7ng%20h%E1%BB%99-EA4AAA?logo=githubsponsors&logoColor=white" alt="GitHub Sponsors"></a>
+</p>
 
 ## Build từ mã nguồn
 
