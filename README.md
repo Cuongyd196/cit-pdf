@@ -5,19 +5,19 @@
 <h1 align="center">CIT-PDF</h1>
 
 <p align="center">
-  <b>Bộ công cụ PDF tiếng Việt cho Windows: đọc, sửa, chuyển đổi, nén, ký và bảo vệ tài liệu.</b><br>
+  <b>Bộ công cụ PDF tiếng Việt cho Windows, macOS và Linux: đọc, sửa, chuyển đổi, nén, ký và bảo vệ tài liệu.</b><br>
   Chạy hoàn toàn trên máy của bạn, tệp không bao giờ rời khỏi máy.
 </p>
 
 <p align="center">
   <a href="https://github.com/Cuongyd196/cit-pdf/releases/latest"><img src="https://img.shields.io/github/v/release/Cuongyd196/cit-pdf?label=Phi%C3%AAn%20b%E1%BA%A3n&color=3b7a6e" alt="Phiên bản"></a>
   <a href="https://github.com/Cuongyd196/cit-pdf/releases"><img src="https://img.shields.io/github/downloads/Cuongyd196/cit-pdf/total?label=L%C6%B0%E1%BB%A3t%20t%E1%BA%A3i&color=3b7a6e" alt="Lượt tải"></a>
-  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-3b7a6e" alt="Windows 10 | 11">
+  <img src="https://img.shields.io/badge/Windows%20%7C%20macOS%20%7C%20Linux-3b7a6e" alt="Windows | macOS | Linux">
   <a href="LICENSE"><img src="https://img.shields.io/badge/Gi%E1%BA%A5y%20ph%C3%A9p-AGPL--3.0-3b7a6e" alt="AGPL-3.0"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/Cuongyd196/cit-pdf/releases/latest"><b>⬇ Tải CIT-PDF cho Windows</b></a>
+  <a href="https://github.com/Cuongyd196/cit-pdf/releases/latest"><b>⬇ Tải CIT-PDF</b></a>
   &nbsp;·&nbsp;
   <a href="#tính-năng">Tính năng</a>
   &nbsp;·&nbsp;
@@ -97,16 +97,25 @@ Thẻ **Tất cả công cụ** trong trình xem liệt kê mọi công cụ. C�
 
 ## Cài đặt
 
-Tải tại trang [**Releases**](https://github.com/Cuongyd196/cit-pdf/releases/latest). Dành cho Windows 10 và 11 (64-bit).
+Tải tại trang [**Releases**](https://github.com/Cuongyd196/cit-pdf/releases/latest).
 
-| Tệp                                            | Dùng khi                                                                                                 |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `CIT-PDF-<phiên bản>-Windows-x64-Setup.exe`    | **Nên dùng.** Bản cài cho tài khoản đang đăng nhập, không cần quyền Administrator. Có cập nhật một bước. |
-| `CIT-PDF-<phiên bản>-Windows-x64-Portable.exe` | Chạy thẳng không cần cài, chép được sang USB.                                                            |
+| Hệ điều hành                  | Tệp                                            | Ghi chú                                                                                              |
+| ----------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Windows 10/11 (64-bit)        | `CIT-PDF-<phiên bản>-Windows-x64-Setup.exe`    | **Nên dùng.** Cài cho tài khoản đang đăng nhập, không cần quyền Administrator. Có cập nhật một bước. |
+| Windows 10/11 (64-bit)        | `CIT-PDF-<phiên bản>-Windows-x64-Portable.exe` | Chạy thẳng không cần cài, chép được sang USB.                                                        |
+| macOS (chip Apple M1 trở lên) | `CIT-PDF-<phiên bản>-macOS-arm64.dmg`          | Mở tệp, kéo CIT-PDF vào Applications.                                                                |
+| macOS (chip Intel)            | `CIT-PDF-<phiên bản>-macOS-x64.dmg`            | Như trên.                                                                                            |
+| Ubuntu / Debian               | `CIT-PDF-<phiên bản>-Linux-amd64.deb`          | `sudo apt install ./CIT-PDF-<phiên bản>-Linux-amd64.deb`                                             |
+| Linux khác                    | `CIT-PDF-<phiên bản>-Linux-x86_64.AppImage`    | `chmod +x` rồi chạy, không cần cài.                                                                  |
 
 Mỗi bản phát hành ghi kèm mã **SHA-256** của từng tệp để bạn đối chiếu.
 
-> Windows có thể hiện cảnh báo SmartScreen vì bộ cài chưa có chữ ký số của nhà phát hành. Bấm **More info › Run anyway** để tiếp tục.
+> Các bộ cài chưa có chữ ký số của nhà phát hành.
+>
+> - **Windows** có thể hiện cảnh báo SmartScreen: bấm **More info › Run anyway**.
+> - **macOS** chặn lần mở đầu: chuột phải vào CIT-PDF › **Open** › **Open**, hoặc chạy `xattr -cr /Applications/CIT-PDF.app` trong Terminal.
+>
+> Nút "Cập nhật và khởi động lại" hiện chỉ có trên bản cài Windows; trên macOS và Linux nút này mở trang tải.
 
 ### Bộ xử lý tải khi dùng lần đầu
 
@@ -134,6 +143,7 @@ npm install
 npm run desktop              # build và chạy ứng dụng
 npm run desktop:build        # chỉ build
 npm run desktop:dist         # đóng gói bộ cài Windows vào release/
+# macOS và Linux: workflow .github/workflows/desktop-release.yml (chạy tay với tag)
 npm run desktop:modules-pack # gói bộ xử lý ngoại tuyến cho mạng bị chặn
 ```
 
