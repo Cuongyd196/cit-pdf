@@ -2,7 +2,7 @@
 # files to that tag's GitHub release. Windows installers are still built
 # locally with `npm run desktop:dist`.
 #
-# Run it from the Actions tab (Run workflow) with the tag, e.g. 1.0.6. The
+# Run it from the Actions tab (Run workflow) with the tag, e.g. 1.0.7. The
 # code is checked out at that tag, so the files match the published source.
 name: Desktop release (macOS, Linux)
 
@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to build (e.g. 1.0.6)
+        description: Release tag to build (e.g. 1.0.7)
         required: true
-        default: '1.0.6'
+        default: '1.0.7'
       upload:
         description: Attach the files to the tag's GitHub release
         type: boolean
