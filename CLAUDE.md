@@ -29,7 +29,7 @@ npm run desktop:dist:all    # + electron-builder -mwl
 npm run desktop:modules-pack  # offline engine pack -> release/cit-pdf-modules/
 ```
 
-- This fork has no CI (`.github/` is not in the repo; upstream runs `npx tsc --noEmit` then `npm run test:run` on Node 20), so run both by hand. Lint runs via husky `lint-staged` on commit (eslint --fix + prettier).
+- This fork has no CI for tests (upstream runs `npx tsc --noEmit` then `npm run test:run` on Node 20), so run both by hand. Its only workflow, `.github/workflows/desktop-release.yml`, is run by hand (workflow_dispatch with a tag): it checks out that tag, builds the macOS DMGs (x64, arm64) and the Linux AppImage/deb, and attaches them plus a SHA256SUMS file to the tag's release. Lint runs via husky `lint-staged` on commit (eslint --fix + prettier).
 - **Windows caveat:** `npm run build` and the `build:*` / `serve*` scripts use POSIX inline env syntax (`NODE_OPTIONS='…' node …`, `COMPRESSION_MODE=g npm run build`) and do not work under cmd/PowerShell. Use Git Bash/WSL, or run the steps individually. The `desktop*` scripts are cross-platform because `scripts/build-desktop.mjs` sets env vars itself and calls `npx vite build` directly.
 - `npm run build` is a long pipeline, not just `vite build`: generate blog → generate static tool links → `tsc` → `vite build` → SEO enhancement → per-language static pages → sitemap → security headers → SEO audit. `build:docker` and the desktop build run plain `vite build` and skip the rest.
 - `vitest.config.ts` is the effective test config (jsdom, globals, `src/tests/setup.ts`, includes `src/**/*.{test,spec}.{js,ts}`); the `test` block in `vite.config.ts` is shadowed by it.
@@ -108,4 +108,4 @@ Most tool pages and their scripts still carry English text that never went throu
 - `innerHTML` with interpolated values trips `no-unsanitized` (warn in lint, error in `lint:security`); use `escapeHtml` from `utils/helpers.ts`, DOMPurify, or DOM APIs.
 - Use `utils/safe-storage.ts` rather than raw `localStorage`.
 - Tests live in `src/tests/*.test.ts` with fixtures/builders under `src/tests/helpers/`.
-- Releases go through `npm run release[:minor|:major]` (`scripts/release.js`, see `RELEASE.md`). Desktop installers are built locally with `npm run desktop:dist`; there is no release workflow in this fork.
+- Releases go through `npm run release[:minor|:major]` (`scripts/release.js`, see `RELEASE.md`). Windows installers are built locally with `npm run desktop:dist`; macOS and Linux ones by the desktop-release workflow.

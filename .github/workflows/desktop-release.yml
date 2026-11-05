@@ -1,0 +1,101 @@
+# Builds CIT-PDF for macOS and Linux from a release tag and attaches the
+# files to that tag's GitHub release. Windows installers are still built
+# locally with `npm run desktop:dist`.
+#
+# Run it from the Actions tab (Run workflow) with the tag, e.g. 1.0.6. The
+# code is checked out at that tag, so the files match the published source.
+name: Desktop release (macOS, Linux)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build (e.g. 1.0.6)
+        required: true
+        default: '1.0.6'
+      upload:
+        description: Attach the files to the tag's GitHub release
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-14
+            # Two DMGs (Intel and Apple silicon) instead of the config's
+            # universal one too: each is half the download.
+            targets: --mac dmg --x64 --arm64
+          - name: Linux
+            os: ubuntu-22.04
+            targets: --linux AppImage deb --x64
+
+    steps:
+      - name: Check out ${{ inputs.tag }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - uses: actions/setup-node@v4
+        with:
+          # Vite 8 needs Node 20.19+ / 22.12+.
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+        env:
+          HUSKY: '0'
+
+      - name: Build the desktop bundle
+        run: node scripts/build-desktop.mjs
+
+      # Names follow the Windows files: CIT-PDF-<version>-<OS>-<arch>.<ext>.
+      # The apps are not signed (no Apple or Linux signing keys here).
+      - name: Package
+        run: >
+          npx electron-builder ${{ matrix.targets }} --publish never
+          '-c.mac.artifactName=${productName}-${version}-macOS-${arch}.${ext}'
+          '-c.linux.artifactName=${productName}-${version}-Linux-${arch}.${ext}'
+          '-c.linux.maintainer=Cường IT <cuongyd196@gmail.com>'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Checksums
+        id: files
+        shell: bash
+        run: |
+          cd release
+          ls -la
+          files=$(ls CIT-PDF-*-macOS-*.dmg CIT-PDF-*-Linux-*.AppImage CIT-PDF-*-Linux-*.deb 2>/dev/null || true)
+          test -n "$files"
+          if command -v sha256sum >/dev/null; then sum=sha256sum; else sum='shasum -a 256'; fi
+          $sum $files | tee SHA256SUMS-${{ matrix.name }}.txt
+          echo "list<<EOF" >> "$GITHUB_OUTPUT"
+          for f in $files SHA256SUMS-${{ matrix.name }}.txt; do echo "release/$f" >> "$GITHUB_OUTPUT"; done
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CIT-PDF-${{ inputs.tag }}-${{ matrix.name }}
+          path: ${{ steps.files.outputs.list }}
+          if-no-files-found: error
+
+      - name: Attach to release ${{ inputs.tag }}
+        if: ${{ inputs.upload }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          FILES: ${{ steps.files.outputs.list }}
+        run: |
+          # One path per line, none with spaces.
+          gh release upload "$TAG" $FILES --clobber --repo "$GITHUB_REPOSITORY"
