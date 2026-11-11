@@ -315,7 +315,8 @@ provideViewerDocuments({
 let toolbarShown = true;
 
 function applyToolbarShown(iframe: HTMLIFrameElement) {
-  iframe.contentDocument?.documentElement.classList.toggle(
+  // A frame still loading has a document without its root element yet.
+  iframe.contentDocument?.documentElement?.classList.toggle(
     'cit-no-toolbar',
     !toolbarShown
   );
