@@ -157,6 +157,7 @@ export const IPC_CHANNELS = {
   OPEN_EXTERNAL: 'bento:open-external',
   SHOW_SAVE_DIALOG: 'bento:show-save-dialog',
   LIST_PRINTERS: 'bento:list-printers',
+  OPEN_PRINTER_PREFERENCES: 'bento:open-printer-preferences',
   PRINT: 'bento:print',
   SET_LANGUAGE: 'bento:set-language',
   REGISTER_PICKED_FILE: 'bento:register-picked-file',

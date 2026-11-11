@@ -123,6 +123,8 @@ interface DesktopBridge {
   takeOpenedFile(): Promise<OpenedFile | null>;
   readOpenedFile(path: string): Promise<Uint8Array>;
   listPrinters(): Promise<PrinterInfo[]>;
+  /** The driver's Printing Preferences for one printer (Windows, macOS). */
+  openPrinterPreferences?(deviceName: string): Promise<boolean>;
   print(request: PrintRequest): Promise<PrintResult>;
   setLanguage(lang: string): void;
   registerPickedFile(file: File): Promise<OpenedFile | null>;

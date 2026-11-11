@@ -907,6 +907,48 @@ ipcMain.handle(
   }
 );
 
+/**
+ * Opens the driver's Printing Preferences for one printer (tray, quality,
+ * …): the printer's own defaults, which a print from the app starts from.
+ * Windows only; on macOS, the Printers & Scanners settings.
+ */
+ipcMain.handle(
+  IPC_CHANNELS.OPEN_PRINTER_PREFERENCES,
+  async (event, deviceName: unknown): Promise<boolean> => {
+    if (typeof deviceName !== 'string' || !deviceName.trim()) return false;
+    // Only a printer the system lists: the name goes on a command line.
+    const known = await event.sender.getPrintersAsync();
+    if (!known.some((printer) => printer.name === deviceName)) return false;
+
+    if (process.platform === 'win32') {
+      return new Promise((resolve) => {
+        // Detached: rundll32 owns the dialog, and ending it (as a timeout
+        // would) closes the window as soon as it appears.
+        const child = spawn(
+          'rundll32.exe',
+          ['printui.dll,PrintUIEntry', '/e', '/n', deviceName],
+          { detached: true, stdio: 'ignore', windowsHide: true }
+        );
+        child.once('error', (error) => {
+          console.error('[Main] Could not open printer preferences:', error);
+          resolve(false);
+        });
+        child.once('spawn', () => {
+          child.unref();
+          resolve(true);
+        });
+      });
+    }
+    if (process.platform === 'darwin') {
+      return shell
+        .openExternal('x-apple.systempreferences:com.apple.preference.print')
+        .then(() => true)
+        .catch(() => false);
+    }
+    return false;
+  }
+);
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
