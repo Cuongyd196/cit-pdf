@@ -4,17 +4,21 @@
  * left, a preview of each sheet on the right, and a silent print through the
  * main process.
  *
- * The PDF itself goes to the main process, which prints it through
- * Chromium's PDF viewer, so text and lines stay vectors. When that is not
- * possible, pages are rasterised into a print-only container in this
- * document and the main process prints the window, where print CSS hides
- * everything else.
+ * Paths (in order):
+ * 1. Hand the PDF to the OS (Windows PrintTo / Print) or Chromium's PDF
+ *    viewer — text and lines stay vectors.
+ * 2. If that is unavailable, rasterise pages into a print-only container and
+ *    print the window (print CSS hides everything else).
+ *
+ * "System dialog" prepares the selected pages as a PDF first, then opens the
+ * OS dialog so Properties / advanced settings apply to this job.
  */
 import { getStoredItem, setStoredItem } from '../utils/safe-storage.js';
 import {
   getBridge,
   type PrintDuplexMode,
   type PrintPaperSize,
+  type PrintRequest,
   type PrinterInfo,
 } from './bridge.js';
 import { parsePageRanges } from './print-ranges.js';
@@ -55,7 +59,7 @@ export interface PrintSource {
    */
   fontDocument: Document;
   currentPage: number;
-  /** The print path the dialog replaces, kept as a way out. */
+  /** Last-resort escape: the viewer's own window.print. */
   systemPrint: () => void;
 }
 
@@ -85,13 +89,12 @@ const PAPER_POINTS: Record<PrintPaperSize, [number, number]> = {
   Legal: [612, 1008],
 };
 
-// Pages printed as pictures (see rasterDpi). 200 DPI looked blurry next to
-// a vector print; 300 is close to it on paper.
-const MAX_PRINT_DPI = 300;
-const MIN_PRINT_DPI = 200;
-const PRINT_PIXEL_BUDGET = 150e6;
+// Pages printed as pictures (see rasterDpi). 600 is close to a vector print
+// for short documents; long ones drop toward MIN within the pixel budget.
+const MAX_PRINT_DPI = 600;
+const MIN_PRINT_DPI = 300;
+const PRINT_PIXEL_BUDGET = 200e6;
 const PREVIEW_SCALE = 1.5;
-// Keeps very large pages (posters, plans) from exhausting canvas memory.
 const MAX_CANVAS_SIDE = 5000;
 
 const FIELD_CLASS =
@@ -116,6 +119,35 @@ function loadSettings(): SavedSettings {
   } catch {
     return {};
   }
+}
+
+/** Closest named paper to a page's media box (points). */
+function guessPaper(width: number, height: number): PrintPaperSize {
+  const short = Math.min(width, height);
+  const long = Math.max(width, height);
+  let best: PrintPaperSize = 'A4';
+  let bestDist = Infinity;
+  for (const name of Object.keys(PAPER_POINTS) as PrintPaperSize[]) {
+    const [w, h] = PAPER_POINTS[name];
+    const dist = Math.hypot(short - w, long - h);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = name;
+    }
+  }
+  return best;
+}
+
+function localizePrintError(message: string): string {
+  const key =
+    message === 'Unknown printer'
+      ? 'printUnknownPrinter'
+      : message === 'Printer did not answer'
+        ? 'printNoAnswer'
+        : message === 'Print job failed' || message === 'Print job canceled'
+          ? 'printJobFailed'
+          : null;
+  return key ? ds(key) : message;
 }
 
 async function renderPage(
@@ -180,6 +212,30 @@ function field(labelKey: DesktopStringKey, control: HTMLElement): HTMLElement {
   return wrapper;
 }
 
+function fillPrinterSelect(
+  node: HTMLSelectElement,
+  printers: PrinterInfo[],
+  preferredName: string
+): void {
+  node.replaceChildren();
+  for (const printer of printers) {
+    const option = el(
+      'option',
+      '',
+      printer.isDefault
+        ? `${printer.displayName} (${ds('printDefault')})`
+        : printer.displayName
+    );
+    option.value = printer.name;
+    node.append(option);
+  }
+  const preferred =
+    printers.find((p) => p.name === preferredName) ??
+    printers.find((p) => p.isDefault) ??
+    printers[0];
+  if (preferred) node.value = preferred.name;
+}
+
 export async function openPrintDialog(source: PrintSource): Promise<void> {
   const bridge = getBridge();
   if (!bridge || document.getElementById(DIALOG_ID)) return;
@@ -193,6 +249,18 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
     printers = await bridge.listPrinters();
   } catch (e) {
     console.error('[Desktop] Could not list printers:', e);
+  }
+
+  let defaultPaper: PrintPaperSize =
+    saved.paper && saved.paper in PAPER_POINTS ? saved.paper : 'A4';
+  try {
+    const first = await pdfDocument.getPage(1);
+    const box = first.getViewport({ scale: 1 });
+    if (!(saved.paper && saved.paper in PAPER_POINTS)) {
+      defaultPaper = guessPaper(box.width, box.height);
+    }
+  } catch {
+    /* keep A4 */
   }
 
   const overlay = el(
@@ -228,20 +296,36 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
   header.append(title, closeButton);
 
   // Settings column
-  const printerSelect = select(
-    printers.map((printer): [string, string] => [
-      printer.name,
-      printer.isDefault
-        ? `${printer.displayName} (${ds('printDefault')})`
-        : printer.displayName,
-    ]),
-    ''
+  const printerSelect = el('select', FIELD_CLASS);
+  fillPrinterSelect(printerSelect, printers, saved.printer || '');
+
+  const refreshPrintersButton = el(
+    'button',
+    'rounded-md p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white disabled:opacity-40'
   );
-  const preferred =
-    printers.find((printer) => printer.name === saved.printer) ??
-    printers.find((printer) => printer.isDefault) ??
-    printers[0];
-  if (preferred) printerSelect.value = preferred.name;
+  refreshPrintersButton.type = 'button';
+  refreshPrintersButton.title = ds('printRefreshPrinters');
+  refreshPrintersButton.append(el('i', 'ph ph-arrow-clockwise text-base'));
+
+  const printerRow = el('div', 'flex items-end gap-2');
+  const printerField = field('printPrinter', printerSelect);
+  printerField.classList.add('min-w-0', 'flex-1');
+  printerRow.append(printerField, refreshPrintersButton);
+
+  const advancedButton = el(
+    'button',
+    'mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-gray-600 px-3 py-2 text-sm text-gray-300 transition-colors hover:bg-gray-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-40'
+  );
+  advancedButton.type = 'button';
+  advancedButton.title = ds('printAdvancedHint');
+  advancedButton.append(
+    el('i', 'ph ph-sliders-horizontal text-base'),
+    ds('printAdvanced')
+  );
+  const canOpenAdvanced =
+    typeof bridge.openPrinterPreferences === 'function' &&
+    (bridge.platform === 'win32' || bridge.platform === 'darwin');
+  advancedButton.disabled = !canOpenAdvanced || printers.length === 0;
 
   const copiesInput = el('input', FIELD_CLASS);
   copiesInput.type = 'number';
@@ -267,7 +351,7 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
 
   const paperSelect = select<PrintPaperSize>(
     (Object.keys(PAPER_POINTS) as PrintPaperSize[]).map((name) => [name, name]),
-    saved.paper && saved.paper in PAPER_POINTS ? saved.paper : 'A4'
+    defaultPaper
   );
   const orientationSelect = select<Orientation>(
     [
@@ -304,16 +388,16 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
     'div',
     'w-80 flex-shrink-0 space-y-4 overflow-y-auto border-r border-gray-700 p-6'
   );
+  const noPrintersMsg = el(
+    'p',
+    'rounded-md bg-gray-900 px-3 py-2 text-sm text-gray-300',
+    ds('printNoPrinters')
+  );
   if (printers.length > 0) {
-    settings.append(field('printPrinter', printerSelect));
+    settings.append(printerRow);
+    if (canOpenAdvanced) settings.append(advancedButton);
   } else {
-    settings.append(
-      el(
-        'p',
-        'rounded-md bg-gray-900 px-3 py-2 text-sm text-gray-300',
-        ds('printNoPrinters')
-      )
-    );
+    settings.append(noPrintersMsg, refreshPrintersButton);
   }
   const twoColumns = (a: HTMLElement, b: HTMLElement) => {
     const row = el('div', 'grid grid-cols-2 gap-3');
@@ -344,7 +428,6 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
     'div',
     'relative flex items-center justify-center overflow-hidden shadow-lg'
   );
-  // Literal white: the light theme remaps the white color token.
   paper.style.background = '#ffffff';
   paper.style.border = '1px solid rgba(0, 0, 0, 0.15)';
   stage.append(paper);
@@ -382,6 +465,7 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
     ds('printSystem')
   );
   systemButton.type = 'button';
+  systemButton.title = ds('printSystemHint');
   const status = el(
     'span',
     'min-w-0 flex-1 truncate text-right text-sm text-gray-400'
@@ -408,7 +492,7 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
   let previewIndex = 0;
   let previewToken = 0;
   let busy = false;
-  // Natural size of each page in points, for layout decisions.
+  let cancelled = false;
   const pageSizes = new Map<number, PdfViewport>();
 
   const pageSize = async (pageNumber: number): Promise<PdfViewport> => {
@@ -422,11 +506,14 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
   };
 
   const selectedPages = (): number[] | null => {
-    if (pagesSelect.value === 'current') return [source.currentPage];
-    if (pagesSelect.value === 'custom') {
-      return parsePageRanges(rangeInput.value, total);
+    let pages: number[] | null;
+    if (pagesSelect.value === 'current') pages = [source.currentPage];
+    else if (pagesSelect.value === 'custom') {
+      pages = parsePageRanges(rangeInput.value, total);
+    } else {
+      pages = Array.from({ length: total }, (_, i) => i + 1);
     }
-    return Array.from({ length: total }, (_, i) => i + 1);
+    return pages;
   };
 
   const isLandscape = async (pages: number[]): Promise<boolean> => {
@@ -437,8 +524,6 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
     return first.width > first.height;
   };
 
-  // A page lying the other way from the paper is turned to match it, so a
-  // landscape table in a portrait document still fills its sheet.
   const placement = async (
     pageNumber: number,
     landscape: boolean
@@ -457,6 +542,14 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
 
   const copies = (): number =>
     Math.min(999, Math.max(1, Math.floor(Number(copiesInput.value)) || 1));
+
+  const syncPrinterUi = (): void => {
+    const has = printers.length > 0;
+    noPrintersMsg.classList.toggle('hidden', has);
+    advancedButton.disabled = !canOpenAdvanced || !has || busy;
+    refreshPrintersButton.disabled = busy;
+    printButton.disabled = busy || !has || !selectedPages()?.length;
+  };
 
   async function updatePreview(): Promise<void> {
     const token = ++previewToken;
@@ -496,8 +589,6 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
     );
     if (token !== previewToken) return;
 
-    // Fit the sheet into the stage, then place the page on it the way the
-    // print layout will.
     const available = stage.getBoundingClientRect();
     const sheetScale = Math.min(
       (available.width - 48) / paperWidth,
@@ -510,7 +601,6 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
       scaleSelect.value === 'actual'
         ? 1
         : Math.min(paperWidth / size.width, paperHeight / size.height);
-    // Copy onto a canvas of this document for display.
     const canvas = el('canvas');
     canvas.width = rendered.width;
     canvas.height = rendered.height;
@@ -523,9 +613,11 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
   }
 
   function close(): void {
+    cancelled = true;
     previewToken++;
     window.removeEventListener('keydown', onKeydown, true);
     overlay.remove();
+    removePrintRoot();
   }
 
   function setBusy(value: boolean, message = ''): void {
@@ -543,15 +635,21 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
       duplexSelect,
       colorSelect,
       systemButton,
+      advancedButton,
+      refreshPrintersButton,
     ]) {
       control.disabled = value;
     }
+    if (!value) {
+      advancedButton.disabled = !canOpenAdvanced || printers.length === 0;
+      refreshPrintersButton.disabled = false;
+    }
+    // Keep Cancel enabled while busy so the user can abort preparation.
+    cancelButton.disabled = false;
     printButton.disabled = value;
+    closeButton.disabled = value;
   }
 
-  // The bytes to print: with what the user filled in or drew, if anything.
-  // Only the chosen pages, in their order: the PDF viewer cancels a print
-  // given a page range (seen on Windows), so the file itself holds just them.
   async function pdfBytes(pages: number[]): Promise<Uint8Array | null> {
     try {
       const whole =
@@ -562,16 +660,13 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
             ? await pdfDocument.getData()
             : null;
       if (!whole) return null;
-      const all = pages.length === total && pages.every((p, i) => p === i + 1);
-      if (all) return whole;
+      // Copy out of the viewer frame's realm for IPC / pdf-lib.
+      const local = new Uint8Array(whole);
+      const all =
+        pages.length === total && pages.every((p, i) => p === i + 1);
+      if (all) return local;
       const { PDFDocument } = await import('pdf-lib');
-      // The bytes come from the viewer's frame, another JS realm: pdf-lib's
-      // instanceof check rejects its Uint8Array, so copy them into this one.
-      const src = await PDFDocument.load(new Uint8Array(whole), {
-        ignoreEncryption: true,
-      });
-      // pdf-lib cannot decrypt, so its copy of an encrypted file would be
-      // unreadable; such a file prints as pictures.
+      const src = await PDFDocument.load(local, { ignoreEncryption: true });
       if (src.isEncrypted) return null;
       const out = await PDFDocument.create();
       const copied = await out.copyPages(
@@ -586,9 +681,6 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
     }
   }
 
-  // Resolution for pages printed as pictures: as sharp as MAX_PRINT_DPI
-  // allows, lowered for long documents so that all their pages, which are
-  // held in memory until the job is sent, stay within PRINT_PIXEL_BUDGET.
   async function rasterDpi(pages: number[]): Promise<number> {
     let squareInches = 0;
     for (const n of pages) {
@@ -600,55 +692,80 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
     return Math.max(MIN_PRINT_DPI, Math.min(MAX_PRINT_DPI, Math.floor(fits)));
   }
 
-  async function print(): Promise<void> {
-    const pages = selectedPages();
-    if (busy || !pages || pages.length === 0 || printers.length === 0) return;
+  function buildRequest(
+    landscape: boolean,
+    extras: Partial<PrintRequest> = {}
+  ): PrintRequest {
+    return {
+      deviceName: printerSelect.value,
+      copies: copies(),
+      paperSize: paperSelect.value as PrintPaperSize,
+      landscape,
+      duplexMode: duplexSelect.value as PrintDuplexMode,
+      color: colorSelect.value === 'color',
+      printableArea: scaleSelect.value === 'fit',
+      collate: true,
+      ...extras,
+    };
+  }
 
+  function remember(): void {
+    const next: SavedSettings = {
+      printer: printerSelect.value,
+      paper: paperSelect.value as PrintPaperSize,
+      duplex: duplexSelect.value as PrintDuplexMode,
+      color: colorSelect.value === 'color',
+      scale: scaleSelect.value as Scale,
+    };
+    setStoredItem(SETTINGS_KEY, JSON.stringify(next));
+  }
+
+  async function runPrint(systemDialog: boolean): Promise<void> {
+    const pages = selectedPages();
+    if (busy || !pages || pages.length === 0) return;
+    if (!systemDialog && printers.length === 0) return;
+
+    cancelled = false;
     setBusy(true);
     try {
       const landscape = await isLandscape(pages);
       const fit = scaleSelect.value === 'fit';
-      const request = {
-        deviceName: printerSelect.value,
-        copies: copies(),
-        paperSize: paperSelect.value as PrintPaperSize,
-        landscape,
-        duplexMode: duplexSelect.value as PrintDuplexMode,
-        color: colorSelect.value === 'color',
-        printableArea: fit,
-      };
-      const remember = () => {
-        const next: SavedSettings = {
-          printer: printerSelect.value,
-          paper: paperSelect.value as PrintPaperSize,
-          duplex: duplexSelect.value as PrintDuplexMode,
-          color: colorSelect.value === 'color',
-          scale: scaleSelect.value as Scale,
-        };
-        setStoredItem(SETTINGS_KEY, JSON.stringify(next));
-      };
+      const request = buildRequest(landscape, { systemDialog });
 
-      // First the PDF itself, which prints as vectors (sharp text and
-      // lines). The pages drawn as pictures below are the way back whenever
-      // that print does not go through.
       const pdf = await pdfBytes(pages);
+      if (cancelled) throw new Error('cancelled');
+
       if (pdf) {
-        status.textContent = ds('printSending');
+        status.textContent = systemDialog
+          ? ds('printOpeningSystem')
+          : ds('printSending');
         const vector = await bridge!.print({ ...request, pdf });
+        if (cancelled) throw new Error('cancelled');
         if (vector.success) {
           remember();
           close();
           return;
         }
-        // A job that may still come out must not be printed twice.
-        if (
-          vector.error === 'Unknown printer' ||
-          vector.error === 'Printer did not answer'
-        )
+        if (vector.error === 'Unknown printer') {
           throw new Error(vector.error);
+        }
+        if (systemDialog) {
+          // Cancel is not a failure and must not print the pages again.
+          if (vector.error === 'Print job canceled') throw new Error('cancelled');
+          throw new Error(vector.error || 'Print job failed');
+        }
+        console.warn(
+          '[Desktop] Vector print unavailable, falling back to pictures:',
+          vector.error
+        );
+      } else if (systemDialog) {
+        // No PDF bytes: fall back to the viewer's own print of the open tab.
+        close();
+        source.systemPrint();
+        return;
       }
-      const dpi = await rasterDpi(pages);
 
+      const dpi = await rasterDpi(pages);
       removePrintRoot();
       const style = el('style');
       style.id = PRINT_STYLE_ID;
@@ -686,6 +803,7 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
       root.id = PRINT_ROOT_ID;
 
       for (let i = 0; i < pages.length; i++) {
+        if (cancelled) throw new Error('cancelled');
         status.textContent = ds('printPreparing', {
           n: i + 1,
           m: pages.length,
@@ -712,6 +830,7 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
         sheet.append(image);
         root.append(sheet);
       }
+      if (cancelled) throw new Error('cancelled');
       document.head.append(style);
       document.body.append(root);
 
@@ -721,8 +840,14 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
       remember();
       close();
     } catch (e) {
+      if (e instanceof Error && e.message === 'cancelled') {
+        setBusy(false, ds('printCancelled'));
+        void updatePreview();
+        return;
+      }
       console.error('[Desktop] Print failed:', e);
-      const reason = e instanceof Error && e.message ? `: ${e.message}` : '';
+      const raw = e instanceof Error && e.message ? e.message : '';
+      const reason = raw ? `: ${localizePrintError(raw)}` : '';
       setBusy(false, `${ds('printFailed')}${reason}`);
       status.classList.add('text-red-500');
       void updatePreview();
@@ -732,12 +857,17 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
   }
 
   function onKeydown(e: KeyboardEvent): void {
-    if (e.key === 'Escape' && !busy) {
+    if (e.key === 'Escape') {
       e.preventDefault();
-      close();
-    } else if (e.key === 'Enter' && !printButton.disabled) {
+      if (busy) {
+        cancelled = true;
+        status.textContent = ds('printCancelled');
+      } else {
+        close();
+      }
+    } else if (e.key === 'Enter' && !printButton.disabled && !busy) {
       e.preventDefault();
-      void print();
+      void runPrint(false);
     }
   }
 
@@ -771,18 +901,63 @@ export async function openPrintDialog(source: PrintSource): Promise<void> {
     previewIndex++;
     refresh();
   });
-  closeButton.addEventListener('click', () => !busy && close());
-  cancelButton.addEventListener('click', () => !busy && close());
+  closeButton.addEventListener('click', () => {
+    if (busy) cancelled = true;
+    else close();
+  });
+  cancelButton.addEventListener('click', () => {
+    if (busy) {
+      cancelled = true;
+      status.textContent = ds('printCancelled');
+    } else {
+      close();
+    }
+  });
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay && !busy) close();
   });
-  printButton.addEventListener('click', () => void print());
-  systemButton.addEventListener('click', () => {
-    close();
-    source.systemPrint();
+  printButton.addEventListener('click', () => void runPrint(false));
+  systemButton.addEventListener('click', () => void runPrint(true));
+  refreshPrintersButton.addEventListener('click', () => {
+    if (busy) return;
+    void (async () => {
+      refreshPrintersButton.disabled = true;
+      try {
+        printers = await bridge!.listPrinters();
+        fillPrinterSelect(printerSelect, printers, printerSelect.value);
+        if (printers.length > 0 && !settings.contains(printerRow)) {
+          noPrintersMsg.replaceWith(printerRow);
+          if (canOpenAdvanced) printerRow.after(advancedButton);
+        }
+        syncPrinterUi();
+        refresh();
+      } catch (e) {
+        console.error('[Desktop] Refresh printers failed:', e);
+      } finally {
+        refreshPrintersButton.disabled = false;
+      }
+    })();
+  });
+  advancedButton.addEventListener('click', () => {
+    if (busy || !canOpenAdvanced || !printerSelect.value) return;
+    status.classList.remove('text-red-500');
+    void bridge!
+      .openPrinterPreferences!(printerSelect.value)
+      .then((ok) => {
+        if (!ok) {
+          status.textContent = ds('printAdvancedFailed');
+          status.classList.add('text-red-500');
+        }
+      })
+      .catch((e) => {
+        console.error('[Desktop] Open printer preferences failed:', e);
+        status.textContent = ds('printAdvancedFailed');
+        status.classList.add('text-red-500');
+      });
   });
   window.addEventListener('keydown', onKeydown, true);
 
   document.body.append(overlay);
+  syncPrinterUi();
   await updatePreview();
 }

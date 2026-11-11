@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { execFile, spawn } from 'node:child_process';
+import { execFile, execFileSync, spawn } from 'node:child_process';
 import {
   app,
   BrowserWindow,
@@ -907,10 +907,503 @@ ipcMain.handle(
   }
 );
 
+/**
+ * Opens the driver's Printing Preferences dialog for `deviceName`
+ * (tray, quality, watermark, …). Windows only — other platforms have no
+ * stable equivalent short of the full system print dialog.
+ */
+ipcMain.handle(
+  IPC_CHANNELS.OPEN_PRINTER_PREFERENCES,
+  async (event, deviceName: string): Promise<boolean> => {
+    if (typeof deviceName !== 'string' || !deviceName.trim()) return false;
+    const known = await event.sender.getPrintersAsync();
+    if (!known.some((printer) => printer.name === deviceName)) return false;
+
+    if (process.platform === 'win32') {
+      return new Promise((resolve) => {
+        // /e = Printing Preferences. Must stay detached: rundll32 owns the
+        // dialog, and killing it (execFile timeout) closes the window the
+        // moment it appears — "opens then shuts itself".
+        const child = spawn(
+          'rundll32.exe',
+          ['printui.dll,PrintUIEntry', '/n', deviceName, '/e'],
+          { detached: true, stdio: 'ignore', windowsHide: true }
+        );
+        child.once('error', (error) => {
+          console.error('[Main] Open printer preferences failed:', error);
+          resolve(false);
+        });
+        child.once('spawn', () => {
+          child.unref();
+          resolve(true);
+        });
+      });
+    }
+
+    if (process.platform === 'darwin') {
+      // System Settings → Printers & Scanners; no per-printer prefs deep-link.
+      return shell
+        .openExternal(
+          'x-apple.systempreferences:com.apple.preference.print'
+        )
+        .then(() => true)
+        .catch(() => false);
+    }
+
+    return false;
+  }
+);
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
   return Promise.race([promise, sleep(ms).then(() => null)]);
+}
+
+/** Chromium's silent PDF print often never calls back; do not wait minutes. */
+const VECTOR_PRINT_TIMEOUT_MS = 25_000;
+/** Raster/window print: same hang risk, shorter than leaving the dialog stuck. */
+const WINDOW_PRINT_TIMEOUT_MS = 60_000;
+/** PrintTo reads the temp file after Start-Process returns; delete later. */
+const PRINT_TEMP_KEEP_MS = 120_000;
+
+function deletePrintTempLater(file: string): void {
+  setTimeout(() => {
+    fs.promises.rm(file, { force: true }).catch(() => {});
+  }, PRINT_TEMP_KEEP_MS);
+}
+
+/** IPC may hand a Buffer or ArrayBuffer; normalise before writing/printing. */
+function asPdfBytes(value: unknown): Uint8Array | null {
+  if (value instanceof Uint8Array && value.byteLength > 0) return value;
+  if (value instanceof ArrayBuffer && value.byteLength > 0) {
+    return new Uint8Array(value);
+  }
+  if (
+    value &&
+    typeof value === 'object' &&
+    'buffer' in value &&
+    (value as { buffer: unknown }).buffer instanceof ArrayBuffer
+  ) {
+    const view = value as ArrayBufferView;
+    if (view.byteLength > 0) {
+      return new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
+    }
+  }
+  return null;
+}
+
+/**
+ * ProgIds of PDF readers that register shell\print and shell\printto.
+ * The user's .pdf association is often CIT-PDF itself (no print verb), so
+ * we look these up directly instead of printing "with the default app".
+ */
+const PDF_READER_PROGIDS = [
+  'FoxitReader.Document',
+  'AcroExch.Document.DC',
+  'AcroExch.Document',
+  'Acrobat.Document.DC',
+  'SumatraPDF',
+  'PDFXEdit.PDF',
+];
+
+function regDefault(key: string): string | null {
+  try {
+    const out = execFileSync('reg', ['query', key, '/ve'], {
+      encoding: 'utf8',
+      timeout: 3000,
+      windowsHide: true,
+    });
+    return /REG_SZ\s+(.+)\s*$/m.exec(out)?.[1]?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+function isOurExecutable(exe: string): boolean {
+  const base = path.basename(exe).toLowerCase();
+  return (
+    base.includes('cit-pdf') ||
+    base === path.basename(process.execPath).toLowerCase()
+  );
+}
+
+/** Split a registry command line, keeping quoted paths intact. */
+function splitCommandLine(line: string): string[] {
+  const parts: string[] = [];
+  let current = '';
+  let quoted = false;
+  for (const ch of line) {
+    if (ch === '"') {
+      quoted = !quoted;
+      continue;
+    }
+    if (!quoted && /\s/.test(ch)) {
+      if (current) parts.push(current);
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  if (current) parts.push(current);
+  return parts;
+}
+
+/**
+ * The print or printto command of an installed PDF reader, or null when
+ * none is installed (Edge/Chrome/CIT-PDF do not count — they cannot silent-
+ * print a PDF file). %1 file, %2 printer, %3 driver, %4 port.
+ */
+function readerPrintCommand(verb: 'print' | 'printto'): string | null {
+  for (const progId of PDF_READER_PROGIDS) {
+    const command = regDefault(`HKCR\\${progId}\\shell\\${verb}\\command`);
+    if (!command) continue;
+    const exe = splitCommandLine(command)[0];
+    if (!exe || isOurExecutable(exe) || !fs.existsSync(exe)) continue;
+    return command;
+  }
+  return null;
+}
+
+/**
+ * Launch a print helper and return as soon as it starts. Waiting for exit
+ * would hold our dialog open while Foxit/Acrobat shows a splash for many
+ * seconds then quit — "print window opens then closes by itself".
+ */
+function runDetached(command: string, args: string[]): Promise<boolean> {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+    child.once('error', (error) => {
+      console.error('[Main] Print helper failed:', command, error.message);
+      resolve(false);
+    });
+    child.once('spawn', () => {
+      child.unref();
+      resolve(true);
+    });
+  });
+}
+
+function runPowerShell(
+  script: string,
+  env: NodeJS.ProcessEnv,
+  timeoutMs = 30_000
+): Promise<boolean> {
+  const encoded = Buffer.from(script, 'utf16le').toString('base64');
+  return new Promise((resolve) => {
+    execFile(
+      'powershell.exe',
+      ['-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', encoded],
+      { timeout: timeoutMs, windowsHide: true, env },
+      (error) => {
+        if (error) {
+          console.error('[Main] Print ticket script failed:', error.message);
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      }
+    );
+  });
+}
+
+/** Snapshot the user's ticket, then set duplex / colour / paper / copies. */
+const APPLY_PRINT_TICKET = `
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+Add-Type -AssemblyName System.Printing
+$queue = (New-Object System.Printing.LocalPrintServer).GetPrintQueue($env:CIT_PRINT_PRINTER)
+$src = $queue.UserPrintTicket.GetXmlStream()
+$ms = New-Object System.IO.MemoryStream
+$src.CopyTo($ms)
+[System.IO.File]::WriteAllBytes($env:CIT_TICKET_BACKUP, $ms.ToArray())
+$ticket = New-Object System.Printing.PrintTicket (New-Object System.IO.MemoryStream (,([System.IO.File]::ReadAllBytes($env:CIT_TICKET_BACKUP))))
+try {
+  $ticket.Duplexing = switch ($env:CIT_PRINT_DUPLEX) {
+    'longEdge' { [System.Printing.Duplexing]::TwoSidedLongEdge }
+    'shortEdge' { [System.Printing.Duplexing]::TwoSidedShortEdge }
+    default { [System.Printing.Duplexing]::OneSided }
+  }
+} catch {}
+try {
+  if ($env:CIT_PRINT_COLOR -eq '0') { $ticket.OutputColor = [System.Printing.OutputColor]::Grayscale }
+  else { $ticket.OutputColor = [System.Printing.OutputColor]::Color }
+} catch {}
+try {
+  $media = switch ($env:CIT_PRINT_PAPER) {
+    'A3' { [System.Printing.PageMediaSizeName]::ISOA3 }
+    'A5' { [System.Printing.PageMediaSizeName]::ISOA5 }
+    'Letter' { [System.Printing.PageMediaSizeName]::NorthAmericaLetter }
+    'Legal' { [System.Printing.PageMediaSizeName]::NorthAmericaLegal }
+    default { [System.Printing.PageMediaSizeName]::ISOA4 }
+  }
+  $ticket.PageMediaSize = New-Object System.Printing.PageMediaSize $media
+} catch {}
+try {
+  if ($env:CIT_PRINT_LANDSCAPE -eq '1') { $ticket.PageOrientation = [System.Printing.PageOrientation]::Landscape }
+  else { $ticket.PageOrientation = [System.Printing.PageOrientation]::Portrait }
+} catch {}
+try {
+  $n = [int]$env:CIT_PRINT_COPIES
+  if ($n -lt 1) { $n = 1 }
+  if ($n -gt 999) { $n = 999 }
+  $ticket.CopyCount = $n
+} catch {}
+try {
+  if ($env:CIT_PRINT_COLLATE -eq '1') { $ticket.Collation = [System.Printing.Collation]::Collated }
+  else { $ticket.Collation = [System.Printing.Collation]::Uncollated }
+} catch {}
+$queue.UserPrintTicket = $ticket
+$queue.Commit()
+`;
+
+const RESTORE_PRINT_TICKET = `
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+Add-Type -AssemblyName System.Printing
+$queue = (New-Object System.Printing.LocalPrintServer).GetPrintQueue($env:CIT_PRINT_PRINTER)
+$bytes = [System.IO.File]::ReadAllBytes($env:CIT_TICKET_BACKUP)
+$ticket = New-Object System.Printing.PrintTicket (New-Object System.IO.MemoryStream (,$bytes))
+$queue.UserPrintTicket = $ticket
+$queue.Commit()
+`;
+
+/**
+ * Windows: if Foxit, Adobe, Sumatra or PDF-XChange is installed, hand the
+ * PDF to that reader so text stays vectors. Foxit's own command cannot say
+ * "duplex", so the printer's per-user ticket is set first (two-sided, colour,
+ * paper, copies) and restored after the reader has taken the job.
+ * When no reader is installed, returns false — never via the .pdf association,
+ * which on this app is CIT-PDF itself.
+ */
+async function printPdfViaWindowsShell(
+  file: string,
+  options: VectorPrintOptions
+): Promise<boolean> {
+  const template = readerPrintCommand(options.systemDialog ? 'print' : 'printto');
+  if (!template) return false;
+
+  const parts = splitCommandLine(template)
+    .map((part) =>
+      part
+        .replaceAll('%1', file)
+        .replaceAll('%2', options.deviceName)
+        .replaceAll('%3', '')
+        .replaceAll('%4', '')
+    )
+    .filter((part) => part !== '');
+  const [exe, ...args] = parts;
+  if (!exe) return false;
+
+  // The system dialog has its own duplex / Properties controls.
+  if (options.systemDialog) return runDetached(exe, args);
+
+  const backup = path.join(os.tmpdir(), `cit-ticket-${crypto.randomUUID()}.xml`);
+  const ticketEnv: NodeJS.ProcessEnv = {
+    ...process.env,
+    CIT_TICKET_BACKUP: backup,
+    CIT_PRINT_PRINTER: options.deviceName,
+    CIT_PRINT_DUPLEX: options.duplexMode,
+    CIT_PRINT_COLOR: options.color ? '1' : '0',
+    CIT_PRINT_PAPER: options.paperSize,
+    CIT_PRINT_LANDSCAPE: options.landscape ? '1' : '0',
+    CIT_PRINT_COPIES: String(options.copies),
+    CIT_PRINT_COLLATE: options.collate ? '1' : '0',
+  };
+  const applied = await runPowerShell(APPLY_PRINT_TICKET, ticketEnv);
+  if (!applied) return false;
+  try {
+    const handed = await new Promise<boolean>((resolve) => {
+      execFile(exe, args, { timeout: 90_000, windowsHide: true }, (error) => {
+        if (error) {
+          console.error('[Main] PDF reader print failed:', error.message);
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+    // The reader copies the ticket when it spools; keep it that long.
+    if (handed) await sleep(2000);
+    return handed;
+  } finally {
+    await runPowerShell(RESTORE_PRINT_TICKET, ticketEnv);
+    fs.promises.rm(backup, { force: true }).catch(() => {});
+  }
+}
+
+interface VectorPrintOptions {
+  deviceName: string;
+  copies: number;
+  paperSize: PrintPaperSize;
+  landscape: boolean;
+  duplexMode: PrintDuplexMode;
+  color: boolean;
+  printableArea: boolean;
+  collate: boolean;
+  systemDialog: boolean;
+  dryRunPath?: string;
+}
+
+/**
+ * Native Windows print: Windows.Data.Pdf (built into Windows 10/11) draws
+ * each page and System.Drawing.Printing sends it to the spooler. No Foxit,
+ * Adobe or other PDF app. The system-dialog mode is the real Windows print
+ * dialog, Properties included.
+ *
+ * Pages are bitmaps (Windows has no public "print this PDF as vectors" API).
+ * A installed reader is still preferred when it can honour the job, because
+ * that path stays vector.
+ */
+function printPdfViaWindowsNative(
+  file: string,
+  options: VectorPrintOptions
+): Promise<'ok' | 'cancel' | 'fail'> {
+  const script = `
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Runtime.WindowsRuntime
+$null = [Windows.Storage.StorageFile, Windows.Storage, ContentType=WindowsRuntime]
+$null = [Windows.Data.Pdf.PdfDocument, Windows.Data.Pdf, ContentType=WindowsRuntime]
+$null = [Windows.Storage.Streams.InMemoryRandomAccessStream, Windows.Storage.Streams, ContentType=WindowsRuntime]
+
+function Await-Op($op, $type) {
+  $method = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
+    $_.Name -eq 'AsTask' -and $_.IsGenericMethodDefinition -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation\`1'
+  } | Select-Object -First 1).MakeGenericMethod($type)
+  $task = $method.Invoke($null, @($op))
+  $task.Wait()
+  return $task.Result
+}
+function Await-Act($act) {
+  $method = [System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
+    $_.Name -eq 'AsTask' -and -not $_.IsGenericMethod -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncAction'
+  } | Select-Object -First 1
+  $task = $method.Invoke($null, @($act))
+  $task.Wait()
+}
+
+$file = Await-Op ([Windows.Storage.StorageFile]::GetFileFromPathAsync($env:CIT_PRINT_FILE)) ([Windows.Storage.StorageFile])
+$pdf = Await-Op ([Windows.Data.Pdf.PdfDocument]::LoadFromFileAsync($file)) ([Windows.Data.Pdf.PdfDocument])
+
+$doc = New-Object System.Drawing.Printing.PrintDocument
+$doc.PrinterSettings.PrinterName = $env:CIT_PRINT_PRINTER
+if (-not $doc.PrinterSettings.IsValid) { throw 'Unknown printer' }
+$copies = [int]$env:CIT_PRINT_COPIES
+if ($copies -lt 1) { $copies = 1 }
+if ($copies -gt 999) { $copies = 999 }
+$doc.PrinterSettings.Copies = [int16]$copies
+$doc.PrinterSettings.Collate = $env:CIT_PRINT_COLLATE -eq '1'
+$doc.DefaultPageSettings.Landscape = $env:CIT_PRINT_LANDSCAPE -eq '1'
+$doc.DefaultPageSettings.Color = $env:CIT_PRINT_COLOR -ne '0'
+$doc.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(0, 0, 0, 0)
+if ($doc.PrinterSettings.CanDuplex) {
+  $doc.PrinterSettings.Duplex = switch ($env:CIT_PRINT_DUPLEX) {
+    'longEdge' { [System.Drawing.Printing.Duplex]::Vertical }
+    'shortEdge' { [System.Drawing.Printing.Duplex]::Horizontal }
+    default { [System.Drawing.Printing.Duplex]::Simplex }
+  }
+}
+$kind = switch ($env:CIT_PRINT_PAPER) {
+  'A3' { 8 } 'A5' { 11 } 'Letter' { 1 } 'Legal' { 5 } default { 9 }
+}
+$paper = $doc.PrinterSettings.PaperSizes | Where-Object { [int]$_.RawKind -eq $kind } | Select-Object -First 1
+if ($paper) { $doc.DefaultPageSettings.PaperSize = $paper }
+
+$script:pageIndex = 0
+$doc.add_PrintPage({
+  param($sender, $ev)
+  $page = $pdf.GetPage([uint32]$script:pageIndex)
+  $dpi = 600
+  if ($pdf.PageCount -gt 20) { $dpi = 300 }
+  $opts = New-Object Windows.Data.Pdf.PdfPageRenderOptions
+  $opts.DestinationWidth = [uint32][Math]::Max(1, [Math]::Ceiling($page.Size.Width / 96.0 * $dpi))
+  $opts.DestinationHeight = [uint32][Math]::Max(1, [Math]::Ceiling($page.Size.Height / 96.0 * $dpi))
+  $ras = New-Object Windows.Storage.Streams.InMemoryRandomAccessStream
+  Await-Act ($page.RenderToStreamAsync($ras, $opts))
+  $ras.Seek(0)
+  $stream = [System.IO.WindowsRuntimeStreamExtensions]::AsStream($ras)
+  $stream.Position = 0
+  $bmp = New-Object System.Drawing.Bitmap $stream
+  $ev.Graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+  $ev.Graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+  $bounds = $ev.MarginBounds
+  if ($env:CIT_PRINT_FIT -eq '1') {
+    $ev.Graphics.DrawImage($bmp, $bounds)
+  } else {
+    $wantW = [int]($page.Size.Width / 96.0 * 100)
+    $wantH = [int]($page.Size.Height / 96.0 * 100)
+    $scale = [Math]::Min(1.0, [Math]::Min($bounds.Width / [double]$wantW, $bounds.Height / [double]$wantH))
+    $dw = [Math]::Max(1, [int]($wantW * $scale))
+    $dh = [Math]::Max(1, [int]($wantH * $scale))
+    $x = $bounds.X + [int](($bounds.Width - $dw) / 2)
+    $y = $bounds.Y + [int](($bounds.Height - $dh) / 2)
+    $ev.Graphics.DrawImage($bmp, $x, $y, $dw, $dh)
+  }
+  $bmp.Dispose()
+  $stream.Dispose()
+  $ras.Dispose()
+  $script:pageIndex++
+  $ev.HasMorePages = $script:pageIndex -lt $pdf.PageCount
+})
+
+if ($env:CIT_PRINT_DIALOG -eq '1') {
+  $dlg = New-Object System.Windows.Forms.PrintDialog
+  $dlg.Document = $doc
+  $dlg.UseEXDialog = $true
+  $dlg.AllowPrintToFile = $false
+  $dlg.AllowSomePages = $false
+  if ($dlg.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { exit 2 }
+}
+$doc.Print()
+exit 0
+`;
+  const encoded = Buffer.from(script, 'utf16le').toString('base64');
+  return new Promise((resolve) => {
+    execFile(
+      'powershell.exe',
+      ['-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', encoded],
+      {
+        timeout: options.systemDialog ? 300_000 : 120_000,
+        windowsHide: !options.systemDialog,
+        env: {
+          ...process.env,
+          CIT_PRINT_FILE: file,
+          CIT_PRINT_PRINTER: options.deviceName,
+          CIT_PRINT_COPIES: String(options.copies),
+          CIT_PRINT_PAPER: options.paperSize,
+          CIT_PRINT_LANDSCAPE: options.landscape ? '1' : '0',
+          CIT_PRINT_DUPLEX: options.duplexMode,
+          CIT_PRINT_COLOR: options.color ? '1' : '0',
+          CIT_PRINT_COLLATE: options.collate ? '1' : '0',
+          CIT_PRINT_FIT: options.printableArea ? '1' : '0',
+          CIT_PRINT_DIALOG: options.systemDialog ? '1' : '0',
+        },
+      },
+      (error) => {
+        if (!error) {
+          resolve('ok');
+          return;
+        }
+        const code =
+          typeof error === 'object' && error && 'code' in error
+            ? (error as { code?: number | string }).code
+            : undefined;
+        if (code === 2) {
+          resolve('cancel');
+          return;
+        }
+        console.error('[Main] Native Windows print failed:', error);
+        resolve('fail');
+      }
+    );
+  });
 }
 
 /**
@@ -921,7 +1414,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
  * memory, with a time limit, tells instead.
  */
 async function pdfViewerReady(win: BrowserWindow): Promise<boolean> {
-  const deadline = Date.now() + 60_000;
+  const deadline = Date.now() + 20_000;
   let progressUnknownSince = 0;
   while (Date.now() < deadline) {
     if (win.isDestroyed()) return false;
@@ -950,7 +1443,7 @@ async function pdfViewerReady(win: BrowserWindow): Promise<boolean> {
         if (Date.now() - progressUnknownSince > 3000) {
           const probe = await withTimeout(
             win.webContents.printToPDF({ pageRanges: '1' }).catch(() => null),
-            10_000
+            8_000
           );
           return !!probe && probe.length > 0;
         }
@@ -963,22 +1456,13 @@ async function pdfViewerReady(win: BrowserWindow): Promise<boolean> {
   return false;
 }
 
-interface VectorPrintOptions {
-  deviceName: string;
-  copies: number;
-  paperSize: PrintPaperSize;
-  landscape: boolean;
-  duplexMode: PrintDuplexMode;
-  color: boolean;
-  printableArea: boolean;
-  dryRunPath?: string;
-}
+const PRINT_DPI = { horizontal: 600, vertical: 600 };
 
 /**
- * Prints a PDF through Chromium's PDF viewer in a hidden window. The viewer
- * hands the printer the pages as PDFium draws them, text and lines as
- * vectors, so print comes out as sharp as from any PDF reader. (Printing
- * pages drawn as pictures blurred small text and table lines.)
+ * Prints a PDF as vectors.
+ * Windows: OS Print / PrintTo first when those can honour the request
+ * (Chromium silent PDF print often never calls back). Chromium is used when
+ * duplex/mono must be set from the app, on other OSes, or as fallback.
  */
 async function printPdfVector(
   bytes: Uint8Array,
@@ -989,8 +1473,30 @@ async function printPdfVector(
     `cit-pdf-print-${crypto.randomUUID()}.pdf`
   );
   let win: BrowserWindow | null = null;
+  let keepTemp = false;
   try {
-    await fs.promises.writeFile(file, bytes);
+    await fs.promises.writeFile(file, Buffer.from(bytes));
+
+    if (options.dryRunPath) {
+      // Need the Chromium viewer only to re-encode for the dry-run file.
+    } else if (process.platform === 'win32') {
+      // A PDF reader keeps vectors. Duplex, colour and paper are written
+      // onto the printer ticket first — the reader's command has no such flags.
+      const handedOff = await printPdfViaWindowsShell(file, options);
+      if (handedOff) {
+        keepTemp = true;
+        return { success: true };
+      }
+      // Built-in Windows print: spooler + Windows.Data.Pdf. Applies paper,
+      // duplex, colour and the real Windows print dialog. No extra app.
+      const native = await printPdfViaWindowsNative(file, options);
+      if (native === 'ok') return { success: true };
+      if (native === 'cancel') {
+        return { success: false, error: 'Print job canceled' };
+      }
+      console.warn('[Main] Native Windows print failed; trying Chromium');
+    }
+
     win = new BrowserWindow({
       show: false,
       webPreferences: {
@@ -1017,32 +1523,56 @@ async function printPdfVector(
       return { success: true };
     }
 
+    const silent = !options.systemDialog;
     return await new Promise<PrintResult>((resolve) => {
-      // A job that never reports back must not hold the dialog forever. It
-      // may still come out, so this is an error, not a reason to print the
-      // pictures instead.
+      let settled = false;
+      const finish = (result: PrintResult) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(result);
+      };
+      // Silent PDF print may never call back; cancel and let the dialog
+      // fall back to pictures. System dialog waits longer for the user.
       const timer = setTimeout(
-        () => resolve({ success: false, error: 'Printer did not answer' }),
-        180_000
+        () => {
+          console.error('[Main] Chromium PDF print timed out');
+          if (silent && win && !win.isDestroyed()) {
+            win.destroy();
+            win = null;
+          }
+          finish({
+            success: false,
+            error: silent ? 'vector-unavailable' : 'Printer did not answer',
+          });
+        },
+        silent ? VECTOR_PRINT_TIMEOUT_MS : 300_000
       );
       win!.webContents.print(
         {
-          silent: true,
+          silent,
           printBackground: true,
-          deviceName: options.deviceName,
+          deviceName: silent ? options.deviceName : '',
           copies: options.copies,
-          collate: true,
+          collate: options.collate,
           pageSize: options.paperSize,
           landscape: options.landscape,
           duplexMode: options.duplexMode,
           color: options.color,
+          dpi: PRINT_DPI,
           margins: {
             marginType: options.printableArea ? 'printableArea' : 'none',
           },
         },
         (success, failureReason) => {
-          clearTimeout(timer);
-          resolve(success ? { success } : { success, error: failureReason });
+          finish(
+            success
+              ? { success }
+              : {
+                  success,
+                  error: failureReason || 'vector-unavailable',
+                }
+          );
         }
       );
     });
@@ -1050,8 +1580,13 @@ async function printPdfVector(
     console.error('[Main] Vector print failed:', e);
     return { success: false, error: 'vector-unavailable' };
   } finally {
-    if (win && !win.isDestroyed()) win.destroy();
-    fs.promises.rm(file, { force: true }).catch(() => {});
+    if (win && !win.isDestroyed()) {
+      // Give the spooler a moment to finish reading before tearing down.
+      await sleep(1500);
+      if (win && !win.isDestroyed()) win.destroy();
+    }
+    if (keepTemp) deletePrintTempLater(file);
+    else fs.promises.rm(file, { force: true }).catch(() => {});
   }
 }
 
@@ -1069,25 +1604,31 @@ ipcMain.handle(
       : 'simplex';
     const landscape = request.landscape === true;
     const copies = Math.min(999, Math.max(1, Math.floor(request.copies) || 1));
+    const collate = request.collate !== false;
+    const systemDialog = request.systemDialog === true;
+    const color = request.color !== false;
 
     // Development aid: write the print layout to a PDF instead of printing.
     const dryRunPath = process.env.CIT_PRINT_TO_FILE;
 
-    if (request.pdf instanceof Uint8Array && request.pdf.length > 0) {
-      if (!dryRunPath) {
+    const pdfBytes = asPdfBytes(request.pdf);
+    if (pdfBytes) {
+      if (!dryRunPath && !systemDialog) {
         const known = await contents.getPrintersAsync();
         if (!known.some((printer) => printer.name === request.deviceName)) {
           return { success: false, error: 'Unknown printer' };
         }
       }
-      return printPdfVector(request.pdf, {
+      return printPdfVector(pdfBytes, {
         deviceName: request.deviceName,
         copies,
         paperSize,
         landscape,
         duplexMode,
-        color: request.color !== false,
+        color,
         printableArea: request.printableArea === true,
+        collate,
+        systemDialog,
         dryRunPath,
       });
     }
@@ -1102,29 +1643,50 @@ ipcMain.handle(
       return { success: true };
     }
 
-    const printers = await contents.getPrintersAsync();
-    if (!printers.some((printer) => printer.name === request.deviceName)) {
-      return { success: false, error: 'Unknown printer' };
+    if (!systemDialog) {
+      const printers = await contents.getPrintersAsync();
+      if (!printers.some((printer) => printer.name === request.deviceName)) {
+        return { success: false, error: 'Unknown printer' };
+      }
     }
 
     return new Promise((resolve) => {
+      let settled = false;
+      const finish = (result: PrintResult) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(result);
+      };
+      const timer = setTimeout(
+        () => {
+          console.error('[Main] Window print timed out');
+          finish({ success: false, error: 'Printer did not answer' });
+        },
+        systemDialog ? 300_000 : WINDOW_PRINT_TIMEOUT_MS
+      );
       contents.print(
         {
-          silent: true,
+          silent: !systemDialog,
           printBackground: true,
-          deviceName: request.deviceName,
+          deviceName: systemDialog ? '' : request.deviceName,
           copies,
-          collate: true,
+          collate,
           pageSize: paperSize,
           landscape,
           duplexMode,
-          color: request.color !== false,
+          color,
+          dpi: PRINT_DPI,
           margins: {
             marginType: request.printableArea ? 'printableArea' : 'none',
           },
         },
         (success, failureReason) => {
-          resolve(success ? { success } : { success, error: failureReason });
+          finish(
+            success
+              ? { success }
+              : { success, error: failureReason || 'Print job failed' }
+          );
         }
       );
     });

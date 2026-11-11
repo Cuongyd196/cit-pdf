@@ -91,9 +91,16 @@ export interface PrintRequest {
   color: boolean;
   /** Keep content inside the printer's printable area. */
   printableArea: boolean;
+  /** Collate multiple copies (Chromium / window print). Default true. */
+  collate?: boolean;
   /**
-   * The PDF itself. When given, it is printed through Chromium's PDF viewer,
-   * which keeps text and lines as vectors, instead of the window.
+   * Show the OS print dialog so the user can open printer Properties /
+   * advanced settings for this job. The PDF (when given) is what is printed.
+   */
+  systemDialog?: boolean;
+  /**
+   * The PDF itself. Printed via the OS (Windows Print/PrintTo) or Chromium's
+   * PDF viewer so text and lines stay vectors, instead of the window.
    */
   pdf?: Uint8Array;
 }
@@ -157,6 +164,7 @@ export const IPC_CHANNELS = {
   OPEN_EXTERNAL: 'bento:open-external',
   SHOW_SAVE_DIALOG: 'bento:show-save-dialog',
   LIST_PRINTERS: 'bento:list-printers',
+  OPEN_PRINTER_PREFERENCES: 'bento:open-printer-preferences',
   PRINT: 'bento:print',
   SET_LANGUAGE: 'bento:set-language',
   REGISTER_PICKED_FILE: 'bento:register-picked-file',

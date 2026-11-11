@@ -93,6 +93,14 @@ const bridge = {
     return ipcRenderer.invoke(IPC_CHANNELS.LIST_PRINTERS);
   },
 
+  /** Opens the OS printing-preferences dialog for one printer (Windows). */
+  openPrinterPreferences: (deviceName: string): Promise<boolean> => {
+    return ipcRenderer.invoke(
+      IPC_CHANNELS.OPEN_PRINTER_PREFERENCES,
+      deviceName
+    );
+  },
+
   // Prints the page as it currently renders for print media, without
   // showing the OS print dialog.
   print: (request: PrintRequest): Promise<PrintResult> => {

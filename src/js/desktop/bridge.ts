@@ -94,7 +94,10 @@ export interface PrintRequest {
   duplexMode: PrintDuplexMode;
   color: boolean;
   printableArea: boolean;
-  /** The PDF itself, printed as vectors through Chromium's PDF viewer. */
+  collate?: boolean;
+  /** OS print dialog (per-job Properties / advanced settings). */
+  systemDialog?: boolean;
+  /** The PDF itself, printed as vectors (OS or Chromium), not the window. */
   pdf?: Uint8Array;
 }
 
@@ -123,6 +126,8 @@ interface DesktopBridge {
   takeOpenedFile(): Promise<OpenedFile | null>;
   readOpenedFile(path: string): Promise<Uint8Array>;
   listPrinters(): Promise<PrinterInfo[]>;
+  /** Opens the printer's own preferences / advanced settings (Windows). */
+  openPrinterPreferences?(deviceName: string): Promise<boolean>;
   print(request: PrintRequest): Promise<PrintResult>;
   setLanguage(lang: string): void;
   registerPickedFile(file: File): Promise<OpenedFile | null>;
